@@ -34,6 +34,7 @@ cd ai-hedge-fund
 
 
 1. Install Poetry (if not already installed):
+
 **Mac/Linux:**
 ```bash
 curl -sSL https://install.python-poetry.org | python3 -
