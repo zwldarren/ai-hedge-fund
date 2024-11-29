@@ -19,7 +19,7 @@ An AI-powered hedge fund that uses multiple agents to make trading decisions. Th
 ## Prerequisites
 
 - Python 3.9+
-- Poetry (recommended) or Docker
+- Poetry
 - OpenAI API key
 
 ## Setup
@@ -30,18 +30,11 @@ git clone https://github.com/your-repo/ai-hedge-fund.git
 cd ai-hedge-fund
 ```
 
-### Using Poetry (Recommended)
-
+### Using Poetry
 
 1. Install Poetry (if not already installed):
-
-**Mac/Linux:**
 ```bash
 curl -sSL https://install.python-poetry.org | python3 -
-```
-**Windows:**
-```powershell
-(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
 ```
 
 2. Install dependencies:
@@ -52,46 +45,16 @@ poetry install
 3. Set up your environment variables:
 ```bash
 cp .env.example .env
-```
-
-**Mac/Linux:**
-```bash
 export OPENAI_API_KEY='your-api-key-here'
 export FINANCIAL_DATASETS_API_KEY='your-api-key-here'
-```
-
-**Windows:**
-```powershell
-$env:OPENAI_API_KEY='your-api-key-here'
-$env:FINANCIAL_DATASETS_API_KEY='your-api-key-here'
-```
-
-### Using Docker
-
-1. Build the Docker image:
-```bash
-docker build -t ai-hedge-fund .
-```
-
-2. Run the Docker container:
-```bash
-docker run -it ai-hedge-fund
 ```
 
 ## Usage
 
 ### Running the Hedge Fund
 
-The hedge fund can be run by using the following command:
-
-**Poetry:**
 ```bash
 poetry run python agents.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
-```
-
-**Docker:**
-```bash
-docker run -it ai-hedge-fund --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
 ```
 
 **Example Output:**
@@ -105,16 +68,8 @@ docker run -it ai-hedge-fund --ticker AAPL --start-date 2024-01-01 --end-date 20
 
 ### Running the Backtester
 
-To evaluate the strategy's performance over historical data:
-
-**Poetry:**
 ```bash
 poetry run python backtester.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
-```
-
-**Docker:**
-```bash
-docker run -it ai-hedge-fund backtester.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
 ```
 
 ## Project Structure 
@@ -124,9 +79,7 @@ ai-hedge-fund/
 ├── tools.py # Technical analysis tools
 ├── requirements.txt # Python dependencies
 ├── pyproject.toml # Poetry configuration
-├── Dockerfile # Docker configuration
 └── README.md # Documentation
-
 
 ## Contributing
 
