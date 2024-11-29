@@ -27,7 +27,8 @@ An AI-powered hedge fund that uses multiple agents to make trading decisions. Th
 Clone the repository:
 ```bash
 git clone https://github.com/your-repo/ai-hedge-fund.git
-cd ai-hedge-fund```
+cd ai-hedge-fund
+```
 
 ### Using Poetry (Recommended)
 
