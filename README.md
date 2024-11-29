@@ -85,6 +85,7 @@ Date         Ticker Action Quantity    Price         Cash    Stock  Total Value
 ```
 
 ## Project Structure 
+```
 ai-hedge-fund/
 ├── agents.py # Main agent definitions and workflow
 ├── backtester.py # Backtesting functionality
@@ -92,6 +93,7 @@ ai-hedge-fund/
 ├── requirements.txt # Python dependencies
 ├── pyproject.toml # Poetry configuration
 └── README.md # Documentation
+```
 
 ## Contributing
 
