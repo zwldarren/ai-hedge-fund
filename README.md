@@ -62,7 +62,6 @@ poetry run python agents.py --ticker AAPL --start-date 2024-01-01 --end-date 202
 {
   "action": "buy",
   "quantity": 50000,
-  "ticker": "AAPL"
 }
 ```
 
