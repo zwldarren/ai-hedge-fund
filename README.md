@@ -72,6 +72,20 @@ poetry run python agents.py --ticker AAPL --start-date 2024-01-01 --end-date 202
 poetry run python backtester.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
 ```
 
+**Example Output:**
+```
+Starting backtest...
+Date         Ticker Action Quantity    Price         Cash    Stock  Total Value
+----------------------------------------------------------------------
+2024-01-01   AAPL   buy       519.0   192.53        76.93    519.0    100000.00
+2024-01-02   AAPL   hold          0   185.64        76.93    519.0     96424.09
+2024-01-03   AAPL   hold          0   184.25        76.93    519.0     95702.68
+2024-01-04   AAPL   hold          0   181.91        76.93    519.0     94488.22
+2024-01-05   AAPL   hold          0   181.18        76.93    519.0     94109.35
+2024-01-08   AAPL   sell        519   185.56     96382.57      0.0     96382.57
+2024-01-09   AAPL   buy       520.0   185.14       109.77    520.0     96382.57
+```
+
 ## Project Structure 
 ai-hedge-fund/
 ├── agents.py # Main agent definitions and workflow

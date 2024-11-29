@@ -128,7 +128,7 @@ class Backtester:
 ### 4. Run the Backtest #####
 if __name__ == "__main__":
     # Define parameters
-    ticker = "NVDA"  # Example ticker symbol
+    ticker = "AAPL"  # Example ticker symbol
     start_date = "2024-01-01"  # Adjust as needed
     end_date = "2024-03-31"  # Adjust as needed
     initial_capital = 100000  # $100,000

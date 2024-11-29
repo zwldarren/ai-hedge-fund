@@ -168,8 +168,6 @@ def risk_management_agent(state: AgentState):
 def portfolio_management_agent(state: AgentState):
     """Makes final trading decisions and generates orders"""
     portfolio = state["messages"][0].additional_kwargs["portfolio"]
-    data = state["data"]
-    ticker = data["ticker"]
     last_message = state["messages"][-1]
 
     portfolio_prompt = ChatPromptTemplate.from_messages(
@@ -178,10 +176,9 @@ def portfolio_management_agent(state: AgentState):
                 "system",
                 """You are a portfolio manager making final trading decisions.
                 Your job is to make a trading decision based on the risk management data.
-                Provide the following in your output as a JSON:
+                Provide the following in your output:
                 - "action": "buy" | "sell" | "hold",
                 - "quantity": <positive integer>
-                - "ticker": <string>
                 Only buy if you have available cash.
                 The quantity that you buy must be less than or equal to the max position size.
                 Only sell if you have shares in the portfolio to sell.
@@ -194,14 +191,12 @@ def portfolio_management_agent(state: AgentState):
 
                 Risk Management Data: {last_message.content}
 
-                Here is the ticker: {ticker}
-
                 Here is the current portfolio:
                 Portfolio:
                 Cash: ${portfolio['cash']:.2f}
                 Current Position: {portfolio['stock']} shares
                 
-                Only include the action, quantity, and ticker in your output as JSON.
+                Only include the action and quantity in your output.
 
                 Remember, the action must be either buy, sell, or hold.
                 You can only buy if you have available cash.
