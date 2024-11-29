@@ -4,9 +4,9 @@ import operator
 from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai.chat_models import ChatOpenAI
-from langgraph.graph import END, StateGraph, START
+from langgraph.graph import END, StateGraph
 
-from tools import calculate_bollinger_bands, calculate_macd, calculate_obv, calculate_rsi, get_prices, prices_to_df
+from src.tools import calculate_bollinger_bands, calculate_macd, calculate_obv, calculate_rsi, get_prices, prices_to_df
 
 import argparse
 from datetime import datetime
@@ -241,7 +241,7 @@ workflow.add_node("risk_management_agent", risk_management_agent)
 workflow.add_node("portfolio_management_agent", portfolio_management_agent)
 
 # Define the workflow
-workflow.add_edge(START, "market_data_agent")
+workflow.set_entry_point("market_data_agent")
 workflow.add_edge("market_data_agent", "quant_agent")
 workflow.add_edge("quant_agent", "risk_management_agent")
 workflow.add_edge("risk_management_agent", "portfolio_management_agent")
