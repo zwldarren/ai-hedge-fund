@@ -20,7 +20,6 @@ An AI-powered hedge fund that uses multiple agents to make trading decisions. Th
 
 - Python 3.9+
 - Poetry
-- OpenAI API key
 
 ## Setup
 
@@ -54,7 +53,7 @@ export FINANCIAL_DATASETS_API_KEY='your-api-key-here'
 ### Running the Hedge Fund
 
 ```bash
-poetry run python agents.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
+poetry run python src/agents.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
 ```
 
 **Example Output:**
@@ -68,7 +67,7 @@ poetry run python agents.py --ticker AAPL --start-date 2024-01-01 --end-date 202
 ### Running the Backtester
 
 ```bash
-poetry run python backtester.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
+poetry run python src/backtester.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
 ```
 
 **Example Output:**
