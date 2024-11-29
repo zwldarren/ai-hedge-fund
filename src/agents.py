@@ -196,7 +196,7 @@ def portfolio_management_agent(state: AgentState):
                 Cash: ${portfolio['cash']:.2f}
                 Current Position: {portfolio['stock']} shares
                 
-                Only include the action and quantity in your output.
+                Only include the action and quantity in your output as JSON.
 
                 Remember, the action must be either buy, sell, or hold.
                 You can only buy if you have available cash.
