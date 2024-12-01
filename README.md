@@ -53,7 +53,7 @@ export FINANCIAL_DATASETS_API_KEY='your-api-key-here'
 ### Running the Hedge Fund
 
 ```bash
-poetry run python src/agents.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
+poetry run python src/agents.py --ticker AAPL
 ```
 
 **Example Output:**
@@ -64,11 +64,17 @@ poetry run python src/agents.py --ticker AAPL --start-date 2024-01-01 --end-date
 }
 ```
 
+You can optionally specify the start and end dates to make decisions for a specific time period.
+
+```bash
+poetry run python src/agents.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
+```
+
 ### Running the Hedge Fund (with Decisions)
 This will print the decisions of each agent to the console.
 
 ```bash
-poetry run python src/agents.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01 --show-decisions
+poetry run python src/agents.py --ticker AAPL --show-decisions
 ```
 
 **Example Output:**
@@ -94,7 +100,7 @@ Risk Score: 4
 ### Running the Backtester
 
 ```bash
-poetry run python src/backtester.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
+poetry run python src/backtester.py --ticker AAPL
 ```
 
 **Example Output:**
@@ -109,6 +115,12 @@ Date         Ticker Action Quantity    Price         Cash    Stock  Total Value
 2024-01-05   AAPL   hold          0   181.18        76.93    519.0     94109.35
 2024-01-08   AAPL   sell        519   185.56     96382.57      0.0     96382.57
 2024-01-09   AAPL   buy       520.0   185.14       109.77    520.0     96382.57
+```
+
+You can optionally specify the start and end dates to backtest over a specific time period.
+
+```bash
+poetry run python src/backtester.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
 ```
 
 ## Project Structure 
