@@ -64,6 +64,33 @@ poetry run python src/agents.py --ticker AAPL --start-date 2024-01-01 --end-date
 }
 ```
 
+### Running the Hedge Fund (with Decisions)
+This will print the decisions of each agent to the console.
+
+```bash
+poetry run python src/agents.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01 --show-decisions
+```
+
+**Example Output:**
+```
+=====         Quant Agent          =====
+Quant Trading Signal: neutral 
+Confidence (0-1, higher is better): 0.25
+========================================
+
+=====    Risk Management Agent     =====
+Max Position Size: 5000.0  
+Risk Score: 4
+========================================
+
+=====  Portfolio Management Agent  =====
+{
+  "action": "buy",
+  "quantity": 5000
+}
+========================================
+```
+
 ### Running the Backtester
 
 ```bash
