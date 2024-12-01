@@ -7,6 +7,19 @@ An AI-powered hedge fund that uses multiple agents to make trading decisions. Th
 3. Risk Management Agent - Evaluates portfolio risk and sets position limits
 4. Portfolio Management Agent - Makes final trading decisions and generates orders
 
+## Table of Contents
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Setup](#setup)
+  - [Using Poetry](#using-poetry)
+- [Usage](#usage)
+  - [Running the Hedge Fund](#running-the-hedge-fund)
+  - [Running the Hedge Fund (with Decisions)](#running-the-hedge-fund-with-decisions)
+  - [Running the Backtester](#running-the-backtester)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Features
 
 - Multi-agent architecture for sophisticated trading decisions
