@@ -149,21 +149,23 @@ def risk_management_agent(state: AgentState):
                 evaluate portfolio exposure and recommend position sizing.
                 Provide the following in your output (not as a JSON):
                 Max Position Size: <float greater than 0>,
-                Risk Score: <integer between 1 and 10>"""
+                Risk Score: <integer between 1 and 10>
+                Trading Action: <buy | sell | hold>
+                """
             ),
             MessagesPlaceholder(variable_name="messages"),
             (
                 "human",
                 f"""Based on the trading analysis below, provide your risk assessment.
 
-                Trading Analysis: {last_message.content}
+                Quant Trading Signal: {last_message.content}
 
                 Here is the current portfolio:
                 Portfolio:
                 Cash: ${portfolio['cash']:.2f}
                 Current Position: {portfolio['stock']} shares
                 
-                Only include the max position size and risk score in your output.
+                Only include the max position size, risk score, and trading action in your output.
                 """
             ),
         ]
@@ -188,17 +190,19 @@ def portfolio_management_agent(state: AgentState):
     """Makes final trading decisions and generates orders"""
     show_decisions = state["messages"][0].additional_kwargs["show_decisions"]
     portfolio = state["messages"][0].additional_kwargs["portfolio"]
-    last_message = state["messages"][-1]
+    risk_message = state["messages"][-1]
+    quant_message = state["messages"][-2]
 
     portfolio_prompt = ChatPromptTemplate.from_messages(
         [
             (
                 "system",
                 """You are a portfolio manager making final trading decisions.
-                Your job is to make a trading decision based on the risk management data.
+                Your job is to make a trading decision based on the team's analysis.
                 Provide the following in your output:
                 - "action": "buy" | "sell" | "hold",
                 - "quantity": <positive integer>
+                - "reasoning": <explanation of the decision>
                 Only buy if you have available cash.
                 The quantity that you buy must be less than or equal to the max position size.
                 Only sell if you have shares in the portfolio to sell.
@@ -207,16 +211,17 @@ def portfolio_management_agent(state: AgentState):
             MessagesPlaceholder(variable_name="messages"),
             (
                 "human",
-                f"""Based on the risk management data below, make your trading decision.
+                f"""Based on the team's analysis below, make your trading decision.
 
-                Risk Management Data: {last_message.content}
+                Quant Team Trading Signal: {quant_message.content}
+                Risk Management Team Signal: {risk_message.content}
 
                 Here is the current portfolio:
                 Portfolio:
                 Cash: ${portfolio['cash']:.2f}
                 Current Position: {portfolio['stock']} shares
                 
-                Only include the action and quantity in your output as JSON.
+                Only include the action, quantity, and reasoning in your output as JSON.  Do not include any JSON markdown.
 
                 Remember, the action must be either buy, sell, or hold.
                 You can only buy if you have available cash.
