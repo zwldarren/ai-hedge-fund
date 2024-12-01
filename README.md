@@ -9,9 +9,7 @@ An AI-powered hedge fund that uses multiple agents to make trading decisions. Th
 
 ## Table of Contents
 - [Features](#features)
-- [Prerequisites](#prerequisites)
 - [Setup](#setup)
-  - [Using Poetry](#using-poetry)
 - [Usage](#usage)
   - [Running the Hedge Fund](#running-the-hedge-fund)
   - [Running the Hedge Fund (with Decisions)](#running-the-hedge-fund-with-decisions)
@@ -29,11 +27,6 @@ An AI-powered hedge fund that uses multiple agents to make trading decisions. Th
 - Backtesting capabilities with performance analytics
 - Support for multiple stock tickers
 
-## Prerequisites
-
-- Python 3.9+
-- Poetry
-
 ## Setup
 
 Clone the repository:
@@ -41,8 +34,6 @@ Clone the repository:
 git clone https://github.com/your-repo/ai-hedge-fund.git
 cd ai-hedge-fund
 ```
-
-### Using Poetry
 
 1. Install Poetry (if not already installed):
 ```bash
