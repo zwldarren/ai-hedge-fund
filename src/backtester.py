@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -127,19 +127,24 @@ class Backtester:
     
 ### 4. Run the Backtest #####
 if __name__ == "__main__":
-    # Define parameters
-    ticker = "AAPL"  # Example ticker symbol
-    start_date = "2024-01-01"  # Adjust as needed
-    end_date = "2024-03-31"  # Adjust as needed
-    initial_capital = 100000  # $100,000
+    import argparse
+    
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description='Run backtesting simulation')
+    parser.add_argument('--ticker', type=str, help='Stock ticker symbol (e.g., AAPL)')
+    parser.add_argument('--end_date', type=str, default=datetime.now().strftime('%Y-%m-%d'), help='End date in YYYY-MM-DD format')
+    parser.add_argument('--start_date', type=str, default=(datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d'), help='Start date in YYYY-MM-DD format')
+    parser.add_argument('--initial_capital', type=float, default=100000, help='Initial capital amount (default: 100000)')
+
+    args = parser.parse_args()
 
     # Create an instance of Backtester
     backtester = Backtester(
         agent=run_hedge_fund,
-        ticker=ticker,
-        start_date=start_date,
-        end_date=end_date,
-        initial_capital=initial_capital,
+        ticker=args.ticker,
+        start_date=args.start_date,
+        end_date=args.end_date,
+        initial_capital=args.initial_capital,
     )
 
     # Run the backtesting process
