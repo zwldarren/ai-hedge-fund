@@ -12,7 +12,7 @@ An AI-powered hedge fund that uses multiple agents to make trading decisions. Th
 - [Setup](#setup)
 - [Usage](#usage)
   - [Running the Hedge Fund](#running-the-hedge-fund)
-  - [Running the Hedge Fund (with Decisions)](#running-the-hedge-fund-with-decisions)
+  - [Running the Hedge Fund (with Reasoning)](#running-the-hedge-fund-with-reasoning)
   - [Running the Backtester](#running-the-backtester)
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
@@ -74,11 +74,11 @@ You can optionally specify the start and end dates to make decisions for a speci
 poetry run python src/agents.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
 ```
 
-### Running the Hedge Fund (with Decisions)
-This will print the decisions of each agent to the console.
+### Running the Hedge Fund (with Reasoning)
+This will print the reasoning of each agent to the console.
 
 ```bash
-poetry run python src/agents.py --ticker AAPL --show-decisions
+poetry run python src/agents.py --ticker AAPL --show-reasoning
 ```
 
 **Example Output:**
