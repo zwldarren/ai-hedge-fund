@@ -24,14 +24,23 @@ def market_data_agent(state: AgentState):
     messages = state["messages"]
     data = state["data"]
 
+    # Set default dates
+    end_date = data["end_date"] or datetime.now().strftime('%Y-%m-%d')
+    if not data["start_date"]:
+        # Calculate 3 months before end_date
+        end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
+        start_date = end_date_obj.replace(month=end_date_obj.month - 3) if end_date_obj.month > 3 else \
+            end_date_obj.replace(year=end_date_obj.year - 1, month=end_date_obj.month + 9)
+        start_date = start_date.strftime('%Y-%m-%d')
+    else:
+        start_date = data["start_date"]
+
     # Get the historical price data
-    prices = get_prices(
-        data["ticker"], data["start_date"], data["end_date"]
-    )
+    prices = get_prices(data["ticker"], start_date, end_date)
 
     return {
         "messages": messages,
-        "data": {**data, "prices": prices}
+        "data": {**data, "prices": prices, "start_date": start_date, "end_date": end_date}
     }
 
 ##### 2. Quantitative Agent #####
@@ -161,8 +170,9 @@ def risk_management_agent(state: AgentState):
     )
     chain = risk_prompt | llm
     result = chain.invoke(state).content
+    message_content = f"Risk Management Signal: {result}"
     message = HumanMessage(
-        content=f"{result}",
+        content=message_content.strip(),
         name="risk_management",
     )
 
@@ -278,18 +288,24 @@ app = workflow.compile()
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run the hedge fund trading system')
     parser.add_argument('--ticker', type=str, required=True, help='Stock ticker symbol')
-    parser.add_argument('--start-date', type=str, required=True, help='Start date (YYYY-MM-DD)')
-    parser.add_argument('--end-date', type=str, required=True, help='End date (YYYY-MM-DD)')
+    parser.add_argument('--start-date', type=str, help='Start date (YYYY-MM-DD). Defaults to 3 months before end date')
+    parser.add_argument('--end-date', type=str, help='End date (YYYY-MM-DD). Defaults to today')
     parser.add_argument('--show-decisions', action='store_true', help='Show decisions from each agent')
     
     args = parser.parse_args()
     
-    # Validate dates
-    try:
-        datetime.strptime(args.start_date, '%Y-%m-%d')
-        datetime.strptime(args.end_date, '%Y-%m-%d')
-    except ValueError:
-        raise ValueError("Dates must be in YYYY-MM-DD format")
+    # Validate dates if provided
+    if args.start_date:
+        try:
+            datetime.strptime(args.start_date, '%Y-%m-%d')
+        except ValueError:
+            raise ValueError("Start date must be in YYYY-MM-DD format")
+    
+    if args.end_date:
+        try:
+            datetime.strptime(args.end_date, '%Y-%m-%d')
+        except ValueError:
+            raise ValueError("End date must be in YYYY-MM-DD format")
     
     # Sample portfolio - you might want to make this configurable too
     portfolio = {
