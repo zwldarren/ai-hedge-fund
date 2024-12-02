@@ -83,20 +83,45 @@ poetry run python src/agents.py --ticker AAPL --show-reasoning
 
 **Example Output:**
 ```
-=====         Quant Agent          =====
-Quant Trading Signal: neutral 
-Confidence (0-1, higher is better): 0.25
-========================================
-
-=====    Risk Management Agent     =====
-Max Position Size: 5000.0  
-Risk Score: 4
-========================================
-
-=====  Portfolio Management Agent  =====
+==========         Quant Agent          ==========
 {
-  "action": "buy",
-  "quantity": 5000
+  "signal": "bearish",
+  "confidence": 0.5,
+  "reasoning": {
+    "MACD": {
+      "signal": "neutral",
+      "details": "MACD Line crossed neither above nor below Signal Line"
+    },
+    "RSI": {
+      "signal": "bearish",
+      "details": "RSI is 72.07 (overbought)"
+    },
+    "Bollinger": {
+      "signal": "bearish",
+      "details": "Price is above upper band"
+    },
+    "OBV": {
+      "signal": "bullish",
+      "details": "OBV slope is 30612582.00 (bullish)"
+    }
+  }
+}
+========================================
+
+==========    Risk Management Agent     ==========
+{
+  "max_position_size": 10000.0,
+  "risk_score": 6,
+  "trading_action": "hold",
+  "reasoning": "The overall signal is bearish with moderate confidence, indicated by overbought RSI and price above the Bollinger band, suggesting potential downside. However, the bullish OBV could offset some bearish pressure. Therefore, it's prudent to hold off on new positions until clearer direction emerges."
+}
+========================================
+
+==========  Portfolio Management Agent  ==========
+{
+  "action": "hold",
+  "quantity": 0,
+  "reasoning": "The team's analysis indicates a bearish outlook with moderate confidence due to overbought RSI and price above the Bollinger band, while the bullish OBV suggests some counterbalancing. The risk management team recommends holding off on new positions until clearer direction emerges. Additionally, the current portfolio has no shares to sell, and the risk profile advises against new purchases."
 }
 ========================================
 ```
