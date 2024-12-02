@@ -310,7 +310,7 @@ def show_agent_reasoning(output, agent_name):
         except json.JSONDecodeError:
             # Fallback to original string if not valid JSON
             print(output)
-    print("=" * 40)
+    print("=" * 48)
 
 ##### Run the Hedge Fund #####
 def run_hedge_fund(ticker: str, start_date: str, end_date: str, portfolio: dict, show_reasoning: bool = False):
