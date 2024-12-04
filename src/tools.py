@@ -41,6 +41,27 @@ def get_price_data(ticker, start_date, end_date):
     prices = get_prices(ticker, start_date, end_date)
     return prices_to_df(prices)
 
+def get_financial_metrics(ticker, report_period, period='ttm', limit=1):
+    """Fetch financial metrics from the API."""
+    headers = {"X-API-KEY": os.environ.get("FINANCIAL_DATASETS_API_KEY")}
+    url = (
+        f"https://api.financialdatasets.ai/financial-metrics/"
+        f"?ticker={ticker}"
+        f"&report_period_lte={report_period}"
+        f"&limit={limit}"
+        f"&period={period}"
+    )
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        raise Exception(
+            f"Error fetching data: {response.status_code} - {response.text}"
+        )
+    data = response.json()
+    financial_metrics = data.get("financial_metrics")
+    if not financial_metrics:
+        raise ValueError("No financial metrics returned")
+    return financial_metrics
+
 def calculate_confidence_level(signals):
     """Calculate confidence level based on the difference between SMAs."""
     sma_diff_prev = abs(signals['sma_5_prev'] - signals['sma_20_prev'])
