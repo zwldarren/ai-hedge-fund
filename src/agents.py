@@ -63,7 +63,7 @@ def market_data_agent(state: AgentState):
             "prices": prices, 
             "start_date": start_date, 
             "end_date": end_date,
-            "financial_metrics": financial_metrics
+            "financial_metrics": financial_metrics,
         }
     }
 
@@ -185,7 +185,7 @@ def quant_agent(state: AgentState):
     
     return {
         "messages": [message],
-        "data": data
+        "data": data,
     }
 
 ##### Fundamental Agent #####
@@ -296,7 +296,7 @@ def fundamentals_agent(state: AgentState):
     
     return {
         "messages": [message],
-        "data": data
+        "data": data,
     }
 
 ##### Risk Management Agent #####
@@ -502,7 +502,7 @@ app = workflow.compile()
 # Add this at the bottom of the file
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run the hedge fund trading system')
-    parser.add_argument('--ticker', type=str, help='Stock ticker symbol')
+    parser.add_argument('--ticker', type=str, required=True, help='Stock ticker symbol')
     parser.add_argument('--start-date', type=str, help='Start date (YYYY-MM-DD). Defaults to 3 months before end date')
     parser.add_argument('--end-date', type=str, help='End date (YYYY-MM-DD). Defaults to today')
     parser.add_argument('--show-reasoning', action='store_true', help='Show reasoning from each agent')
@@ -529,8 +529,7 @@ if __name__ == "__main__":
     }
     
     result = run_hedge_fund(
-        # ticker=args.ticker,
-        ticker='AAPL',
+        ticker=args.ticker,
         start_date=args.start_date,
         end_date=args.end_date,
         portfolio=portfolio,
