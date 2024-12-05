@@ -22,6 +22,7 @@ An AI-powered hedge fund that uses multiple agents to make trading decisions. Th
 
 - Multi-agent architecture for sophisticated trading decisions
 - Technical analysis using MACD, RSI, Bollinger Bands, and OBV
+- Fundamental analysis using financial metrics
 - Risk management with position sizing recommendations
 - Portfolio management with automated trading decisions
 - Backtesting capabilities with performance analytics
@@ -158,7 +159,7 @@ ai-hedge-fund/
 ├── src/
 │   ├── agents.py # Main agent definitions and workflow
 │   ├── backtester.py # Backtesting functionality
-│   ├── tools.py # Technical analysis tools
+│   ├── tools.py # Agent tools
 ├── pyproject.toml # Poetry configuration
 ├── .env.example # Environment variables
 └── README.md # Documentation
