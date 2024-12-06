@@ -4,8 +4,9 @@ An AI-powered hedge fund that uses multiple agents to make trading decisions. Th
 
 1. Market Data Agent - Gathers and preprocesses market data
 2. Quantitative Agent - Analyzes technical indicators and generates trading signals
-3. Risk Management Agent - Evaluates portfolio risk and sets position limits
-4. Portfolio Management Agent - Makes final trading decisions and generates orders
+3. Fundamentals Agent - Analyzes fundamental data and generates trading signals
+4. Risk Management Agent - Evaluates portfolio risk and sets position limits
+5. Portfolio Management Agent - Makes final trading decisions and generates orders
 
 ## Disclaimer
 
