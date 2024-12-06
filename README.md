@@ -176,3 +176,19 @@ ai-hedge-fund/
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Legal Disclaimer
+
+**IMPORTANT: FOR EDUCATIONAL AND RESEARCH PURPOSES ONLY**
+
+This project is strictly for educational and research purposes. It is NOT intended for actual trading or investment purposes. 
+
+- This software is provided "as is" without any warranties or guarantees.
+- The creator(s) of this project accept no responsibility or liability for any financial losses incurred through the use of this software.
+- Past performance demonstrated in backtests or simulations does not guarantee future results.
+- Trading and investing in financial markets involves substantial risk of loss.
+- This project should NOT be used to make actual trading or investment decisions.
+- Users should always consult with qualified financial advisors before making any investment decisions.
+- The strategies and techniques demonstrated here may not be suitable for all investors.
+
+By using this software, you acknowledge and accept all risks associated with algorithmic trading and agree that you are using this code solely for educational purposes.
