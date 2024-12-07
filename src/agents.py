@@ -7,7 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai.chat_models import ChatOpenAI
 from langgraph.graph import END, StateGraph
 
-from src.tools import calculate_bollinger_bands, calculate_macd, calculate_obv, calculate_rsi, get_financial_metrics, get_prices, prices_to_df
+from src.tools import calculate_bollinger_bands, calculate_macd, calculate_obv, calculate_rsi, get_financial_metrics, get_market_news, get_prices, prices_to_df
 
 import argparse
 from datetime import datetime
@@ -56,6 +56,12 @@ def market_data_agent(state: AgentState):
         limit=1,
     )
 
+    # Get the market news
+    market_news = get_market_news(
+        query=f"Latest {data['ticker']} market news",
+        max_results=3,
+    )
+
     return {
         "messages": messages,
         "data": {
@@ -64,6 +70,7 @@ def market_data_agent(state: AgentState):
             "start_date": start_date, 
             "end_date": end_date,
             "financial_metrics": financial_metrics,
+            "market_news": market_news,
         }
     }
 
@@ -299,6 +306,67 @@ def fundamentals_agent(state: AgentState):
         "data": data,
     }
 
+##### Sentiment Agent #####
+def sentiment_agent(state: AgentState):
+    """Analyzes market sentiment and generates trading signals."""
+    data = state["data"]
+    market_news = data["market_news"]
+    show_reasoning = state["metadata"]["show_reasoning"]
+
+    # Create the prompt template
+    template = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                """
+                You are a market sentiment analyst.
+                Your job is to analyze the market news and provide a sentiment analysis.
+                Provide the following in your output (as a JSON):
+                "sentiment": <bullish | bearish | neutral>,
+                "reasoning": <concise explanation of the decision>
+                """
+            ),
+            (
+                "human",
+                """
+                Based on the following market news, provide your sentiment analysis.
+                {market_news}
+
+                Only include the sentiment and reasoning in your JSON output.  Do not include any JSON markdown.
+                """
+            ),
+        ]
+    )
+
+    # Generate the prompt
+    prompt = template.invoke(
+        {"market_news": market_news}
+    )
+
+    # Invoke the LLM
+    result = llm.invoke(prompt)
+
+    # Extract the sentiment and reasoning from the result, safely
+    try:
+        message_content = json.loads(result.content)
+    except json.JSONDecodeError:
+        message_content = {"sentiment": "neutral", "reasoning": "Unable to parse JSON output of market sentiment analysis"}
+
+    # Create the market sentiment message
+    message = HumanMessage(
+        content=str(message_content),
+        name="sentiment_agent",
+    )
+
+    # Print the reasoning if the flag is set
+    if show_reasoning:
+        show_agent_reasoning(message_content, "Sentiment Analysis Agent")
+
+    return {
+        "messages": [message],
+        "data": data,
+    }
+
 ##### Risk Management Agent #####
 def risk_management_agent(state: AgentState):
     """Evaluates portfolio risk and sets position limits"""
@@ -308,7 +376,7 @@ def risk_management_agent(state: AgentState):
     # Find the quant message by looking for the message with name "quant_agent"
     quant_message = next(msg for msg in state["messages"] if msg.name == "quant_agent")
     fundamentals_message = next(msg for msg in state["messages"] if msg.name == "fundamentals_agent")
-
+    sentiment_message = next(msg for msg in state["messages"] if msg.name == "sentiment_agent")
     # Create the prompt template
     template = ChatPromptTemplate.from_messages(
         [
@@ -330,7 +398,7 @@ def risk_management_agent(state: AgentState):
 
                 Quant Analysis Trading Signal: {quant_message}
                 Fundamental Analysis Trading Signal: {fundamentals_message}
-
+                Sentiment Analysis Trading Signal: {sentiment_message}
                 Here is the current portfolio:
                 Portfolio:
                 Cash: {portfolio_cash}
@@ -347,8 +415,9 @@ def risk_management_agent(state: AgentState):
         {
             "quant_message": quant_message.content,
             "fundamentals_message": fundamentals_message.content,
+            "sentiment_message": sentiment_message.content,
             "portfolio_cash": f"{portfolio['cash']:.2f}",
-            "portfolio_stock": portfolio["stock"]
+            "portfolio_stock": portfolio["stock"],
         }
     )
 
@@ -375,6 +444,7 @@ def portfolio_management_agent(state: AgentState):
     # Get the quant agent, fundamentals agent, and risk management agent messages
     quant_message = next(msg for msg in state["messages"] if msg.name == "quant_agent")
     fundamentals_message = next(msg for msg in state["messages"] if msg.name == "fundamentals_agent")
+    sentiment_message = next(msg for msg in state["messages"] if msg.name == "sentiment_agent")
     risk_message = next(msg for msg in state["messages"] if msg.name == "risk_management_agent")
 
     # Create the prompt template
@@ -399,6 +469,7 @@ def portfolio_management_agent(state: AgentState):
 
                 Quant Analysis Trading Signal: {quant_message}
                 Fundamental Analysis Trading Signal: {fundamentals_message}
+                Sentiment Analysis Trading Signal: {sentiment_message}
                 Risk Management Trading Signal: {risk_message}
 
                 Here is the current portfolio:
@@ -421,6 +492,7 @@ def portfolio_management_agent(state: AgentState):
         {
             "quant_message": quant_message.content, 
             "fundamentals_message": fundamentals_message.content,
+            "sentiment_message": sentiment_message.content,
             "risk_message": risk_message.content,
             "portfolio_cash": f"{portfolio['cash']:.2f}",
             "portfolio_stock": portfolio["stock"]
@@ -485,6 +557,7 @@ workflow = StateGraph(AgentState)
 workflow.add_node("market_data_agent", market_data_agent)
 workflow.add_node("quant_agent", quant_agent)
 workflow.add_node("fundamentals_agent", fundamentals_agent)
+workflow.add_node("sentiment_agent", sentiment_agent)
 workflow.add_node("risk_management_agent", risk_management_agent)
 workflow.add_node("portfolio_management_agent", portfolio_management_agent)
 
@@ -492,8 +565,10 @@ workflow.add_node("portfolio_management_agent", portfolio_management_agent)
 workflow.set_entry_point("market_data_agent")
 workflow.add_edge("market_data_agent", "quant_agent")
 workflow.add_edge("market_data_agent", "fundamentals_agent")
+workflow.add_edge("market_data_agent", "sentiment_agent")
 workflow.add_edge("quant_agent", "risk_management_agent")
 workflow.add_edge("fundamentals_agent", "risk_management_agent")
+workflow.add_edge("sentiment_agent", "risk_management_agent")
 workflow.add_edge("risk_management_agent", "portfolio_management_agent")
 workflow.add_edge("portfolio_management_agent", END)
 

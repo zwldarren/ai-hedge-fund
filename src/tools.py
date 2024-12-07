@@ -2,7 +2,11 @@ import os
 
 import pandas as pd
 import requests
-  
+from typing import Dict, Union
+from tavily import TavilyClient
+
+import requests
+
 def get_prices(ticker, start_date, end_date):
     """Fetch price data from the API."""
     headers = {"X-API-KEY": os.environ.get("FINANCIAL_DATASETS_API_KEY")}
@@ -61,6 +65,19 @@ def get_financial_metrics(ticker, report_period, period='ttm', limit=1):
     if not financial_metrics:
         raise ValueError("No financial metrics returned")
     return financial_metrics
+
+def get_market_news(
+    query: str,
+    max_results: int = 3,
+) -> Union[Dict, str]:
+    """
+    Perform a web search using the Tavily API.
+
+    This tool accesses real-time web data, news, articles and should be used when up-to-date information from the internet is required.
+    """
+    client = TavilyClient(api_key=os.environ.get("TAVILY_API_KEY"))
+    response = client.search(query, max_results=max_results)
+    return response
 
 def calculate_confidence_level(signals):
     """Calculate confidence level based on the difference between SMAs."""
