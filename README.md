@@ -62,7 +62,7 @@ poetry install
 
 3. Set up your environment variables:
 ```bash
-# Create a .env file for your API keys
+# Create .env file for your API keys
 cp .env.example .env
  # For using LLM
 export OPENAI_API_KEY='your-api-key-here'
