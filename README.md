@@ -4,9 +4,10 @@ An AI-powered hedge fund that uses multiple agents to make trading decisions. Th
 
 1. Market Data Agent - Gathers and preprocesses market data
 2. Quantitative Agent - Analyzes technical indicators and generates trading signals
-3. Fundamentals Agent - Analyzes fundamental data and generates trading signals
-4. Risk Management Agent - Evaluates portfolio risk and sets position limits
-5. Portfolio Management Agent - Makes final trading decisions and generates orders
+4. Fundamentals Agent - Analyzes fundamental data and generates trading signals
+3. Sentiment Agent - Analyzes market sentiment and generates trading signals
+5. Risk Management Agent - Evaluates portfolio risk and sets position limits
+6. Portfolio Management Agent - Makes final trading decisions and generates orders
 
 ## Disclaimer
 
@@ -33,13 +34,13 @@ By using this software, you agree to use it solely for learning purposes.
 
 ## Features
 
-- Multi-agent architecture for sophisticated trading decisions
+- Multi-agent architecture for trading decisions
 - Technical analysis using MACD, RSI, Bollinger Bands, and OBV
 - Fundamental analysis using financial metrics
+- Sentiment analysis using web search
 - Risk management with position sizing recommendations
 - Portfolio management with automated trading decisions
 - Backtesting capabilities with performance analytics
-- Support for multiple stock tickers
 
 ## Setup
 
@@ -73,15 +74,6 @@ export FINANCIAL_DATASETS_API_KEY='your-api-key-here'
 ```bash
 poetry run python src/agents.py --ticker AAPL
 ```
-
-**Example Output:**
-```json
-{
-  "action": "buy",
-  "quantity": 50000,
-}
-```
-
 You can optionally specify the start and end dates to make decisions for a specific time period.
 
 ```bash
@@ -93,51 +85,6 @@ This will print the reasoning of each agent to the console.
 
 ```bash
 poetry run python src/agents.py --ticker AAPL --show-reasoning
-```
-
-**Example Output:**
-```
-==========         Quant Agent          ==========
-{
-  "signal": "bearish",
-  "confidence": 0.5,
-  "reasoning": {
-    "MACD": {
-      "signal": "neutral",
-      "details": "MACD Line crossed neither above nor below Signal Line"
-    },
-    "RSI": {
-      "signal": "bearish",
-      "details": "RSI is 72.07 (overbought)"
-    },
-    "Bollinger": {
-      "signal": "bearish",
-      "details": "Price is above upper band"
-    },
-    "OBV": {
-      "signal": "bullish",
-      "details": "OBV slope is 30612582.00 (bullish)"
-    }
-  }
-}
-========================================
-
-==========    Risk Management Agent     ==========
-{
-  "max_position_size": 10000.0,
-  "risk_score": 6,
-  "trading_action": "hold",
-  "reasoning": "The overall signal is bearish with moderate confidence, indicated by overbought RSI and price above the Bollinger band, suggesting potential downside. However, the bullish OBV could offset some bearish pressure. Therefore, it's prudent to hold off on new positions until clearer direction emerges."
-}
-========================================
-
-==========  Portfolio Management Agent  ==========
-{
-  "action": "hold",
-  "quantity": 0,
-  "reasoning": "The team's analysis indicates a bearish outlook with moderate confidence due to overbought RSI and price above the Bollinger band, while the bullish OBV suggests some counterbalancing. The risk management team recommends holding off on new positions until clearer direction emerges. Additionally, the current portfolio has no shares to sell, and the risk profile advises against new purchases."
-}
-========================================
 ```
 
 ### Running the Backtester
