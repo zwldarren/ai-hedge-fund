@@ -6,7 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai.chat_models import ChatOpenAI
 from langgraph.graph import END, StateGraph
 
-from src.tools import calculate_bollinger_bands, calculate_macd, calculate_obv, calculate_rsi, get_financial_metrics, get_market_news, get_prices, prices_to_df
+from src.tools import calculate_bollinger_bands, calculate_macd, calculate_obv, calculate_rsi, get_financial_metrics, get_prices, prices_to_df, search_web
 
 import argparse
 from datetime import datetime
@@ -56,7 +56,7 @@ def market_data_agent(state: AgentState):
     )
 
     # Get the market news
-    market_news = get_market_news(
+    market_news = search_web(
         query=f"Latest {data['ticker']} market news",
         max_results=3,
     )
