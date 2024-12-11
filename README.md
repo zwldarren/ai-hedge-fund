@@ -9,7 +9,7 @@ An AI-powered hedge fund that uses multiple agents to make trading decisions. Th
 5. Risk Manager - Evaluates portfolio risk and sets position limits
 6. Portfolio Manager - Makes final trading decisions and generates orders
 
-<img width="1025" alt="Screenshot 2024-12-11 at 12 17 04 AM" src="https://github.com/user-attachments/assets/6e51851c-b4ee-4463-a016-3e9d7b886e7e">
+<img width="1025" alt="Screenshot 2024-12-11 at 12 20 37 AM" src="https://github.com/user-attachments/assets/a03aed40-46cc-45a2-92c5-2a34acb27fd2">
 
 Note: the system simulates trading decisions, it does not actually trade.
 
