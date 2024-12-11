@@ -1,13 +1,17 @@
 # AI Hedge Fund
 
-An AI-powered hedge fund that uses multiple agents to make trading decisions. The system employs several specialized agents working together:
+An AI-powered hedge fund that uses multiple agents to make trading decisions. The system employs several agents working together:
 
-1. Market Data Agent - Gathers and preprocesses market data
-2. Quantitative Agent - Analyzes technical indicators and generates trading signals
-4. Fundamentals Agent - Analyzes fundamental data and generates trading signals
-3. Sentiment Agent - Analyzes market sentiment and generates trading signals
-5. Risk Management Agent - Evaluates portfolio risk and sets position limits
-6. Portfolio Management Agent - Makes final trading decisions and generates orders
+1. Market Data Analyst - Gathers and preprocesses market data
+2. Sentiment Agent - Analyzes market sentiment and generates trading signals
+3. Fundamentals Agent - Analyzes fundamental data and generates trading signals
+4. Quant Analyst - Analyzes technical indicators and generates trading signals
+5. Risk Manager - Evaluates portfolio risk and sets position limits
+6. Portfolio Manager - Makes final trading decisions and generates orders
+
+<img width="1025" alt="Screenshot 2024-12-11 at 12 17 04 AM" src="https://github.com/user-attachments/assets/6e51851c-b4ee-4463-a016-3e9d7b886e7e">
+
+Note: the system simulates trading decisions, it does not actually trade.
 
 ## Disclaimer
 
