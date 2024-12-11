@@ -6,7 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai.chat_models import ChatOpenAI
 from langgraph.graph import END, StateGraph
 
-from src.tools import calculate_bollinger_bands, calculate_macd, calculate_obv, calculate_rsi, get_financial_metrics, get_prices, prices_to_df, get_news
+from src.tools import calculate_bollinger_bands, calculate_macd, calculate_obv, calculate_rsi, get_financial_metrics, get_insider_trades, get_prices, prices_to_df
 
 import argparse
 from datetime import datetime
@@ -55,12 +55,13 @@ def market_data_agent(state: AgentState):
         limit=1,
     )
 
-    # Get the market news
-    market_news = get_news(
-        query=f"Show me {data['ticker']} news before {end_date} only.",
+    # Get the insider trades
+    insider_trades = get_insider_trades(
+        ticker=data["ticker"], 
+        start_date=start_date, 
         end_date=end_date,
-        max_results=5,
     )
+
 
     return {
         "messages": messages,
@@ -70,7 +71,7 @@ def market_data_agent(state: AgentState):
             "start_date": start_date, 
             "end_date": end_date,
             "financial_metrics": financial_metrics,
-            "market_news": market_news,
+            "insider_trades": insider_trades,
         }
     }
 
@@ -310,7 +311,7 @@ def fundamentals_agent(state: AgentState):
 def sentiment_agent(state: AgentState):
     """Analyzes market sentiment and generates trading signals."""
     data = state["data"]
-    market_news = data["market_news"]
+    insider_trades = data["insider_trades"]
     show_reasoning = state["metadata"]["show_reasoning"]
 
     # Create the prompt template
@@ -320,8 +321,14 @@ def sentiment_agent(state: AgentState):
                 "system",
                 """
                 You are a market sentiment analyst.
-                Your job is to analyze the market news and provide a sentiment analysis.
-                Provide the following in your output (as a JSON):
+                Your job is to analyze the insider trades of a company and provide a sentiment analysis.
+                The insider trades are a list of transactions made by company insiders.
+                - If the insider is buying, the sentiment may be bullish. 
+                - If the insider is selling, the sentiment may be bearish.
+                - If the insider is neutral, the sentiment may be neutral.
+                The sentiment is amplified if the insider is buying or selling a large amount of shares.
+                Also, the sentiment is amplified if the insider is a high-level executive (e.g. CEO, CFO, etc.) or board member.
+                For each insider trade, provide the following in your output (as a JSON):
                 "sentiment": <bullish | bearish | neutral>,
                 "reasoning": <concise explanation of the decision>
                 """
@@ -329,8 +336,8 @@ def sentiment_agent(state: AgentState):
             (
                 "human",
                 """
-                Based on the following market news, provide your sentiment analysis.
-                {market_news}
+                Based on the following insider trades, provide your sentiment analysis.
+                {insider_trades}
 
                 Only include the sentiment and reasoning in your JSON output.  Do not include any JSON markdown.
                 """
@@ -340,7 +347,7 @@ def sentiment_agent(state: AgentState):
 
     # Generate the prompt
     prompt = template.invoke(
-        {"market_news": market_news}
+        {"insider_trades": insider_trades}
     )
 
     # Invoke the LLM

@@ -2,8 +2,6 @@ import os
 
 import pandas as pd
 import requests
-from typing import Dict, Union
-from tavily import TavilyClient
 
 import requests
 
@@ -66,37 +64,27 @@ def get_financial_metrics(ticker, report_period, period='ttm', limit=1):
         raise ValueError("No financial metrics returned")
     return financial_metrics
 
-def get_news(
-    query: str,
-    end_date: str,
-    max_results: int = 5,
-) -> Union[Dict, str]:
+def get_insider_trades(ticker, start_date, end_date):
     """
-    Perform a web search using the Tavily API.
-
-    This tool accesses real-time web data, news, articles and should be used when up-to-date information from the internet is required.
+    Fetch insider trades for a given ticker and date range.
     """
-    from datetime import datetime
-
-    client = TavilyClient(api_key=os.environ.get("TAVILY_API_KEY"))
-    response = client.search(query, topic="news", max_results=max_results)
-    
-    # Convert end_date string to datetime object
-    end_date_dt = datetime.strptime(end_date, '%Y-%m-%d')
-    
-    # Filter results
-    if 'results' in response:
-        filtered_results = []
-        for result in response['results']:
-            if 'published_date' in result:
-                # Parse the published_date
-                pub_date = datetime.strptime(result['published_date'], '%a, %d %b %Y %H:%M:%S %Z')
-                if pub_date.date() <= end_date_dt.date():
-                    filtered_results.append(result)
-        
-        response['results'] = filtered_results
-    
-    return response
+    headers = {"X-API-KEY": os.environ.get("FINANCIAL_DATASETS_API_KEY")}
+    url = (
+        f"https://api.financialdatasets.ai/insider-trades/"
+        f"?ticker={ticker}"
+        f"&filing_date_gte={start_date}"
+        f"&filing_date_lte={end_date}"
+    )
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        raise Exception(
+            f"Error fetching data: {response.status_code} - {response.text}"
+        )
+    data = response.json()
+    insider_trades = data.get("insider_trades")
+    if not insider_trades:
+        raise ValueError("No insider trades returned")
+    return insider_trades
 
 def calculate_confidence_level(signals):
     """Calculate confidence level based on the difference between SMAs."""
