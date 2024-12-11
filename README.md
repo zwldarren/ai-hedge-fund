@@ -67,7 +67,6 @@ cp .env.example .env
 
 export OPENAI_API_KEY='your-api-key-here' # For using LLM
 export FINANCIAL_DATASETS_API_KEY='your-api-key-here' # For fetching stock market data
-export TAVILY_API_KEY='your-api-key-here' # For web search
 ```
 
 ## Usage
