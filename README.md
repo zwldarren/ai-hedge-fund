@@ -29,7 +29,6 @@ By using this software, you agree to use it solely for learning purposes.
 - [Setup](#setup)
 - [Usage](#usage)
   - [Running the Hedge Fund](#running-the-hedge-fund)
-  - [Running the Hedge Fund (with Reasoning)](#running-the-hedge-fund-with-reasoning)
   - [Running the Backtester](#running-the-backtester)
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
