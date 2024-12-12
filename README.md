@@ -26,7 +26,6 @@ This project is for **educational and research purposes only**.
 By using this software, you agree to use it solely for learning purposes.
 
 ## Table of Contents
-- [Features](#features)
 - [Setup](#setup)
 - [Usage](#usage)
   - [Running the Hedge Fund](#running-the-hedge-fund)
@@ -35,16 +34,6 @@ By using this software, you agree to use it solely for learning purposes.
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
 - [License](#license)
-
-## Features
-
-- Multi-agent architecture for trading decisions
-- Technical analysis using MACD, RSI, Bollinger Bands, and OBV
-- Fundamental analysis using financial metrics
-- Sentiment analysis using web search
-- Risk management with position sizing recommendations
-- Portfolio management with automated trading decisions
-- Backtesting capabilities with performance analytics
 
 ## Setup
 
@@ -78,19 +67,18 @@ export FINANCIAL_DATASETS_API_KEY='your-api-key-here' # Get a key from https://f
 ### Running the Hedge Fund
 
 ```bash
-poetry run python src/agents.py --ticker AAPL
+poetry run python src/agents.py --ticker AAPL --show-reasoning
+```
+
+You can also specify a show-reasoning flag to print the reasoning of each agent to the console.
+
+```bash
+poetry run python src/agents.py --ticker AAPL --show-reasoning
 ```
 You can optionally specify the start and end dates to make decisions for a specific time period.
 
 ```bash
-poetry run python src/agents.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01
-```
-
-### Running the Hedge Fund (with Reasoning)
-This will print the reasoning of each agent to the console.
-
-```bash
-poetry run python src/agents.py --ticker AAPL --show-reasoning
+poetry run python src/agents.py --ticker AAPL --start-date 2024-01-01 --end-date 2024-03-01 
 ```
 
 ### Running the Backtester
