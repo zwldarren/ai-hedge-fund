@@ -69,7 +69,7 @@ export FINANCIAL_DATASETS_API_KEY='your-api-key-here' # Get a key from https://f
 poetry run python src/agents.py --ticker AAPL
 ```
 
-You can also specify a show-reasoning flag to print the reasoning of each agent to the console.
+You can also specify a `--show-reasoning` flag to print the reasoning of each agent to the console.
 
 ```bash
 poetry run python src/agents.py --ticker AAPL --show-reasoning
