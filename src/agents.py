@@ -6,7 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai.chat_models import ChatOpenAI
 from langgraph.graph import END, StateGraph
 
-from src.tools import calculate_bollinger_bands, calculate_macd, calculate_obv, calculate_rsi, get_financial_metrics, get_insider_trades, get_prices, prices_to_df
+from src.tools import calculate_bollinger_bands, calculate_intrinsic_value, calculate_macd, calculate_obv, calculate_rsi, get_cash_flow_statements, get_financial_metrics, get_insider_trades, get_market_cap, get_prices, prices_to_df
 
 import argparse
 from datetime import datetime
@@ -60,8 +60,21 @@ def market_data_agent(state: AgentState):
         ticker=data["ticker"], 
         start_date=start_date, 
         end_date=end_date,
+        limit=5,
     )
 
+    # Get the market cap
+    market_cap = get_market_cap(
+        ticker=data["ticker"],
+    )
+
+    # Get the cash flow statements
+    cash_flow_statements = get_cash_flow_statements(
+        ticker=data["ticker"], 
+        end_date=end_date,
+        period='ttm',
+        limit=1,
+    )
 
     return {
         "messages": messages,
@@ -72,6 +85,8 @@ def market_data_agent(state: AgentState):
             "end_date": end_date,
             "financial_metrics": financial_metrics,
             "insider_trades": insider_trades,
+            "market_cap": market_cap,
+            "cash_flow_statements": cash_flow_statements,
         }
     }
 
@@ -201,8 +216,10 @@ def fundamentals_agent(state: AgentState):
     """Analyzes fundamental data and generates trading signals."""
     show_reasoning = state["metadata"]["show_reasoning"]
     data = state["data"]
-    metrics = data["financial_metrics"][0]  # Get the most recent metrics
-    
+    metrics = data["financial_metrics"][0]
+    cash_flow_statement = data["cash_flow_statements"][0]
+    market_cap = data["market_cap"]
+
     # Initialize signals list for different fundamental aspects
     signals = []
     reasoning = {}
@@ -252,23 +269,42 @@ def fundamentals_agent(state: AgentState):
         "details": f"Current Ratio: {metrics['current_ratio']:.2f}, D/E: {metrics['debt_to_equity']:.2f}"
     }
     
-    # 4. Valuation
+    # 4. Price to X ratios
     pe_ratio = metrics["price_to_earnings_ratio"]
     pb_ratio = metrics["price_to_book_ratio"]
     ps_ratio = metrics["price_to_sales_ratio"]
     
-    valuation_score = 0
+    price_ratio_score = 0
     if pe_ratio < 25:  # Reasonable P/E ratio
-        valuation_score += 1
+        price_ratio_score += 1
     if pb_ratio < 3:  # Reasonable P/B ratio
-        valuation_score += 1
+        price_ratio_score += 1
     if ps_ratio < 5:  # Reasonable P/S ratio
-        valuation_score += 1
+        price_ratio_score += 1
         
-    signals.append('bullish' if valuation_score >= 2 else 'bearish' if valuation_score == 0 else 'neutral')
-    reasoning["Valuation"] = {
+    signals.append('bullish' if price_ratio_score >= 2 else 'bearish' if price_ratio_score == 0 else 'neutral')
+    reasoning["Price_Ratios"] = {
         "signal": signals[3],
         "details": f"P/E: {pe_ratio:.2f}, P/B: {pb_ratio:.2f}, P/S: {ps_ratio:.2f}"
+    }
+
+    # 5. Calculate intrinsic value and compare to market cap
+    free_cash_flow = cash_flow_statement.get('free_cash_flow')
+    intrinsic_value = calculate_intrinsic_value(
+        free_cash_flow=free_cash_flow,
+        growth_rate=metrics["earnings_growth"],
+        discount_rate=0.10,
+        terminal_growth_rate=0.03,
+        num_years=5,
+    )
+    if market_cap < intrinsic_value:
+        signals.append('bullish')
+    else:
+        signals.append('bearish')
+
+    reasoning["Intrinsic_Value"] = {
+        "signal": signals[4],
+        "details": f"Intrinsic Value: ${intrinsic_value:,.2f}, Market Cap: ${market_cap:,.2f}"
     }
     
     # Determine overall signal
