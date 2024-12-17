@@ -56,7 +56,7 @@ class Backtester:
 
         print("\nStarting backtest...")
         print(f"{'Date':<12} {'Ticker':<6} {'Action':<6} {'Quantity':>8} {'Price':>8} {'Cash':>12} {'Stock':>8} {'Total Value':>12}")
-        print("-" * 70)
+        print("-" * 100)
 
         for current_date in dates:
             lookback_start = (current_date - timedelta(days=30)).strftime("%Y-%m-%d")
