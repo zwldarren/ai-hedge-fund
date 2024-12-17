@@ -31,35 +31,35 @@ def get_financial_metrics(
         raise ValueError("No financial metrics returned")
     return financial_metrics
 
-def get_cash_flow_statements(
+def search_line_items(
     ticker: str,
-    end_date: str,
+    line_items: List[str],
     period: str = 'ttm',
     limit: int = 1
 ) -> List[Dict[str, Any]]:
     """Fetch cash flow statements from the API."""
     headers = {"X-API-KEY": os.environ.get("FINANCIAL_DATASETS_API_KEY")}
-    url = (
-        f"https://api.financialdatasets.ai/financials/cash-flow-statements/"
-        f"?ticker={ticker}"
-        f"&report_period_lte={end_date}"
-        f"&limit={limit}"
-        f"&period={period}"
-    )
-    response = requests.get(url, headers=headers)
+    url = "https://api.financialdatasets.ai/financials/search/line-items"
+
+    body = {
+        "tickers": [ticker],
+        "line_items": line_items,
+        "period": period,
+        "limit": limit
+    }
+    response = requests.post(url, headers=headers, json=body)
     if response.status_code != 200:
         raise Exception(
             f"Error fetching data: {response.status_code} - {response.text}"
         )
     data = response.json()
-    cash_flow_statements = data.get("cash_flow_statements")
-    if not cash_flow_statements:
-        raise ValueError("No cash flow statements returned")
-    return cash_flow_statements
+    search_results = data.get("search_results")
+    if not search_results:
+        raise ValueError("No search results returned")
+    return search_results
 
 def get_insider_trades(
     ticker: str,
-    start_date: str,
     end_date: str,
     limit: int = 5,
 ) -> List[Dict[str, Any]]:
@@ -70,7 +70,6 @@ def get_insider_trades(
     url = (
         f"https://api.financialdatasets.ai/insider-trades/"
         f"?ticker={ticker}"
-        f"&filing_date_gte={start_date}"
         f"&filing_date_lte={end_date}"
         f"&limit={limit}"
     )
