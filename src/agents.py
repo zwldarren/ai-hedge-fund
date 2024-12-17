@@ -6,7 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai.chat_models import ChatOpenAI
 from langgraph.graph import END, StateGraph
 
-from src.tools import calculate_bollinger_bands, calculate_intrinsic_value, calculate_macd, calculate_obv, calculate_rsi, get_cash_flow_statements, get_financial_metrics, get_insider_trades, get_market_cap, get_prices, prices_to_df
+from src.tools import calculate_bollinger_bands, calculate_intrinsic_value, calculate_macd, calculate_obv, calculate_rsi, search_line_items, get_financial_metrics, get_insider_trades, get_market_cap, get_prices, prices_to_df
 
 import argparse
 from datetime import datetime
@@ -58,7 +58,6 @@ def market_data_agent(state: AgentState):
     # Get the insider trades
     insider_trades = get_insider_trades(
         ticker=data["ticker"], 
-        start_date=start_date, 
         end_date=end_date,
         limit=5,
     )
@@ -68,10 +67,10 @@ def market_data_agent(state: AgentState):
         ticker=data["ticker"],
     )
 
-    # Get the cash flow statements
-    cash_flow_statements = get_cash_flow_statements(
+    # Get the line_items
+    financial_line_items = search_line_items(
         ticker=data["ticker"], 
-        end_date=end_date,
+        line_items=["free_cash_flow"],
         period='ttm',
         limit=1,
     )
@@ -86,7 +85,7 @@ def market_data_agent(state: AgentState):
             "financial_metrics": financial_metrics,
             "insider_trades": insider_trades,
             "market_cap": market_cap,
-            "cash_flow_statements": cash_flow_statements,
+            "financial_line_items": financial_line_items,
         }
     }
 
@@ -187,7 +186,7 @@ def quant_agent(state: AgentState):
     # Generate the message content
     message_content = {
         "signal": overall_signal,
-        "confidence": round(confidence, 2),
+        "confidence": f"{round(confidence * 100)}%",
         "reasoning": {
             "MACD": reasoning["MACD"],
             "RSI": reasoning["RSI"],
@@ -217,7 +216,7 @@ def fundamentals_agent(state: AgentState):
     show_reasoning = state["metadata"]["show_reasoning"]
     data = state["data"]
     metrics = data["financial_metrics"][0]
-    cash_flow_statement = data["cash_flow_statements"][0]
+    financial_line_item = data["financial_line_items"][0]
     market_cap = data["market_cap"]
 
     # Initialize signals list for different fundamental aspects
@@ -289,7 +288,7 @@ def fundamentals_agent(state: AgentState):
     }
 
     # 5. Calculate intrinsic value and compare to market cap
-    free_cash_flow = cash_flow_statement.get('free_cash_flow')
+    free_cash_flow = financial_line_item.get('free_cash_flow')
     intrinsic_value = calculate_intrinsic_value(
         free_cash_flow=free_cash_flow,
         growth_rate=metrics["earnings_growth"],
@@ -324,7 +323,7 @@ def fundamentals_agent(state: AgentState):
     
     message_content = {
         "signal": overall_signal,
-        "confidence": round(confidence, 2),
+        "confidence": f"{round(confidence * 100)}%",
         "reasoning": reasoning
     }
     
@@ -350,60 +349,43 @@ def sentiment_agent(state: AgentState):
     insider_trades = data["insider_trades"]
     show_reasoning = state["metadata"]["show_reasoning"]
 
-    # Create the prompt template
-    template = ChatPromptTemplate.from_messages(
-        [
-            (
-                "system",
-                """
-                You are a market sentiment analyst.
-                Your job is to analyze the insider trades of a company and provide a sentiment analysis.
-                The insider trades are a list of transactions made by company insiders.
-                - If the insider is buying, the sentiment may be bullish. 
-                - If the insider is selling, the sentiment may be bearish.
-                - If the insider is neutral, the sentiment may be neutral.
-                The sentiment is amplified if the insider is buying or selling a large amount of shares.
-                Also, the sentiment is amplified if the insider is a high-level executive (e.g. CEO, CFO, etc.) or board member.
-                For each insider trade, provide the following in your output (as a JSON):
-                "sentiment": <bullish | bearish | neutral>,
-                "reasoning": <concise explanation of the decision>
-                """
-            ),
-            (
-                "human",
-                """
-                Based on the following insider trades, provide your sentiment analysis.
-                {insider_trades}
+    # Loop through the insider trades, if transaction_shares is negative, then it is a sell, which is bearish, if positive, then it is a buy, which is bullish
+    signals = []
+    for trade in insider_trades:
+        if trade["transaction_shares"] < 0:
+            signals.append("bearish")
+        else:
+            signals.append("bullish")
 
-                Only include the sentiment and reasoning in your JSON output.  Do not include any JSON markdown.
-                """
-            ),
-        ]
-    )
+    # Determine overall signal
+    bullish_signals = signals.count("bullish")
+    bearish_signals = signals.count("bearish")
+    if bullish_signals > bearish_signals:
+        overall_signal = "bullish"
+    elif bearish_signals > bullish_signals:
+        overall_signal = "bearish"
+    else:
+        overall_signal = "neutral"
 
-    # Generate the prompt
-    prompt = template.invoke(
-        {"insider_trades": insider_trades}
-    )
+    # Calculate confidence level based on the proportion of indicators agreeing
+    total_signals = len(signals)
+    confidence = max(bullish_signals, bearish_signals) / total_signals
 
-    # Invoke the LLM
-    result = llm.invoke(prompt)
-
-    # Extract the sentiment and reasoning from the result, safely
-    try:
-        message_content = json.loads(result.content)
-    except json.JSONDecodeError:
-        message_content = {"sentiment": "neutral", "reasoning": "Unable to parse JSON output of market sentiment analysis"}
-
-    # Create the market sentiment message
-    message = HumanMessage(
-        content=str(message_content),
-        name="sentiment_agent",
-    )
+    message_content = {
+        "signal": overall_signal,
+        "confidence": f"{round(confidence * 100)}%",
+        "reasoning": f"Bullish signals: {bullish_signals}, Bearish signals: {bearish_signals}"
+    }
 
     # Print the reasoning if the flag is set
     if show_reasoning:
         show_agent_reasoning(message_content, "Sentiment Analysis Agent")
+
+    # Create the sentiment message
+    message = HumanMessage(
+        content=str(message_content),
+        name="sentiment_agent",
+    )
 
     return {
         "messages": [message],
@@ -446,7 +428,7 @@ def risk_management_agent(state: AgentState):
                 Portfolio:
                 Cash: {portfolio_cash}
                 Current Position: {portfolio_stock} shares
-                
+
                 Only include the max position size, risk score, trading action, and reasoning in your JSON output.  Do not include any JSON markdown.
                 """
             ),
@@ -496,15 +478,46 @@ def portfolio_management_agent(state: AgentState):
             (
                 "system",
                 """You are a portfolio manager making final trading decisions.
-                Your job is to make a trading decision based on the team's analysis.
+                Your job is to make a trading decision based on the team's analysis while strictly adhering
+                to risk management constraints.
+
+                RISK MANAGEMENT CONSTRAINTS:
+                - You MUST NOT exceed the max_position_size specified by the risk manager
+                - You MUST follow the trading_action (buy/sell/hold) recommended by risk management
+                - These are hard constraints that cannot be overridden by other signals
+
+                When weighing the different signals for direction and timing:
+                1. Fundamental Analysis (50% weight)
+                   - Primary driver of trading decisions
+                   - Should determine overall direction
+                
+                2. Technical/Quant Analysis (35% weight)
+                   - Secondary confirmation
+                   - Helps with entry/exit timing
+                
+                3. Sentiment Analysis (15% weight)
+                   - Final consideration
+                   - Can influence sizing within risk limits
+                
+                The decision process should be:
+                1. First check risk management constraints
+                2. Then evaluate fundamental outlook
+                3. Use technical analysis for timing
+                4. Consider sentiment for final adjustment
+                
                 Provide the following in your output:
                 - "action": "buy" | "sell" | "hold",
                 - "quantity": <positive integer>
-                - "reasoning": <concise explanation of the decision>
-                Only buy if you have available cash.
-                The quantity that you buy must be less than or equal to the max position size.
-                Only sell if you have shares in the portfolio to sell.
-                The quantity that you sell must be less than or equal to the current position."""
+                - "confidence": <float between 0 and 1>
+                - "agent_signals": <list of agent signals including agent name, signal (bullish | bearish | neutral), and their confidence>
+                - "reasoning": <concise explanation of the decision including how you weighted the signals>
+
+                Trading Rules:
+                - Never exceed risk management position limits
+                - Only buy if you have available cash
+                - Only sell if you have shares to sell
+                - Quantity must be ≤ current position for sells
+                - Quantity must be ≤ max_position_size from risk management"""
             ),
             (
                 "human",
@@ -520,7 +533,7 @@ def portfolio_management_agent(state: AgentState):
                 Cash: {portfolio_cash}
                 Current Position: {portfolio_stock} shares
 
-                Only include the action, quantity, and reasoning in your output as JSON.  Do not include any JSON markdown.
+                Only include the action, quantity, reasoning, confidence, and agent_signals in your output as JSON.  Do not include any JSON markdown.
 
                 Remember, the action must be either buy, sell, or hold.
                 You can only buy if you have available cash.
