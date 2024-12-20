@@ -465,11 +465,14 @@ def risk_management_agent(state: AgentState):
     base_position_size = total_portfolio_value * 0.25  # Start with 25% max position of total portfolio
     
     if market_risk_score >= 4:
-        max_position_size = base_position_size * 0.5  # Reduce position for high risk
+        # Reduce position for high risk
+        max_position_size = base_position_size * 0.5
     elif market_risk_score >= 2:
-        max_position_size = base_position_size * 0.75 # Slightly reduce for moderate risk
+        # Slightly reduce for moderate risk
+        max_position_size = base_position_size * 0.75
     else:
-        max_position_size = base_position_size         # Keep base size for low risk
+        # Keep base size for low risk
+        max_position_size = base_position_size
 
     # 4. Stress Testing
     stress_test_scenarios = {
