@@ -119,13 +119,13 @@ ai-hedge-fund/
 │   │   ├── technicals.py # Technical analysis agent
 │   ├── tools/ # Agent tools
 │   │   ├── api.py # API tools
-│   ├── backtester.py # Backtesting tools
+│   ├── backtester.py
 │   ├── main.py # Main entry point
-├── pyproject.toml # Poetry configuration
-├── poetry.lock # Poetry lock file
-├── .env.example # Environment variables
-├── .gitignore # Git ignore file
-└── README.md # Documentation
+├── pyproject.toml
+├── poetry.lock
+├── .env.example 
+├── .gitignore
+└── README.md
 ```
 
 ## Contributing
