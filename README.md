@@ -122,10 +122,7 @@ ai-hedge-fund/
 │   ├── backtester.py
 │   ├── main.py # Main entry point
 ├── pyproject.toml
-├── poetry.lock
-├── .env.example 
-├── .gitignore
-└── README.md
+├── ...
 ```
 
 ## Contributing
