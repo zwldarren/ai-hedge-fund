@@ -111,20 +111,20 @@ poetry run python src/backtester.py --ticker AAPL --start-date 2024-01-01 --end-
 ## Project Structure 
 ```
 ai-hedge-fund/
-├── agents/ # Agent definitions and workflow
-│   ├── fundamentals.py # Fundamental analysis agent
-│   ├── market_data.py # Market data agent
-│   ├── portfolio_manager.py # Portfolio management agent
-│   ├── risk_manager.py # Risk management agent
-│   ├── sentiment.py # Sentiment analysis agent
-│   ├── state.py # Agent state
-│   ├── technicals.py # Technical analysis agent
-├── tools/ # Agent tools
-│   ├── api.py # API tools
-├── backtester.py # Backtesting tools
-├── main.py # Main entry point
+├── src/
+│   ├── agents/ # Agent definitions and workflow
+│   │   ├── fundamentals.py # Fundamental analysis agent
+│   │   ├── portfolio_manager.py # Portfolio management agent
+│   │   ├── risk_manager.py # Risk management agent
+│   │   ├── technicals.py # Technical analysis agent
+│   ├── tools/ # Agent tools
+│   │   ├── api.py # API tools
+│   ├── backtester.py # Backtesting tools
+│   ├── main.py # Main entry point
 ├── pyproject.toml # Poetry configuration
+├── poetry.lock # Poetry lock file
 ├── .env.example # Environment variables
+├── .gitignore # Git ignore file
 └── README.md # Documentation
 ```
 
