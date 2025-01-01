@@ -20,7 +20,11 @@ def fundamentals_agent(state: AgentState):
     net_margin = metrics.get("net_margin")
     operating_margin = metrics.get("operating_margin")
 
-    thresholds = [(return_on_equity, 0.15), (net_margin, 0.20), (operating_margin, 0.15)]
+    thresholds = [
+        (return_on_equity, 0.15),  # Strong ROE above 15%
+        (net_margin, 0.20),  # Healthy profit margins
+        (operating_margin, 0.15)  # Strong operating efficiency
+    ]
     profitability_score = sum(
         metric is not None and metric > threshold
         for metric, threshold in thresholds
@@ -39,13 +43,19 @@ def fundamentals_agent(state: AgentState):
     }
     
     # 2. Growth Analysis
-    growth_score = 0
-    if metrics["revenue_growth"] and metrics["revenue_growth"] > 0.10:  # 10% revenue growth
-        growth_score += 1
-    if metrics["earnings_growth"] and metrics["earnings_growth"] > 0.10:  # 10% earnings growth
-        growth_score += 1
-    if metrics["book_value_growth"] and metrics["book_value_growth"] > 0.10:  # 10% book value growth
-        growth_score += 1
+    revenue_growth = metrics.get("revenue_growth")
+    earnings_growth = metrics.get("earnings_growth")
+    book_value_growth = metrics.get("book_value_growth")
+
+    thresholds = [
+        (revenue_growth, 0.10),  # 10% revenue growth
+        (earnings_growth, 0.10),  # 10% earnings growth
+        (book_value_growth, 0.10)  # 10% book value growth
+    ]
+    growth_score = sum(
+        metric is not None and metric > threshold
+        for metric, threshold in thresholds
+    )
         
     signals.append('bullish' if growth_score >= 2 else 'bearish' if growth_score == 0 else 'neutral')
     reasoning["growth_signal"] = {
@@ -58,13 +68,18 @@ def fundamentals_agent(state: AgentState):
     }
     
     # 3. Financial Health
+    current_ratio = metrics.get("current_ratio")
+    debt_to_equity = metrics.get("debt_to_equity")
+    free_cash_flow_per_share = metrics.get("free_cash_flow_per_share")
+    earnings_per_share = metrics.get("earnings_per_share")
+
     health_score = 0
-    if metrics["current_ratio"] and metrics["current_ratio"] > 1.5:  # Strong liquidity
+    if current_ratio and current_ratio > 1.5:  # Strong liquidity
         health_score += 1
-    if metrics["debt_to_equity"] and metrics["debt_to_equity"] < 0.5:  # Conservative debt levels
+    if debt_to_equity and debt_to_equity < 0.5:  # Conservative debt levels
         health_score += 1
-    if (metrics["free_cash_flow_per_share"] and metrics["earnings_per_share"] and
-            metrics["free_cash_flow_per_share"] > metrics["earnings_per_share"] * 0.8):  # Strong FCF conversion
+    if (free_cash_flow_per_share and earnings_per_share and
+            free_cash_flow_per_share > earnings_per_share * 0.8):  # Strong FCF conversion
         health_score += 1
         
     signals.append('bullish' if health_score >= 2 else 'bearish' if health_score == 0 else 'neutral')
@@ -78,17 +93,19 @@ def fundamentals_agent(state: AgentState):
     }
     
     # 4. Price to X ratios
-    pe_ratio = metrics.get("price_to_earnings_ratio", None)
-    pb_ratio = metrics.get("price_to_book_ratio", None)
-    ps_ratio = metrics.get("price_to_sales_ratio", None)
-    
-    price_ratio_score = 0
-    if pe_ratio and pe_ratio < 25:  # Reasonable P/E ratio
-        price_ratio_score += 1
-    if pb_ratio and pb_ratio < 3:  # Reasonable P/B ratio
-        price_ratio_score += 1
-    if ps_ratio and ps_ratio < 5:  # Reasonable P/S ratio
-        price_ratio_score += 1
+    pe_ratio = metrics.get("price_to_earnings_ratio")
+    pb_ratio = metrics.get("price_to_book_ratio")
+    ps_ratio = metrics.get("price_to_sales_ratio")
+
+    thresholds = [
+        (pe_ratio, 25),  # Reasonable P/E ratio
+        (pb_ratio, 3),  # Reasonable P/B ratio
+        (ps_ratio, 5)  # Reasonable P/S ratio
+    ]
+    price_ratio_score = sum(
+        metric is not None and metric > threshold
+        for metric, threshold in thresholds
+    )
         
     signals.append('bullish' if price_ratio_score >= 2 else 'bearish' if price_ratio_score == 0 else 'neutral')
     reasoning["price_ratios_signal"] = {
