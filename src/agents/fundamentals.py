@@ -16,12 +16,16 @@ def fundamentals_agent(state: AgentState):
     reasoning = {}
     
     # 1. Profitability Analysis
+    return_on_equity = metrics.get("return_on_equity", None)
+    net_margin = metrics.get("net_margin", None)
+    operating_margin = metrics.get("operating_margin", None)
+
     profitability_score = 0
-    if metrics["return_on_equity"] and metrics["return_on_equity"] > 0.15:  # Strong ROE above 15%
+    if return_on_equity and return_on_equity > 0.15:  # Strong ROE above 15%
         profitability_score += 1
-    if metrics["net_margin"] and metrics["net_margin"] > 0.20:  # Healthy profit margins
+    if net_margin and net_margin > 0.20:  # Healthy profit margins
         profitability_score += 1
-    if metrics["operating_margin"] and metrics["operating_margin"] > 0.15:  # Strong operating efficiency
+    if operating_margin and operating_margin > 0.15:  # Strong operating efficiency
         profitability_score += 1
         
     signals.append('bullish' if profitability_score >= 2 else 'bearish' if profitability_score == 0 else 'neutral')
