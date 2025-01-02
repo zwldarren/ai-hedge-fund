@@ -9,7 +9,7 @@ import json
 import pandas as pd
 import numpy as np
 
-from tools.api import prices_to_df
+from tools.api import get_prices, prices_to_df
 
 
 ##### Technical Analyst #####
@@ -24,7 +24,17 @@ def technical_analyst_agent(state: AgentState):
     """
     show_reasoning = state["metadata"]["show_reasoning"]
     data = state["data"]
-    prices = data["prices"]
+    start_date = data["start_date"]
+    end_date = data["end_date"]
+
+    # Get the historical price data
+    prices = get_prices(
+        ticker=data["ticker"], 
+        start_date=start_date, 
+        end_date=end_date,
+    )
+
+    # Convert prices to a DataFrame
     prices_df = prices_to_df(prices)
     
     # Calculate indicators

@@ -12,24 +12,8 @@ def market_data_agent(state: AgentState):
     """Responsible for gathering and preprocessing market data"""
     messages = state["messages"]
     data = state["data"]
-
-    # Set default dates
-    end_date = data["end_date"] or datetime.now().strftime('%Y-%m-%d')
-    if not data["start_date"]:
-        # Calculate 3 months before end_date
-        end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
-        start_date = end_date_obj.replace(month=end_date_obj.month - 3) if end_date_obj.month > 3 else \
-            end_date_obj.replace(year=end_date_obj.year - 1, month=end_date_obj.month + 9)
-        start_date = start_date.strftime('%Y-%m-%d')
-    else:
-        start_date = data["start_date"]
-
-    # Get the historical price data
-    prices = get_prices(
-        ticker=data["ticker"], 
-        start_date=start_date, 
-        end_date=end_date,
-    )
+    start_date = data["start_date"]
+    end_date = data["end_date"]
 
     # Get the financial metrics
     financial_metrics = get_financial_metrics(
@@ -63,7 +47,6 @@ def market_data_agent(state: AgentState):
         "messages": messages,
         "data": {
             **data, 
-            "prices": prices, 
             "start_date": start_date, 
             "end_date": end_date,
             "financial_metrics": financial_metrics,

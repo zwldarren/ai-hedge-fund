@@ -85,17 +85,30 @@ if __name__ == "__main__":
             datetime.strptime(args.end_date, '%Y-%m-%d')
         except ValueError:
             raise ValueError("End date must be in YYYY-MM-DD format")
+        
+
+    # Set the start and end dates
+    end_date = args.end_date or datetime.now().strftime('%Y-%m-%d')
+    if not args.start_date:
+        # Calculate 3 months before end_date
+        end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
+        start_date = end_date_obj.replace(month=end_date_obj.month - 3) if end_date_obj.month > 3 else \
+            end_date_obj.replace(year=end_date_obj.year - 1, month=end_date_obj.month + 9)
+        start_date = start_date.strftime('%Y-%m-%d')
+    else:
+        start_date = args.start_date
     
-    # Sample portfolio - you might want to make this configurable too
+    # TODO: Make this configurable via args
     portfolio = {
         "cash": 100000.0,  # $100,000 initial cash
         "stock": 0         # No initial stock position
     }
     
+    # Run the hedge fund
     result = run_hedge_fund(
         ticker=args.ticker,
-        start_date=args.start_date,
-        end_date=args.end_date,
+        start_date=start_date,
+        end_date=end_date,
         portfolio=portfolio,
         show_reasoning=args.show_reasoning
     )
