@@ -9,14 +9,19 @@ import numpy as np
 
 import json
 
+from tools.api import get_insider_trades
+
 ##### Sentiment Agent #####
 def sentiment_agent(state: AgentState):
     """Analyzes market sentiment and generates trading signals."""
     data = state["data"]
-    insider_trades = data["insider_trades"]
-    show_reasoning = state["metadata"]["show_reasoning"]
-
-    # Loop through the insider trades, if transaction_shares is negative, then it is a sell, which is bearish, if positive, then it is a buy, which is bullish
+    end_date = data["end_date"]
+    # Get the insider trades
+    insider_trades = get_insider_trades(
+        ticker=data["ticker"], 
+        end_date=end_date,
+        limit=5,
+    )
 
     # Get the signals from the insider trades
     transaction_shares = pd.Series([t['transaction_shares'] for t in insider_trades]).dropna()
@@ -44,7 +49,7 @@ def sentiment_agent(state: AgentState):
     }
 
     # Print the reasoning if the flag is set
-    if show_reasoning:
+    if state["metadata"]["show_reasoning"]:
         show_agent_reasoning(message_content, "Sentiment Analysis Agent")
 
     # Create the sentiment message

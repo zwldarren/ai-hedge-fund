@@ -14,13 +14,6 @@ def market_data_agent(state: AgentState):
     start_date = data["start_date"]
     end_date = data["end_date"]
 
-    # Get the insider trades
-    insider_trades = get_insider_trades(
-        ticker=data["ticker"], 
-        end_date=end_date,
-        limit=5,
-    )
-
     # Get the market cap
     market_cap = get_market_cap(
         ticker=data["ticker"],
@@ -40,7 +33,6 @@ def market_data_agent(state: AgentState):
             **data, 
             "start_date": start_date, 
             "end_date": end_date,
-            "insider_trades": insider_trades,
             "market_cap": market_cap,
             "financial_line_items": financial_line_items,
         }
