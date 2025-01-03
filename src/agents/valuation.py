@@ -2,16 +2,14 @@ from langchain_core.messages import HumanMessage
 from agents.state import AgentState, show_agent_reasoning
 import json
 
-from tools.api import get_financial_metrics, get_market_cap
+from tools.api import get_financial_metrics, get_market_cap, search_line_items
 
 def valuation_agent(state: AgentState):
     """Performs detailed valuation analysis using multiple methodologies."""
     data = state["data"]
-    current_financial_line_item = data["financial_line_items"][0]
-    previous_financial_line_item = data["financial_line_items"][1]
     end_date = data["end_date"]
 
-    # Get the financial metrics
+    # Fetch the financial metrics
     financial_metrics = get_financial_metrics(
         ticker=data["ticker"], 
         report_period=end_date, 
@@ -21,6 +19,18 @@ def valuation_agent(state: AgentState):
 
     # Pull the most recent financial metrics
     metrics = financial_metrics[0]
+
+    # Fetch the specific line_items that we need for valuation purposes
+    financial_line_items = search_line_items(
+        ticker=data["ticker"], 
+        line_items=["free_cash_flow", "net_income", "depreciation_and_amortization", "capital_expenditure", "working_capital"],
+        period='ttm',
+        limit=2,
+    )
+
+    # Pull the current and previous financial line items
+    current_financial_line_item = financial_line_items[0]
+    previous_financial_line_item = financial_line_items[1]
 
     # Calculate working capital change
     working_capital_change = (current_financial_line_item.get('working_capital') or 0) - (previous_financial_line_item.get('working_capital') or 0)
