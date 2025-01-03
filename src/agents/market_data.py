@@ -13,12 +13,7 @@ def market_data_agent(state: AgentState):
     data = state["data"]
     start_date = data["start_date"]
     end_date = data["end_date"]
-
-    # Get the market cap
-    market_cap = get_market_cap(
-        ticker=data["ticker"],
-    )
-
+    
     # Get the line_items
     financial_line_items = search_line_items(
         ticker=data["ticker"], 
@@ -33,7 +28,6 @@ def market_data_agent(state: AgentState):
             **data, 
             "start_date": start_date, 
             "end_date": end_date,
-            "market_cap": market_cap,
             "financial_line_items": financial_line_items,
         }
     }
