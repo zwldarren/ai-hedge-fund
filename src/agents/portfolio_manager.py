@@ -2,7 +2,7 @@ from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai.chat_models import ChatOpenAI
 
-from agents.state import AgentState, show_agent_reasoning
+from graph.state import AgentState, show_agent_reasoning
 
 
 ##### Portfolio Management Agent #####

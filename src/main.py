@@ -2,12 +2,11 @@ from langchain_core.messages import HumanMessage
 from langgraph.graph import END, StateGraph
 
 from agents.fundamentals import fundamentals_agent
-from agents.market_data import market_data_agent
 from agents.portfolio_manager import portfolio_management_agent
 from agents.technicals import technical_analyst_agent
 from agents.risk_manager import risk_management_agent
 from agents.sentiment import sentiment_agent
-from agents.state import AgentState
+from graph.state import AgentState
 from agents.valuation import valuation_agent
 
 import argparse
@@ -39,8 +38,12 @@ def run_hedge_fund(ticker: str, start_date: str, end_date: str, portfolio: dict,
 # Define the new workflow
 workflow = StateGraph(AgentState)
 
+def start(state: AgentState):
+    """Initialize the workflow with the input message."""
+    return state
+
 # Add nodes
-workflow.add_node("market_data_agent", market_data_agent)
+workflow.add_node("start_node", start)
 workflow.add_node("technical_analyst_agent", technical_analyst_agent)
 workflow.add_node("fundamentals_agent", fundamentals_agent)
 workflow.add_node("sentiment_agent", sentiment_agent)
@@ -49,11 +52,11 @@ workflow.add_node("portfolio_management_agent", portfolio_management_agent)
 workflow.add_node("valuation_agent", valuation_agent)
 
 # Define the workflow
-workflow.set_entry_point("market_data_agent")
-workflow.add_edge("market_data_agent", "technical_analyst_agent")
-workflow.add_edge("market_data_agent", "fundamentals_agent")
-workflow.add_edge("market_data_agent", "sentiment_agent")
-workflow.add_edge("market_data_agent", "valuation_agent")
+workflow.set_entry_point("start_node")
+workflow.add_edge("start_node", "technical_analyst_agent")
+workflow.add_edge("start_node", "fundamentals_agent")
+workflow.add_edge("start_node", "sentiment_agent")
+workflow.add_edge("start_node", "valuation_agent")
 workflow.add_edge("technical_analyst_agent", "risk_management_agent")
 workflow.add_edge("fundamentals_agent", "risk_management_agent")
 workflow.add_edge("sentiment_agent", "risk_management_agent")
