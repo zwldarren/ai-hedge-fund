@@ -16,12 +16,12 @@ class Backtester:
         self.portfolio = {"cash": initial_capital, "stock": 0}
         self.portfolio_values = []
 
-    def parse_action(self, agent_output):
+    def parse_agent_response(self, agent_output):
         try:
             # Expect JSON output from agent
             import json
             decision = json.loads(agent_output)
-            return decision["action"], decision["quantity"]
+            return decision
         except:
             print(f"Error parsing action: {agent_output}")
             return "hold", 0
@@ -55,21 +55,22 @@ class Backtester:
         dates = pd.date_range(self.start_date, self.end_date, freq="B")
 
         print("\nStarting backtest...")
-        print(f"{'Date':<12} {'Ticker':<6} {'Action':<6} {'Quantity':>8} {'Price':>8} {'Cash':>12} {'Stock':>8} {'Total Value':>12}")
-        print("-" * 100)
+        print(f"{'Date':<12} {'Ticker':<6} {'Action':<6} {'Quantity':>8} {'Price':>8} {'Cash':>12} {'Stock':>8} {'Total Value':>12} {'Bullish':>8} {'Bearish':>8} {'Neutral':>8}")
+        print("-" * 110)
 
         for current_date in dates:
             lookback_start = (current_date - timedelta(days=30)).strftime("%Y-%m-%d")
             current_date_str = current_date.strftime("%Y-%m-%d")
 
-            agent_output = self.agent(
+            output = self.agent(
                 ticker=self.ticker,
                 start_date=lookback_start,
                 end_date=current_date_str,
                 portfolio=self.portfolio
             )
 
-            action, quantity = self.parse_action(agent_output)
+            agent_decision = output["decision"]
+            action, quantity = agent_decision["action"], agent_decision["quantity"]
             df = get_price_data(self.ticker, lookback_start, current_date_str)
             current_price = df.iloc[-1]['close']
 
@@ -80,10 +81,16 @@ class Backtester:
             total_value = self.portfolio["cash"] + self.portfolio["stock"] * current_price
             self.portfolio["portfolio_value"] = total_value
 
+            # Get the signals from the analyst_signals and print them
+            analyst_signals = output["analyst_signals"]
+            bullish_signals = [signal for signal in analyst_signals.values() if signal.get("signal") == "bullish"]
+            bearish_signals = [signal for signal in analyst_signals.values() if signal.get("signal") == "bearish"]
+            neutral_signals = [signal for signal in analyst_signals.values() if signal.get("signal") == "neutral"]
+
             # Log the current state with executed quantity
             print(
                 f"{current_date.strftime('%Y-%m-%d'):<12} {self.ticker:<6} {action:<6} {executed_quantity:>8} {current_price:>8.2f} "
-                f"{self.portfolio['cash']:>12.2f} {self.portfolio['stock']:>8} {total_value:>12.2f}"
+                f"{self.portfolio['cash']:>12.2f} {self.portfolio['stock']:>8} {total_value:>12.2f} {len(bullish_signals):>8} {len(bearish_signals):>8} {len(neutral_signals):>8}"
             )
 
             # Record the portfolio value
