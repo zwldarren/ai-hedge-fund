@@ -8,7 +8,6 @@ from agents.state import AgentState, show_agent_reasoning
 ##### Portfolio Management Agent #####
 def portfolio_management_agent(state: AgentState):
     """Makes final trading decisions and generates orders"""
-    show_reasoning = state["metadata"]["show_reasoning"]
     portfolio = state["data"]["portfolio"]
 
     # Get the technical analyst, fundamentals agent, and risk management agent messages
@@ -118,7 +117,7 @@ def portfolio_management_agent(state: AgentState):
     )
 
     # Print the decision if the flag is set
-    if show_reasoning:
+    if state["metadata"]["show_reasoning"]:
         show_agent_reasoning(message.content, "Portfolio Management Agent")
 
     return {"messages": state["messages"] + [message]}

@@ -6,7 +6,6 @@ from tools.api import get_financial_metrics
 
 def valuation_agent(state: AgentState):
     """Performs detailed valuation analysis using multiple methodologies."""
-    show_reasoning = state["metadata"]["show_reasoning"]
     data = state["data"]
     current_financial_line_item = data["financial_line_items"][0]
     previous_financial_line_item = data["financial_line_items"][1]
@@ -82,7 +81,7 @@ def valuation_agent(state: AgentState):
         name="valuation_agent",
     )
 
-    if show_reasoning:
+    if state["metadata"]["show_reasoning"]:
         show_agent_reasoning(message_content, "Valuation Analysis Agent")
 
     return {

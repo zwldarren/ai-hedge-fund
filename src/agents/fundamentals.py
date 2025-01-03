@@ -9,7 +9,6 @@ from tools.api import get_financial_metrics
 ##### Fundamental Agent #####
 def fundamentals_agent(state: AgentState):
     """Analyzes fundamental data and generates trading signals."""
-    show_reasoning = state["metadata"]["show_reasoning"]
     data = state["data"]
     end_date = data["end_date"]
 
@@ -160,7 +159,7 @@ def fundamentals_agent(state: AgentState):
     )
     
     # Print the reasoning if the flag is set
-    if show_reasoning:
+    if state["metadata"]["show_reasoning"]:
         show_agent_reasoning(message_content, "Fundamental Analysis Agent")
     
     return {

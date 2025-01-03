@@ -22,7 +22,6 @@ def technical_analyst_agent(state: AgentState):
     4. Volatility Analysis
     5. Statistical Arbitrage Signals
     """
-    show_reasoning = state["metadata"]["show_reasoning"]
     data = state["data"]
     start_date = data["start_date"]
     end_date = data["end_date"]
@@ -205,7 +204,7 @@ def technical_analyst_agent(state: AgentState):
         name="technical_analyst_agent",
     )
 
-    if show_reasoning:
+    if state["metadata"]["show_reasoning"]:
         show_agent_reasoning(analysis_report, "Technical Analyst")
     
     return {
