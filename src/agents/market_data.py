@@ -2,9 +2,8 @@
 from langchain_openai.chat_models import ChatOpenAI
 
 from agents.state import AgentState
-from tools.api import search_line_items, get_financial_metrics, get_insider_trades, get_market_cap, get_prices
+from tools.api import search_line_items, get_insider_trades, get_market_cap
 
-from datetime import datetime
 
 llm = ChatOpenAI(model="gpt-4o")
 
@@ -14,14 +13,6 @@ def market_data_agent(state: AgentState):
     data = state["data"]
     start_date = data["start_date"]
     end_date = data["end_date"]
-
-    # Get the financial metrics
-    financial_metrics = get_financial_metrics(
-        ticker=data["ticker"], 
-        report_period=end_date, 
-        period='ttm', 
-        limit=1,
-    )
 
     # Get the insider trades
     insider_trades = get_insider_trades(
@@ -49,7 +40,6 @@ def market_data_agent(state: AgentState):
             **data, 
             "start_date": start_date, 
             "end_date": end_date,
-            "financial_metrics": financial_metrics,
             "insider_trades": insider_trades,
             "market_cap": market_cap,
             "financial_line_items": financial_line_items,

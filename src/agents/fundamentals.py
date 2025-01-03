@@ -4,12 +4,25 @@ from agents.state import AgentState, show_agent_reasoning
 
 import json
 
+from tools.api import get_financial_metrics
+
 ##### Fundamental Agent #####
 def fundamentals_agent(state: AgentState):
     """Analyzes fundamental data and generates trading signals."""
     show_reasoning = state["metadata"]["show_reasoning"]
     data = state["data"]
-    metrics = data["financial_metrics"][0]
+    end_date = data["end_date"]
+
+    # Get the financial metrics
+    financial_metrics = get_financial_metrics(
+        ticker=data["ticker"], 
+        report_period=end_date, 
+        period='ttm', 
+        limit=1,
+    )
+
+    # Pull the most recent financial metrics
+    metrics = financial_metrics[0]
 
     # Initialize signals list for different fundamental aspects
     signals = []
