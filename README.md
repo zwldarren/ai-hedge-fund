@@ -82,6 +82,9 @@ For any other ticker, you will need to set the `FINANCIAL_DATASETS_API_KEY` in t
 poetry run python src/main.py --ticker AAPL
 ```
 
+**Example Output:**
+<img width="992" alt="Screenshot 2025-01-06 at 5 50 17 PM" src="https://github.com/user-attachments/assets/e8ca04bf-9989-4a7d-a8b4-34e04666663b" />
+
 You can also specify a `--show-reasoning` flag to print the reasoning of each agent to the console.
 
 ```bash
