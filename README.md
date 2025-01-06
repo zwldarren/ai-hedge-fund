@@ -83,7 +83,7 @@ poetry run python src/main.py --ticker AAPL
 ```
 
 **Example Output:**
-<img width="373" alt="Screenshot 2025-01-06 at 5 51 37 PM" src="https://github.com/user-attachments/assets/e887e8e3-b601-4c82-bc0d-a5bf009cbcb6" />
+<img width="992" alt="Screenshot 2025-01-06 at 5 50 17 PM" src="https://github.com/user-attachments/assets/e8ca04bf-9989-4a7d-a8b4-34e04666663b" />
 
 You can also specify a `--show-reasoning` flag to print the reasoning of each agent to the console.
 
