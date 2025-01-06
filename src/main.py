@@ -11,6 +11,7 @@ from agents.valuation import valuation_agent
 
 import argparse
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 
 def parse_hedge_fund_response(response):
@@ -123,14 +124,7 @@ if __name__ == "__main__":
     if not args.start_date:
         # Calculate 3 months before end_date
         end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
-        start_date = (
-            end_date_obj.replace(month=end_date_obj.month - 3)
-            if end_date_obj.month > 3
-            else end_date_obj.replace(
-                year=end_date_obj.year - 1, month=end_date_obj.month + 9
-            )
-        )
-        start_date = start_date.strftime("%Y-%m-%d")
+        start_date = (end_date_obj - relativedelta(months=3)).strftime("%Y-%m-%d")
     else:
         start_date = args.start_date
 
