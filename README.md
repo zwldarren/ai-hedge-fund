@@ -78,7 +78,6 @@ For any other ticker, you will need to set the `FINANCIAL_DATASETS_API_KEY` in t
 ## Usage
 
 ### Running the Hedge Fund
-
 ```bash
 poetry run python src/main.py --ticker AAPL
 ```
@@ -101,18 +100,7 @@ poetry run python src/backtester.py --ticker AAPL
 ```
 
 **Example Output:**
-```
-Starting backtest...
-Date         Ticker Action Quantity    Price         Cash    Stock  Total Value
-----------------------------------------------------------------------
-2024-01-01   AAPL   buy       519.0   192.53        76.93    519.0    100000.00
-2024-01-02   AAPL   hold          0   185.64        76.93    519.0     96424.09
-2024-01-03   AAPL   hold          0   184.25        76.93    519.0     95702.68
-2024-01-04   AAPL   hold          0   181.91        76.93    519.0     94488.22
-2024-01-05   AAPL   hold          0   181.18        76.93    519.0     94109.35
-2024-01-08   AAPL   sell        519   185.56     96382.57      0.0     96382.57
-2024-01-09   AAPL   buy       520.0   185.14       109.77    520.0     96382.57
-```
+<img width="941" alt="Screenshot 2025-01-06 at 5 47 52 PM" src="https://github.com/user-attachments/assets/00e794ea-8628-44e6-9a84-8f8a31ad3b47" />
 
 You can optionally specify the start and end dates to backtest over a specific time period.
 
