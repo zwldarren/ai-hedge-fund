@@ -8,6 +8,7 @@ from colorama import Fore, Back, Style, init
 
 from main import run_hedge_fund
 from tools.api import get_price_data
+from utils.display import print_backtest_results, format_backtest_row
 
 init(autoreset=True)
 
@@ -60,11 +61,8 @@ class Backtester:
 
     def run_backtest(self):
         dates = pd.date_range(self.start_date, self.end_date, freq="B")
-        
-        # Create a list to store rows for tabulation
         table_rows = []
-        headers = ["Date", "Ticker", "Action", "Quantity", "Price", "Cash", "Stock", "Total Value", "Bullish", "Bearish", "Neutral"]
-
+        
         print("\nStarting backtest...")
 
         for current_date in dates:
@@ -87,54 +85,32 @@ class Backtester:
             executed_quantity = self.execute_trade(action, quantity, current_price)
 
             # Update total portfolio value
-            total_value = (
-                self.portfolio["cash"] + self.portfolio["stock"] * current_price
-            )
+            total_value = self.portfolio["cash"] + self.portfolio["stock"] * current_price
             self.portfolio["portfolio_value"] = total_value
 
-            # Get the signals from the analyst_signals and print them
+            # Count signals
             analyst_signals = output["analyst_signals"]
-            bullish_signals = [
-                signal
-                for signal in analyst_signals.values()
-                if signal.get("signal") == "bullish"
-            ]
-            bearish_signals = [
-                signal
-                for signal in analyst_signals.values()
-                if signal.get("signal") == "bearish"
-            ]
-            neutral_signals = [
-                signal
-                for signal in analyst_signals.values()
-                if signal.get("signal") == "neutral"
-            ]
+            bullish_count = len([s for s in analyst_signals.values() if s.get("signal") == "bullish"])
+            bearish_count = len([s for s in analyst_signals.values() if s.get("signal") == "bearish"])
+            neutral_count = len([s for s in analyst_signals.values() if s.get("signal") == "neutral"])
 
-            # Color-coded row data
-            action_color = {
-                "buy": Fore.GREEN,
-                "sell": Fore.RED,
-                "hold": Fore.YELLOW
-            }.get(action, "")
+            # Format and add row
+            table_rows.append(format_backtest_row(
+                date=current_date.strftime('%Y-%m-%d'),
+                ticker=self.ticker,
+                action=action,
+                quantity=executed_quantity,
+                price=current_price,
+                cash=self.portfolio['cash'],
+                stock=self.portfolio['stock'],
+                total_value=total_value,
+                bullish_count=bullish_count,
+                bearish_count=bearish_count,
+                neutral_count=neutral_count
+            ))
 
-            # Format row with colors
-            table_rows.append([
-                current_date.strftime('%Y-%m-%d'),
-                f"{Fore.CYAN}{self.ticker}{Style.RESET_ALL}",
-                f"{action_color}{action}{Style.RESET_ALL}",
-                f"{action_color}{executed_quantity}{Style.RESET_ALL}",
-                f"{Fore.WHITE}{current_price:.2f}{Style.RESET_ALL}",
-                f"{Fore.YELLOW}{self.portfolio['cash']:.2f}{Style.RESET_ALL}",
-                f"{Fore.WHITE}{self.portfolio['stock']}{Style.RESET_ALL}",
-                f"{Fore.YELLOW}{total_value:.2f}{Style.RESET_ALL}",
-                f"{Fore.GREEN}{len(bullish_signals)}{Style.RESET_ALL}",
-                f"{Fore.RED}{len(bearish_signals)}{Style.RESET_ALL}",
-                f"{Fore.BLUE}{len(neutral_signals)}{Style.RESET_ALL}"
-            ])
-
-            # Clear screen and display colored table
-            print("\033[H\033[J")
-            print(f"{tabulate(table_rows, headers=headers, tablefmt='grid')}{Style.RESET_ALL}")
+            # Display the updated table
+            print_backtest_results(table_rows)
 
             # Record the portfolio value
             self.portfolio_values.append(

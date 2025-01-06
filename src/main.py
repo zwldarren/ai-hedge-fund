@@ -1,5 +1,6 @@
 from langchain_core.messages import HumanMessage
 from langgraph.graph import END, StateGraph
+from colorama import Fore, Back, Style, init
 
 from agents.fundamentals import fundamentals_agent
 from agents.portfolio_manager import portfolio_management_agent
@@ -8,11 +9,14 @@ from agents.risk_manager import risk_management_agent
 from agents.sentiment import sentiment_agent
 from graph.state import AgentState
 from agents.valuation import valuation_agent
+from utils.display import print_trading_output
 
 import argparse
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from tabulate import tabulate
+
+init(autoreset=True)
 
 
 def parse_hedge_fund_response(response):
@@ -143,35 +147,4 @@ if __name__ == "__main__":
         portfolio=portfolio,
         show_reasoning=args.show_reasoning,
     )
-    print("\nFinal Result:")
-    decision = result.get("decision")
-    
-    # Prepare data for tabulation
-    table_data = []
-    for agent, signal in result.get("analyst_signals").items():
-        agent_name = agent.replace("_agent", "").replace("_", " ").title()
-        table_data.append([
-            agent_name,
-            signal.get('signal', '').upper(),
-            f"{signal.get('confidence')}%"
-        ])
-    
-    print("\nANALYST SIGNALS:")
-    print(tabulate(table_data, 
-                  headers=['Analyst', 'Signal', 'Confidence'],
-                  tablefmt='grid',
-                  colalign=("left", "center", "right")))
-    
-    # Prepare trading decision data for tabulation
-    decision_data = [
-        ["Action", decision.get('action').upper()],
-        ["Quantity", decision.get('quantity')],
-        ["Confidence", f"{decision.get('confidence'):.1f}%"],
-    ]
-    
-    print("\nTRADING DECISION:")
-    print(tabulate(decision_data, 
-                  tablefmt='grid',
-                  colalign=("left", "right")))
-    
-    print(f"\nReasoning: {decision.get('reasoning')}")
+    print_trading_output(result)
