@@ -11,18 +11,20 @@ from tools.api import get_insider_trades
 
 def sentiment_agent(state: AgentState):
     """Analyzes market sentiment and generates trading signals."""
-    data = state["data"]
-    end_date = data["end_date"]
+    data = state.get("data", {})
+    end_date = data.get("end_date")
+    ticker = data.get("ticker")
+
     # Get the insider trades
     insider_trades = get_insider_trades(
-        ticker=data["ticker"],
+        ticker=ticker,
         end_date=end_date,
         limit=5,
     )
 
     # Get the signals from the insider trades
     transaction_shares = pd.Series(
-        [t["transaction_shares"] for t in insider_trades]
+        [t.get("transaction_shares") for t in insider_trades]
     ).dropna()
     bearish_condition = transaction_shares < 0
     signals = np.where(bearish_condition, "bearish", "bullish").tolist()
