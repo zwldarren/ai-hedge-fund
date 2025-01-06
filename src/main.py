@@ -12,6 +12,7 @@ from agents.valuation import valuation_agent
 import argparse
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from tabulate import tabulate
 
 
 def parse_hedge_fund_response(response):
@@ -145,16 +146,32 @@ if __name__ == "__main__":
     print("\nFinal Result:")
     decision = result.get("decision")
     
-    print("\nANALYST SIGNALS:")
+    # Prepare data for tabulation
+    table_data = []
     for agent, signal in result.get("analyst_signals").items():
         agent_name = agent.replace("_agent", "").replace("_", " ").title()
-        print(f"\n{agent_name}:")
-        print(f"Signal: {signal.get('signal', '').upper()}")
-        print(f"Confidence: {signal.get('confidence')}%")
+        table_data.append([
+            agent_name,
+            signal.get('signal', '').upper(),
+            f"{signal.get('confidence')}%"
+        ])
     
-    # Print the decision
+    print("\nANALYST SIGNALS:")
+    print(tabulate(table_data, 
+                  headers=['Analyst', 'Signal', 'Confidence'],
+                  tablefmt='grid',
+                  colalign=("left", "center", "right")))
+    
+    # Prepare trading decision data for tabulation
+    decision_data = [
+        ["Action", decision.get('action').upper()],
+        ["Quantity", decision.get('quantity')],
+        ["Confidence", f"{decision.get('confidence'):.1f}%"],
+    ]
+    
     print("\nTRADING DECISION:")
-    print(f"Action: {decision.get('action').upper()}")
-    print(f"Quantity: {decision.get('quantity')}")
-    print(f"Confidence: {decision.get('confidence'):.1f}")
+    print(tabulate(decision_data, 
+                  tablefmt='grid',
+                  colalign=("left", "right")))
+    
     print(f"\nReasoning: {decision.get('reasoning')}")
