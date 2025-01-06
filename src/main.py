@@ -151,7 +151,6 @@ if __name__ == "__main__":
         print(f"\n{agent_name}:")
         print(f"Signal: {signal.get('signal', '').upper()}")
         print(f"Confidence: {signal.get('confidence')}%")
-
     
     # Print the decision
     print("\nTRADING DECISION:")
