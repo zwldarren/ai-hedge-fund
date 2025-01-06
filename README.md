@@ -62,7 +62,10 @@ cp .env.example .env
 
 Set the API keys in the .env file:
 ```
+# Get your OpenAI API key from https://platform.openai.com/
 OPENAI_API_KEY=your-openai-api-key
+
+# Get your Financial Datasets API key from https://financialdatasets.ai/
 FINANCIAL_DATASETS_API_KEY=your-financial-datasets-api-key
 ```
 
