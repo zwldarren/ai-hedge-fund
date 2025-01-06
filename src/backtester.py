@@ -3,9 +3,13 @@ from dateutil.relativedelta import relativedelta
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from tabulate import tabulate
+from colorama import Fore, Back, Style, init
 
 from main import run_hedge_fund
 from tools.api import get_price_data
+
+init(autoreset=True)
 
 
 class Backtester:
@@ -56,12 +60,12 @@ class Backtester:
 
     def run_backtest(self):
         dates = pd.date_range(self.start_date, self.end_date, freq="B")
+        
+        # Create a list to store rows for tabulation
+        table_rows = []
+        headers = ["Date", "Ticker", "Action", "Quantity", "Price", "Cash", "Stock", "Total Value", "Bullish", "Bearish", "Neutral"]
 
         print("\nStarting backtest...")
-        print(
-            f"{'Date':<12} {'Ticker':<6} {'Action':<6} {'Quantity':>8} {'Price':>8} {'Cash':>12} {'Stock':>8} {'Total Value':>12} {'Bullish':>8} {'Bearish':>8} {'Neutral':>8}"
-        )
-        print("-" * 110)
 
         for current_date in dates:
             lookback_start = (current_date - timedelta(days=30)).strftime("%Y-%m-%d")
@@ -106,11 +110,31 @@ class Backtester:
                 if signal.get("signal") == "neutral"
             ]
 
-            # Log the current state with executed quantity
-            print(
-                f"{current_date.strftime('%Y-%m-%d'):<12} {self.ticker:<6} {action:<6} {executed_quantity:>8} {current_price:>8.2f} "
-                f"{self.portfolio['cash']:>12.2f} {self.portfolio['stock']:>8} {total_value:>12.2f} {len(bullish_signals):>8} {len(bearish_signals):>8} {len(neutral_signals):>8}"
-            )
+            # Color-coded row data
+            action_color = {
+                "buy": Fore.GREEN,
+                "sell": Fore.RED,
+                "hold": Fore.YELLOW
+            }.get(action, "")
+
+            # Format row with colors
+            table_rows.append([
+                current_date.strftime('%Y-%m-%d'),
+                f"{Fore.CYAN}{self.ticker}{Style.RESET_ALL}",
+                f"{action_color}{action}{Style.RESET_ALL}",
+                f"{action_color}{executed_quantity}{Style.RESET_ALL}",
+                f"{Fore.WHITE}{current_price:.2f}{Style.RESET_ALL}",
+                f"{Fore.YELLOW}{self.portfolio['cash']:.2f}{Style.RESET_ALL}",
+                f"{Fore.WHITE}{self.portfolio['stock']}{Style.RESET_ALL}",
+                f"{Fore.YELLOW}{total_value:.2f}{Style.RESET_ALL}",
+                f"{Fore.GREEN}{len(bullish_signals)}{Style.RESET_ALL}",
+                f"{Fore.RED}{len(bearish_signals)}{Style.RESET_ALL}",
+                f"{Fore.BLUE}{len(neutral_signals)}{Style.RESET_ALL}"
+            ])
+
+            # Clear screen and display colored table
+            print("\033[H\033[J")
+            print(f"{tabulate(table_rows, headers=headers, tablefmt='grid')}{Style.RESET_ALL}")
 
             # Record the portfolio value
             self.portfolio_values.append(
