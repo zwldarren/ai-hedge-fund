@@ -58,10 +58,15 @@ poetry install
 ```bash
 # Create .env file for your API keys
 cp .env.example .env
-
-export OPENAI_API_KEY='your-api-key-here' # Get a key from https://platform.openai.com/
-export FINANCIAL_DATASETS_API_KEY='your-api-key-here' # Get a key from https://financialdatasets.ai/
 ```
+
+Set the API keys in the .env file:
+```
+OPENAI_API_KEY=your-openai-api-key
+FINANCIAL_DATASETS_API_KEY=your-financial-datasets-api-key
+```
+
+Note: You must to set the OpenAI API key for the hedge fund to work.
 
 ## Usage
 
