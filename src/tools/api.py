@@ -12,7 +12,10 @@ def get_financial_metrics(
     limit: int = 1
 ) -> List[Dict[str, Any]]:
     """Fetch financial metrics from the API."""
-    headers = {"X-API-KEY": os.environ.get("FINANCIAL_DATASETS_API_KEY")}
+    headers = {}
+    if api_key := os.environ.get("FINANCIAL_DATASETS_API_KEY"):
+        headers["X-API-KEY"] = api_key
+    
     url = (
         f"https://api.financialdatasets.ai/financial-metrics/"
         f"?ticker={ticker}"
@@ -38,7 +41,10 @@ def search_line_items(
     limit: int = 1
 ) -> List[Dict[str, Any]]:
     """Fetch cash flow statements from the API."""
-    headers = {"X-API-KEY": os.environ.get("FINANCIAL_DATASETS_API_KEY")}
+    headers = {}
+    if api_key := os.environ.get("FINANCIAL_DATASETS_API_KEY"):
+        headers["X-API-KEY"] = api_key
+
     url = "https://api.financialdatasets.ai/financials/search/line-items"
 
     body = {
@@ -66,7 +72,10 @@ def get_insider_trades(
     """
     Fetch insider trades for a given ticker and date range.
     """
-    headers = {"X-API-KEY": os.environ.get("FINANCIAL_DATASETS_API_KEY")}
+    headers = {}
+    if api_key := os.environ.get("FINANCIAL_DATASETS_API_KEY"):
+        headers["X-API-KEY"] = api_key
+    
     url = (
         f"https://api.financialdatasets.ai/insider-trades/"
         f"?ticker={ticker}"
@@ -88,7 +97,10 @@ def get_market_cap(
     ticker: str,
 ) -> List[Dict[str, Any]]:
     """Fetch market cap from the API."""
-    headers = {"X-API-KEY": os.environ.get("FINANCIAL_DATASETS_API_KEY")}
+    headers = {}
+    if api_key := os.environ.get("FINANCIAL_DATASETS_API_KEY"):
+        headers["X-API-KEY"] = api_key
+
     url = (
         f'https://api.financialdatasets.ai/company/facts'
         f'?ticker={ticker}'
@@ -111,7 +123,10 @@ def get_prices(
     end_date: str
 ) -> List[Dict[str, Any]]:
     """Fetch price data from the API."""
-    headers = {"X-API-KEY": os.environ.get("FINANCIAL_DATASETS_API_KEY")}
+    headers = {}
+    if api_key := os.environ.get("FINANCIAL_DATASETS_API_KEY"):
+        headers["X-API-KEY"] = api_key
+        
     url = (
         f"https://api.financialdatasets.ai/prices/"
         f"?ticker={ticker}"
