@@ -41,7 +41,9 @@ def sentiment_agent(state: AgentState):
 
     # Calculate confidence level based on the proportion of indicators agreeing
     total_signals = len(signals)
-    confidence = round(max(bullish_signals, bearish_signals) / total_signals, 2) * 100
+    confidence = 0  # Default confidence when there are no signals
+    if total_signals > 0:
+        confidence = round(max(bullish_signals, bearish_signals) / total_signals, 2) * 100
     reasoning = (
         f"Bullish signals: {bullish_signals}, Bearish signals: {bearish_signals}"
     )
