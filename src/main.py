@@ -130,9 +130,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--show-reasoning", action="store_true", help="Show reasoning from each agent"
     )
-    parser.add_argument(
-        "--customize", action="store_true", help="Customize which analysts to include"
-    )
 
     args = parser.parse_args()
 

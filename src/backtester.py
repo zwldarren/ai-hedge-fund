@@ -185,9 +185,6 @@ if __name__ == "__main__":
         default=100000,
         help="Initial capital amount (default: 100000)",
     )
-    parser.add_argument(
-        "--customize", action="store_true", help="Customize which analysts to include"
-    )
 
     args = parser.parse_args()
 
