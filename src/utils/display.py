@@ -1,7 +1,15 @@
 from colorama import Fore, Style
 from tabulate import tabulate
 from typing import List, Dict
+from .analysts import ANALYST_ORDER
 
+def sort_analyst_signals(signals):
+    """Sort analyst signals in a consistent order."""
+    # Create order mapping from ANALYST_ORDER
+    analyst_order = {display: idx for idx, (display, _) in enumerate(ANALYST_ORDER)}
+    analyst_order['Risk Management'] = len(ANALYST_ORDER)  # Add Risk Management at the end
+
+    return sorted(signals, key=lambda x: analyst_order.get(x[0], 999))
 
 def print_trading_output(result: dict) -> None:
     """
@@ -15,7 +23,7 @@ def print_trading_output(result: dict) -> None:
         print(f"{Fore.RED}No trading decision available{Style.RESET_ALL}")
         return
 
-    # Print Analyst Signals Table
+    # Prepare analyst signals table
     table_data = []
     for agent, signal in result.get("analyst_signals", {}).items():
         agent_name = agent.replace("_agent", "").replace("_", " ").title()
@@ -34,6 +42,9 @@ def print_trading_output(result: dict) -> None:
                 f"{Fore.YELLOW}{signal.get('confidence')}%{Style.RESET_ALL}",
             ]
         )
+
+    # Sort the signals according to the predefined order
+    table_data = sort_analyst_signals(table_data)
 
     print(f"\n{Fore.WHITE}{Style.BRIGHT}ANALYST SIGNALS:{Style.RESET_ALL}")
     print(
