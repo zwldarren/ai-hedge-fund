@@ -66,10 +66,11 @@ def portfolio_management_agent(state: AgentState):
             "portfolio_stock": portfolio["stock"],
         }
     )
-    # Invoke the LLM
+    # Create the LLM
     llm = ChatOpenAI(model="gpt-4o").with_structured_output(PortfolioManagerOutput)
     
     try:
+        # Invoke the LLM
         result = llm.invoke(prompt)
     except Exception as e:
         # Try again with same prompt
