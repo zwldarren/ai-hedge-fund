@@ -18,7 +18,7 @@ def fundamentals_agent(state: AgentState):
         ticker=data["ticker"],
         end_date=end_date,
         period="ttm",
-        limit=1,
+        limit=10,
     )
 
     # Pull the most recent financial metrics
