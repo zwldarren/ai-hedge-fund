@@ -5,7 +5,7 @@ from langchain_openai.chat_models import ChatOpenAI
 
 from graph.state import AgentState, show_agent_reasoning
 from pydantic import BaseModel, Field
-from typing import Literal
+from typing_extensions import Literal
 
 
 class PortfolioManagerOutput(BaseModel):
