@@ -116,7 +116,7 @@ def portfolio_management_agent(state: AgentState):
 
     progress.update_status("portfolio_management_agent", None, "Making trading decisions")
     # Create the LLM
-    llm = ChatOpenAI(model="gpt-4").with_structured_output(
+    llm = ChatOpenAI(model="gpt-4o").with_structured_output(
         PortfolioManagerOutput,
         method="function_calling",
     )
