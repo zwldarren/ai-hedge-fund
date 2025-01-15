@@ -26,7 +26,10 @@ def valuation_agent(state: AgentState):
             period="ttm",
         )
 
-        # Pull the most recent financial metrics
+        # Add safety check for financial metrics
+        if not financial_metrics:
+            progress.update_status("valuation_agent", ticker, "Failed: No financial metrics found")
+            continue
         metrics = financial_metrics[0]
 
         progress.update_status("valuation_agent", ticker, "Gathering line items")
@@ -44,6 +47,11 @@ def valuation_agent(state: AgentState):
             period="ttm",
             limit=2,
         )
+
+        # Add safety check for financial line items
+        if len(financial_line_items) < 2:
+            progress.update_status("valuation_agent", ticker, "Failed: Insufficient financial line items")
+            continue
 
         # Pull the current and previous financial line items
         current_financial_line_item = financial_line_items[0]
