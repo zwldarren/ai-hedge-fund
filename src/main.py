@@ -131,6 +131,12 @@ def create_workflow(selected_analysts=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the hedge fund trading system")
+    parser.add_argument(
+        "--initial-cash",
+        type=float,
+        default=100000.0,
+        help="Initial cash position. Defaults to 100000.0)"
+    )
     parser.add_argument("--tickers", type=str, required=True, help="Comma-separated list of stock ticker symbols")
     parser.add_argument(
         "--start-date",
@@ -194,10 +200,10 @@ if __name__ == "__main__":
     else:
         start_date = args.start_date
 
-    # Initialize portfolio with multiple tickers
+    # Initialize portfolio with cash amount and stock positions
     portfolio = {
-        "cash": 100000.0,  # $100,000 initial cash
-        "positions": {ticker: 0 for ticker in tickers},  # No initial stock positions
+        "cash": args.initial_cash,  # Initial cash amount
+        "positions": {ticker: 0 for ticker in tickers}  # Initial stock positions
     }
 
     # Run the hedge fund
