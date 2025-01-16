@@ -40,6 +40,10 @@ def technical_analyst_agent(state: AgentState):
             end_date=end_date,
         )
 
+        if not prices:
+            progress.update_status("technical_analyst_agent", ticker, "Failed: No price data found")
+            continue
+
         # Convert prices to a DataFrame
         prices_df = prices_to_df(prices)
 

@@ -24,6 +24,11 @@ def risk_management_agent(state: AgentState):
             start_date=data["start_date"],
             end_date=data["end_date"],
         )
+
+        if not prices:
+            progress.update_status("risk_management_agent", ticker, "Failed: No price data found")
+            continue
+
         prices_df = prices_to_df(prices)
 
         progress.update_status("risk_management_agent", ticker, "Calculating position limits")

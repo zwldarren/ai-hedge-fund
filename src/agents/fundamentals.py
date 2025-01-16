@@ -27,6 +27,10 @@ def fundamentals_agent(state: AgentState):
             limit=10,
         )
 
+        if not financial_metrics:
+            progress.update_status("fundamentals_agent", ticker, "Failed: No financial metrics found")
+            continue
+
         # Pull the most recent financial metrics
         metrics = financial_metrics[0]
 
