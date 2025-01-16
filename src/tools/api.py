@@ -42,7 +42,7 @@ def get_prices(ticker: str, start_date: str, end_date: str) -> list[Price]:
     prices = price_response.prices
 
     if not prices:
-        raise ValueError("No price data returned")
+        return []
 
     # Cache the results as dicts
     _cache.set_prices(ticker, [p.model_dump() for p in prices])
@@ -80,7 +80,7 @@ def get_financial_metrics(
     financial_metrics = metrics_response.financial_metrics
 
     if not financial_metrics:
-        raise ValueError("No financial metrics returned")
+        return []
 
     # Cache the results as dicts
     _cache.set_financial_metrics(ticker, [m.model_dump() for m in financial_metrics])
@@ -159,7 +159,7 @@ def get_insider_trades(
     response_model = InsiderTradeResponse(**data)
     insider_trades = response_model.insider_trades
     if not insider_trades:
-        raise ValueError("No insider trades returned")
+        return []
 
     # Cache the results
     _cache.set_insider_trades(ticker, [trade.model_dump() for trade in insider_trades])
@@ -174,7 +174,7 @@ def get_market_cap(
     financial_metrics = get_financial_metrics(ticker, end_date)
     market_cap = financial_metrics[0].market_cap
     if not market_cap:
-        raise ValueError("No market cap returned")
+        return None
 
     return market_cap
 

@@ -28,6 +28,10 @@ def sentiment_agent(state: AgentState):
             limit=1000,
         )
 
+        if not insider_trades:
+            progress.update_status("sentiment_agent", ticker, "Failed: No insider trades found")
+            continue
+
         progress.update_status("sentiment_agent", ticker, "Analyzing trading patterns")
 
         # Get the signals from the insider trades
