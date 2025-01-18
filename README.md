@@ -89,7 +89,7 @@ poetry run python src/main.py --ticker AAPL,MSFT,NVDA
 You can also specify a `--show-reasoning` flag to print the reasoning of each agent to the console.
 
 ```bash
-poetry run python src/main.py --ticker AAPL --show-reasoning
+poetry run python src/main.py --ticker AAPL,MSFT,NVDA --show-reasoning
 ```
 You can optionally specify the start and end dates to make decisions for a specific time period.
 

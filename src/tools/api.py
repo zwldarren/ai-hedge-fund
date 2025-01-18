@@ -124,7 +124,7 @@ def search_line_items(
     response_model = LineItemResponse(**data)
     search_results = response_model.search_results
     if not search_results:
-        raise ValueError("No search results returned")
+        return []
 
     # Cache the results
     _cache.set_line_items(ticker, [item.model_dump() for item in search_results])
