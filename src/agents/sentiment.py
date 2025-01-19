@@ -45,12 +45,20 @@ def sentiment_agent(state: AgentState):
                               np.where(sentiment == "positive", "bullish", "neutral")).tolist()
         
         progress.update_status("sentiment_agent", ticker, "Combining signals")
-        # Combine signals from both sources
-        signals = insider_signals + news_signals
+        # Combine signals from both sources with weights
+        insider_weight = 0.3
+        news_weight = 0.7
+        
+        # Calculate weighted signal counts
+        bullish_signals = (
+            insider_signals.count("bullish") * insider_weight +
+            news_signals.count("bullish") * news_weight
+        )
+        bearish_signals = (
+            insider_signals.count("bearish") * insider_weight +
+            news_signals.count("bearish") * news_weight
+        )
 
-        # Determine overall signal
-        bullish_signals = signals.count("bullish")
-        bearish_signals = signals.count("bearish")
         if bullish_signals > bearish_signals:
             overall_signal = "bullish"
         elif bearish_signals > bullish_signals:
@@ -58,12 +66,12 @@ def sentiment_agent(state: AgentState):
         else:
             overall_signal = "neutral"
 
-        # Calculate confidence level based on the proportion of indicators agreeing
-        total_signals = len(signals)
+        # Calculate confidence level based on the weighted proportion
+        total_weighted_signals = len(insider_signals) * insider_weight + len(news_signals) * news_weight
         confidence = 0  # Default confidence when there are no signals
-        if total_signals > 0:
-            confidence = round(max(bullish_signals, bearish_signals) / total_signals, 2) * 100
-        reasoning = f"Bullish signals: {bullish_signals}, Bearish signals: {bearish_signals}"
+        if total_weighted_signals > 0:
+            confidence = round(max(bullish_signals, bearish_signals) / total_weighted_signals, 2) * 100
+        reasoning = f"Weighted Bullish signals: {bullish_signals:.1f}, Weighted Bearish signals: {bearish_signals:.1f}"
 
         sentiment_analysis[ticker] = {
             "signal": overall_signal,
