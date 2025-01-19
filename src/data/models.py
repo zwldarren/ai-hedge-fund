@@ -100,6 +100,20 @@ class InsiderTradeResponse(BaseModel):
     insider_trades: list[InsiderTrade]
 
 
+class CompanyNews(BaseModel):
+    ticker: str
+    title: str
+    author: str
+    source: str
+    date: str
+    url: str
+    sentiment: str | None = None
+
+
+class CompanyNewsResponse(BaseModel):
+    news: list[CompanyNews]
+
+
 class Position(BaseModel):
     cash: float = 0.0
     shares: int = 0

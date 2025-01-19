@@ -9,6 +9,7 @@ from colorama import Fore, Style, init
 from utils.analysts import ANALYST_ORDER
 from main import run_hedge_fund
 from tools.api import (
+    get_company_news,
     get_price_data,
     get_prices,
     get_financial_metrics,
@@ -60,8 +61,11 @@ class Backtester:
             # Fetch financial metrics
             get_financial_metrics(ticker, self.end_date, limit=10)
 
-            # Fetch insider trades
-            get_insider_trades(ticker, self.end_date, limit=1000)
+            # Fetch insider trades for the entire period
+            get_insider_trades(ticker, self.end_date, start_date=self.start_date, limit=1000)
+
+            # Fetch company news for the entire period
+            get_company_news(ticker, self.end_date, start_date=self.start_date, limit=1000)
 
             # Fetch common line items used by valuation agent
             search_line_items(
@@ -331,7 +335,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--tickers",
         type=str,
-        required=True,
+        required=False,
         help="Comma-separated list of stock ticker symbols (e.g., AAPL,MSFT,GOOGL)",
     )
     parser.add_argument(
@@ -343,7 +347,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--start-date",
         type=str,
-        default=(datetime.now() - relativedelta(months=3)).strftime("%Y-%m-%d"),
+        default=(datetime.now() - relativedelta(months=12)).strftime("%Y-%m-%d"),
         help="Start date in YYYY-MM-DD format",
     )
     parser.add_argument(
@@ -356,8 +360,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Parse tickers from comma-separated string
-    tickers = [ticker.strip() for ticker in args.tickers.split(",")]
-
+    # tickers = [ticker.strip() for ticker in args.tickers.split(",")]
+    tickers = ["AAPL"]
     selected_analysts = None
     choices = questionary.checkbox(
         "Use the Space bar to select/unselect analysts.",

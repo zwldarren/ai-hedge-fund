@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import json
 
-from tools.api import get_insider_trades
+from tools.api import get_insider_trades, get_company_news
 
 
 ##### Sentiment Agent #####
@@ -28,16 +28,25 @@ def sentiment_agent(state: AgentState):
             limit=1000,
         )
 
-        if not insider_trades:
-            progress.update_status("sentiment_agent", ticker, "Failed: No insider trades found")
-            continue
-
         progress.update_status("sentiment_agent", ticker, "Analyzing trading patterns")
 
         # Get the signals from the insider trades
         transaction_shares = pd.Series([t.transaction_shares for t in insider_trades]).dropna()
-        bearish_condition = transaction_shares < 0
-        signals = np.where(bearish_condition, "bearish", "bullish").tolist()
+        insider_signals = np.where(transaction_shares < 0, "bearish", "bullish").tolist()
+
+        progress.update_status("sentiment_agent", ticker, "Fetching company news")
+
+        # Get the company news
+        company_news = get_company_news(ticker, end_date, limit=100)
+
+        # Get the sentiment from the company news
+        sentiment = pd.Series([n.sentiment for n in company_news]).dropna()
+        news_signals = np.where(sentiment == "negative", "bearish", 
+                              np.where(sentiment == "positive", "bullish", "neutral")).tolist()
+        
+        progress.update_status("sentiment_agent", ticker, "Combining signals")
+        # Combine signals from both sources
+        signals = insider_signals + news_signals
 
         # Determine overall signal
         bullish_signals = signals.count("bullish")
