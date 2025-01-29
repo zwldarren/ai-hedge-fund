@@ -76,7 +76,7 @@ GROQ_API_KEY=your-groq-api-key
 FINANCIAL_DATASETS_API_KEY=your-financial-datasets-api-key
 ```
 
-**Important**: You must to set the OpenAI API key for the hedge fund to work.
+**Important**: You must to set the OpenAI API key or Groq API key for the hedge fund to work.
 
 Financial data for AAPL, GOOGL, MSFT, NVDA, and TSLA is free and does not require an API key.
 
