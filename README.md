@@ -16,6 +16,12 @@ This system employs several agents working together:
 
 Note: the system simulates trading decisions, it does not actually trade.
 
+The system also supports multiple LLMs:
+1. gpt-4o [OpenAI]
+2. gpt-4o-mini [OpenAI]
+3. deepseek-r1 [Groq]
+4. llama-3.3-70b [Groq]
+
 [![Twitter Follow](https://img.shields.io/twitter/follow/virattt?style=social)](https://twitter.com/virattt)
 
 ## Disclaimer
