@@ -63,6 +63,9 @@ poetry install
 # Create .env file for your API keys
 cp .env.example .env
 ```
+
+4. Set your API keys:
+```bash
 # For running LLMs hosted by openai (gpt-4o, gpt-4o-mini, etc.)
 # Get your OpenAI API key from https://platform.openai.com/
 OPENAI_API_KEY=your-openai-api-key
