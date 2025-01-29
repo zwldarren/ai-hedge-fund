@@ -14,7 +14,7 @@ This system employs several agents working together:
    
 <img width="1060" alt="Screenshot 2025-01-03 at 5 39 25 PM" src="https://github.com/user-attachments/assets/4611aace-27d0-43b2-9a70-385b40336e3f" />
 
-Note: the system simulates trading decisions, it does not actually trade.
+**Note**: the system simulates trading decisions, it does not actually trade.
 
 [![Twitter Follow](https://img.shields.io/twitter/follow/virattt?style=social)](https://twitter.com/virattt)
 
