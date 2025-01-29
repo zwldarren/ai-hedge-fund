@@ -79,7 +79,7 @@ GROQ_API_KEY=your-groq-api-key
 FINANCIAL_DATASETS_API_KEY=your-financial-datasets-api-key
 ```
 
-**Important**: You must to set the OpenAI API key or Groq API key for the hedge fund to work.  This depends on the LLM you are using.  If you want to use LLMs from both providers, you will need to set both API keys.
+**Important**: You must set the OpenAI API key or Groq API key for the hedge fund to work.  This depends on the LLM you are using.  If you want to use LLMs from both providers, you will need to set both API keys.
 
 Financial data for AAPL, GOOGL, MSFT, NVDA, and TSLA is free and does not require an API key.
 
@@ -153,7 +153,7 @@ ai-hedge-fund/
 
 ## Feature Requests
 
-If you have a feature request, please open an [issue](https://github.com/virattt/ai-hedge-fund/issues) and make it is tagged with `enhancement`.
+If you have a feature request, please open an [issue](https://github.com/virattt/ai-hedge-fund/issues) and make sure it is tagged with `enhancement`.
 
 ## License
 
