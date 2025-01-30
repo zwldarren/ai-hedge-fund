@@ -30,22 +30,22 @@ class LLMModel(BaseModel):
 # Define available models
 AVAILABLE_MODELS = [
     LLMModel(
-        display_name="gpt-4o [OpenAI]",
+        display_name="gpt-4o [openai]",
         model_name="gpt-4o",
         provider=ModelProvider.OPENAI
     ),
     LLMModel(
-        display_name="gpt-4o-mini [OpenAI]",
+        display_name="gpt-4o-mini [openai]",
         model_name="gpt-4o-mini",
         provider=ModelProvider.OPENAI
     ),
     LLMModel(
-        display_name="DeepSeek-R1 70b [Groq]",
+        display_name="deepseek-r1 70b [groq]",
         model_name="deepseek-r1-distill-llama-70b",
         provider=ModelProvider.GROQ
     ),
     LLMModel(
-        display_name="Llama-3.3 70b [Groq]",
+        display_name="llama-3.3 70b [groq]",
         model_name="llama-3.3-70b-versatile",
         provider=ModelProvider.GROQ
     ),
