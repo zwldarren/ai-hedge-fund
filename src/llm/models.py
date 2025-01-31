@@ -40,6 +40,11 @@ AVAILABLE_MODELS = [
         provider=ModelProvider.OPENAI
     ),
     LLMModel(
+        display_name="o3-mini [openai]",
+        model_name="o3-mini",
+        provider=ModelProvider.OPENAI
+    ),
+    LLMModel(
         display_name="deepseek-r1 70b [groq]",
         model_name="deepseek-r1-distill-llama-70b",
         provider=ModelProvider.GROQ
