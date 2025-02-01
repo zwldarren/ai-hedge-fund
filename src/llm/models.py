@@ -58,7 +58,7 @@ AVAILABLE_MODELS = [
     ),
     LLMModel(
         display_name="claude-3.5-sonnet [anthropic]",
-        model_name="claude-3-5-sonnet-20241022",
+        model_name="claude-3-5-sonnet-latest",
         provider=ModelProvider.ANTHROPIC
     ),
     LLMModel(
