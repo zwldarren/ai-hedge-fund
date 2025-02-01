@@ -68,7 +68,7 @@ AVAILABLE_MODELS = [
     ),
     LLMModel(
         display_name="claude-3-opus [anthropic]",
-        model_name="claude-3-opus-20240229",
+        model_name="claude-3-opus-latest",
         provider=ModelProvider.ANTHROPIC
     ),
 ]
