@@ -63,7 +63,7 @@ AVAILABLE_MODELS = [
     ),
     LLMModel(
         display_name="claude-3.5-haiku [anthropic]",
-        model_name="claude-3-5-haiku-20241022",
+        model_name="claude-3-5-haiku-latest",
         provider=ModelProvider.ANTHROPIC
     ),
     LLMModel(
