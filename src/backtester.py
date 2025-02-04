@@ -165,8 +165,9 @@ class Backtester:
         dates = pd.date_range(self.start_date, self.end_date, freq="B")
         table_rows = []
         performance_metrics = {
-            'sharpe_ratio': 0.0,
-            'max_drawdown': 0.0
+            'sharpe_ratio': None,  # Initialize as None instead of 0.0
+            'sortino_ratio': None,
+            'max_drawdown': None
         }
 
         print("\nStarting backtest...")
@@ -227,7 +228,6 @@ class Backtester:
                     if ticker in signals:
                         ticker_signals[agent] = signals[ticker]
 
-                # Calculate signal counts
                 bullish_count = len([s for s in ticker_signals.values() if s.get("signal", "").lower() == "bullish"])
                 bearish_count = len([s for s in ticker_signals.values() if s.get("signal", "").lower() == "bearish"])
                 neutral_count = len([s for s in ticker_signals.values() if s.get("signal", "").lower() == "neutral"])
@@ -264,27 +264,43 @@ class Backtester:
             self.portfolio_values.append({"Date": current_date, "Portfolio Value": total_value})
 
             # Calculate performance metrics if we have enough data
-            if len(self.portfolio_values) > 1:
+            # We need at least 3 data points to calculate meaningful metrics
+            if len(self.portfolio_values) > 3:
                 # Calculate daily returns
                 values_df = pd.DataFrame(self.portfolio_values).set_index("Date")
                 values_df["Daily Return"] = values_df["Portfolio Value"].pct_change()
                 
-                # Calculate Sharpe Ratio
-                risk_free_rate = 0.0434 / 252  # Daily risk-free rate (4.34% annual)
-                excess_returns = values_df["Daily Return"].dropna() - risk_free_rate
-                mean_excess_return = excess_returns.mean()
-                std_excess_return = excess_returns.std()
+                # Drop any NaN values from returns
+                clean_returns = values_df["Daily Return"].dropna()
                 
-                if std_excess_return != 0:
-                    # Annualize Sharpe Ratio
-                    performance_metrics["sharpe_ratio"] = np.sqrt(252) * mean_excess_return / std_excess_return
-                else:
-                    performance_metrics["sharpe_ratio"] = 0
+                if len(clean_returns) > 0:
+                    # Calculate Sharpe Ratio
+                    risk_free_rate = 0.0434 / 252  # Daily risk-free rate (4.34% annual)
+                    excess_returns = clean_returns - risk_free_rate
+                    mean_excess_return = excess_returns.mean()
+                    std_excess_return = excess_returns.std()
+                    
+                    if std_excess_return > 0:  # Only calculate if we have meaningful volatility
+                        # Annualize Sharpe Ratio
+                        performance_metrics["sharpe_ratio"] = np.sqrt(252) * mean_excess_return / std_excess_return
 
-                # Calculate Maximum Drawdown
-                rolling_max = values_df["Portfolio Value"].cummax()
-                drawdown = (values_df["Portfolio Value"] - rolling_max) / rolling_max
-                performance_metrics["max_drawdown"] = drawdown.min() * 100  # Convert to percentage
+                    # Calculate Sortino Ratio
+                    negative_returns = clean_returns[clean_returns < 0]
+                    if len(negative_returns) > 0:
+                        downside_std = negative_returns.std()
+                        if downside_std > 0:  # Only calculate if we have meaningful downside volatility
+                            # Annualize Sortino Ratio
+                            performance_metrics["sortino_ratio"] = np.sqrt(252) * mean_excess_return / downside_std
+                        else:
+                            performance_metrics["sortino_ratio"] = np.inf if mean_excess_return > 0 else 0
+                    else:
+                        # If no negative returns, Sortino ratio depends on mean return
+                        performance_metrics["sortino_ratio"] = np.inf if mean_excess_return > 0 else 0
+
+                    # Calculate Maximum Drawdown
+                    rolling_max = values_df["Portfolio Value"].cummax()
+                    drawdown = (values_df["Portfolio Value"] - rolling_max) / rolling_max
+                    performance_metrics["max_drawdown"] = drawdown.min() * 100  # Convert to percentage
 
             # Add summary row for this date
             date_rows.append(
@@ -305,6 +321,7 @@ class Backtester:
                     cash_balance=self.portfolio["cash"],
                     total_position_value=total_position_value,
                     sharpe_ratio=performance_metrics["sharpe_ratio"],
+                    sortino_ratio=performance_metrics["sortino_ratio"],
                     max_drawdown=performance_metrics["max_drawdown"],
                 )
             )
