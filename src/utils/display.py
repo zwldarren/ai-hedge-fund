@@ -242,7 +242,4 @@ def format_backtest_row(
             f"{Fore.GREEN}{bullish_count}{Style.RESET_ALL}",
             f"{Fore.RED}{bearish_count}{Style.RESET_ALL}",
             f"{Fore.BLUE}{neutral_count}{Style.RESET_ALL}",
-            "",  # Sharpe Ratio (empty for non-summary rows)
-            "",  # Sortino Ratio (empty for non-summary rows)
-            "",  # Max Drawdown (empty for non-summary rows)
         ]
