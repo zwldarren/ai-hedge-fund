@@ -48,7 +48,7 @@ class Backtester:
         :param model_name: Which LLM model name to use (gpt-4, etc).
         :param model_provider: Which LLM provider (OpenAI, etc).
         :param selected_analysts: List of analyst names or IDs to incorporate.
-        :param initial_margin_requirement: The margin ratio (e.g., 0.5 = 50%).
+        :param initial_margin_requirement: The margin ratio (e.g. 0.5 = 50%).
         """
         self.agent = agent
         self.tickers = tickers
@@ -83,6 +83,192 @@ class Backtester:
                 } for ticker in tickers
             }
         }
+
+    def execute_trade(self, ticker: str, action: str, quantity: float, current_price: float):
+        """
+        Execute trades with support for both long and short positions.
+        `quantity` is the number of shares the agent wants to buy/sell/short/cover.
+        We will only trade integer shares to keep it simple.
+        """
+        if quantity <= 0:
+            return 0
+
+        quantity = int(quantity)  # force integer shares
+        position = self.portfolio["positions"][ticker]
+
+        if action == "buy":
+            cost = quantity * current_price
+            if cost <= self.portfolio["cash"]:
+                # Weighted average cost basis for the new total
+                old_shares = position["long"]
+                old_cost_basis = position["long_cost_basis"]
+                new_shares = quantity
+                total_shares = old_shares + new_shares
+
+                if total_shares > 0:
+                    total_old_cost = old_cost_basis * old_shares
+                    total_new_cost = cost
+                    position["long_cost_basis"] = (total_old_cost + total_new_cost) / total_shares
+
+                position["long"] += quantity
+                self.portfolio["cash"] -= cost
+                return quantity
+            else:
+                # Calculate maximum affordable quantity
+                max_quantity = int(self.portfolio["cash"] / current_price)
+                if max_quantity > 0:
+                    cost = max_quantity * current_price
+                    old_shares = position["long"]
+                    old_cost_basis = position["long_cost_basis"]
+                    total_shares = old_shares + max_quantity
+
+                    if total_shares > 0:
+                        total_old_cost = old_cost_basis * old_shares
+                        total_new_cost = cost
+                        position["long_cost_basis"] = (total_old_cost + total_new_cost) / total_shares
+
+                    position["long"] += max_quantity
+                    self.portfolio["cash"] -= cost
+                    return max_quantity
+                return 0
+
+        elif action == "sell":
+            # You can only sell as many as you own
+            quantity = min(quantity, position["long"])
+            if quantity > 0:
+                # Realized gain/loss using average cost basis
+                avg_cost_per_share = position["long_cost_basis"] if position["long"] > 0 else 0
+                realized_gain = (current_price - avg_cost_per_share) * quantity
+                self.portfolio["realized_gains"][ticker]["long"] += realized_gain
+
+                position["long"] -= quantity
+                self.portfolio["cash"] += quantity * current_price
+
+                if position["long"] == 0:
+                    position["long_cost_basis"] = 0.0
+
+                return quantity
+
+        elif action == "short":
+            """
+            Typical short sale flow:
+              1) Receive proceeds = current_price * quantity
+              2) Post margin_required = proceeds * margin_ratio
+              3) Net effect on cash = +proceeds - margin_required
+            """
+            proceeds = current_price * quantity
+            margin_required = proceeds * self.margin_ratio
+            if margin_required <= self.portfolio["cash"]:
+                # Weighted average short cost basis
+                old_short_shares = position["short"]
+                old_cost_basis = position["short_cost_basis"]
+                new_shares = quantity
+                total_shares = old_short_shares + new_shares
+
+                if total_shares > 0:
+                    total_old_cost = old_cost_basis * old_short_shares
+                    total_new_cost = current_price * new_shares
+                    position["short_cost_basis"] = (total_old_cost + total_new_cost) / total_shares
+
+                position["short"] += quantity
+
+                # Update margin usage
+                position["short_margin_used"] += margin_required
+                self.portfolio["margin_used"] += margin_required
+
+                # Increase cash by proceeds, then subtract the required margin
+                self.portfolio["cash"] += proceeds
+                self.portfolio["cash"] -= margin_required
+                return quantity
+            else:
+                # Calculate maximum shortable quantity
+                if self.margin_ratio > 0:
+                    max_quantity = int(self.portfolio["cash"] / (current_price * self.margin_ratio))
+                else:
+                    max_quantity = 0
+
+                if max_quantity > 0:
+                    proceeds = current_price * max_quantity
+                    margin_required = proceeds * self.margin_ratio
+
+                    old_short_shares = position["short"]
+                    old_cost_basis = position["short_cost_basis"]
+                    total_shares = old_short_shares + max_quantity
+
+                    if total_shares > 0:
+                        total_old_cost = old_cost_basis * old_short_shares
+                        total_new_cost = current_price * max_quantity
+                        position["short_cost_basis"] = (total_old_cost + total_new_cost) / total_shares
+
+                    position["short"] += max_quantity
+                    position["short_margin_used"] += margin_required
+                    self.portfolio["margin_used"] += margin_required
+
+                    self.portfolio["cash"] += proceeds
+                    self.portfolio["cash"] -= margin_required
+                    return max_quantity
+                return 0
+
+        elif action == "cover":
+            """
+            When covering shares:
+              1) Pay cover cost = current_price * quantity
+              2) Release a proportional share of the margin
+              3) Net effect on cash = -cover_cost + released_margin
+            """
+            quantity = min(quantity, position["short"])
+            if quantity > 0:
+                cover_cost = quantity * current_price
+                avg_short_price = position["short_cost_basis"] if position["short"] > 0 else 0
+                realized_gain = (avg_short_price - current_price) * quantity
+
+                if position["short"] > 0:
+                    portion = quantity / position["short"]
+                else:
+                    portion = 1.0
+
+                margin_to_release = portion * position["short_margin_used"]
+
+                position["short"] -= quantity
+                position["short_margin_used"] -= margin_to_release
+                self.portfolio["margin_used"] -= margin_to_release
+
+                # Pay the cost to cover, but get back the released margin
+                self.portfolio["cash"] += margin_to_release
+                self.portfolio["cash"] -= cover_cost
+
+                self.portfolio["realized_gains"][ticker]["short"] += realized_gain
+
+                if position["short"] == 0:
+                    position["short_cost_basis"] = 0.0
+                    position["short_margin_used"] = 0.0
+
+                return quantity
+
+        return 0
+
+    def calculate_portfolio_value(self, current_prices):
+        """
+        Calculate total portfolio value, including:
+          - cash
+          - market value of long positions
+          - unrealized gains/losses for short positions
+        """
+        total_value = self.portfolio["cash"]
+
+        for ticker in self.tickers:
+            position = self.portfolio["positions"][ticker]
+            price = current_prices[ticker]
+
+            # Long position value
+            long_value = position["long"] * price
+            total_value += long_value
+
+            # Short position unrealized PnL = short_shares * (short_cost_basis - current_price)
+            if position["short"] > 0:
+                total_value += position["short"] * (position["short_cost_basis"] - price)
+
+        return total_value
 
     def prefetch_data(self):
         """Pre-fetch all data needed for the backtest period."""
@@ -119,184 +305,6 @@ class Backtester:
             print(f"Error parsing action: {agent_output}")
             return {"action": "hold", "quantity": 0}
 
-    def execute_trade(self, ticker: str, action: str, quantity: float, current_price: float):
-        """
-        Execute trades with support for both long and short positions.
-        `quantity` is the number of shares the agent wants to buy/sell/short/cover.
-        We will only trade integer shares to keep it simple.
-        """
-        if quantity <= 0:
-            return 0
-
-        quantity = int(quantity)  # force integer shares
-        position = self.portfolio["positions"][ticker]
-
-        if action == "buy":
-            cost = quantity * current_price
-            if cost <= self.portfolio["cash"]:
-                # Weighted average cost basis for the new total
-                old_shares = position["long"]
-                old_cost_basis = position["long_cost_basis"]
-                new_shares = quantity
-                total_shares = old_shares + new_shares
-
-                if total_shares > 0:
-                    # Convert old_cost_basis from "average per share" to total cost, then re-average
-                    total_old_cost = old_cost_basis * old_shares
-                    total_new_cost = cost
-                    position["long_cost_basis"] = (total_old_cost + total_new_cost) / total_shares
-
-                # Update position
-                position["long"] += quantity
-                self.portfolio["cash"] -= cost
-                return quantity
-            else:
-                # Calculate maximum affordable quantity
-                max_quantity = int(self.portfolio["cash"] / current_price)
-                if max_quantity > 0:
-                    cost = max_quantity * current_price
-                    old_shares = position["long"]
-                    old_cost_basis = position["long_cost_basis"]
-                    total_shares = old_shares + max_quantity
-
-                    if total_shares > 0:
-                        total_old_cost = old_cost_basis * old_shares
-                        total_new_cost = cost
-                        position["long_cost_basis"] = (total_old_cost + total_new_cost) / total_shares
-
-                    position["long"] += max_quantity
-                    self.portfolio["cash"] -= cost
-                    return max_quantity
-                return 0
-
-        elif action == "sell":
-            # You can only sell as many as you own
-            quantity = min(quantity, position["long"])
-            if quantity > 0:
-                # Realized gain/loss using average cost basis
-                avg_cost_per_share = position["long_cost_basis"] if position["long"] > 0 else 0
-                realized_gain = (current_price - avg_cost_per_share) * quantity
-                self.portfolio["realized_gains"][ticker]["long"] += realized_gain
-
-                # Update position
-                position["long"] -= quantity
-                self.portfolio["cash"] += quantity * current_price
-
-                # If we have zero shares left, reset cost basis
-                if position["long"] == 0:
-                    position["long_cost_basis"] = 0.0
-
-                return quantity
-
-        elif action == "short":
-            # Figure out how many shares can be shorted given the margin ratio
-            margin_required = current_price * quantity * self.margin_ratio
-            if margin_required <= self.portfolio["cash"]:
-                # Weighted average short cost basis
-                old_short_shares = position["short"]
-                old_cost_basis = position["short_cost_basis"]
-                new_shares = quantity
-                total_shares = old_short_shares + new_shares
-
-                if total_shares > 0:
-                    total_old_cost = old_cost_basis * old_short_shares
-                    total_new_cost = current_price * new_shares
-                    position["short_cost_basis"] = (total_old_cost + total_new_cost) / total_shares
-
-                # Update short position
-                position["short"] += quantity
-
-                # Deduct margin from cash, update usage
-                self.portfolio["cash"] -= margin_required
-                position["short_margin_used"] += margin_required
-                self.portfolio["margin_used"] += margin_required
-                return quantity
-            else:
-                # Calculate maximum shortable quantity based on available cash for margin
-                if self.margin_ratio > 0:
-                    max_quantity = int(self.portfolio["cash"] / (current_price * self.margin_ratio))
-                else:
-                    max_quantity = 0
-
-                if max_quantity > 0:
-                    margin_required = current_price * max_quantity * self.margin_ratio
-                    old_short_shares = position["short"]
-                    old_cost_basis = position["short_cost_basis"]
-                    total_shares = old_short_shares + max_quantity
-
-                    if total_shares > 0:
-                        total_old_cost = old_cost_basis * old_short_shares
-                        total_new_cost = current_price * max_quantity
-                        position["short_cost_basis"] = (total_old_cost + total_new_cost) / total_shares
-
-                    position["short"] += max_quantity
-
-                    self.portfolio["cash"] -= margin_required
-                    position["short_margin_used"] += margin_required
-                    self.portfolio["margin_used"] += margin_required
-                    return max_quantity
-                return 0
-
-        elif action == "cover":
-            # You can only cover as many shares as you are short
-            quantity = min(quantity, position["short"])
-            if quantity > 0:
-                cover_cost = quantity * current_price
-                avg_short_price = position["short_cost_basis"] if position["short"] > 0 else 0
-                realized_gain = (avg_short_price - current_price) * quantity
-
-                # Release portion of the margin
-                if position["short"] > 0:
-                    portion = quantity / position["short"]
-                else:
-                    portion = 1.0
-
-                margin_to_release = portion * position["short_margin_used"]
-
-                # Update short position and portfolio
-                position["short"] -= quantity
-                position["short_margin_used"] -= margin_to_release
-                self.portfolio["margin_used"] -= margin_to_release
-
-                # Return the margin to cash, then pay the cost of covering
-                self.portfolio["cash"] += margin_to_release
-                self.portfolio["cash"] -= cover_cost
-
-                self.portfolio["realized_gains"][ticker]["short"] += realized_gain
-
-                # If fully covered, reset short basis
-                if position["short"] == 0:
-                    position["short_cost_basis"] = 0.0
-                    position["short_margin_used"] = 0.0
-
-                return quantity
-
-        return 0
-
-    def calculate_portfolio_value(self, current_prices):
-        """
-        Calculate total portfolio value, including:
-          - cash
-          - market value of long positions
-          - unrealized gains/losses for short positions
-        """
-        total_value = self.portfolio["cash"]
-
-        for ticker in self.tickers:
-            position = self.portfolio["positions"][ticker]
-            price = current_prices[ticker]
-
-            # Long position value
-            long_value = position["long"] * price
-            total_value += long_value
-
-            # Short position unrealized PnL = short_shares * (short_cost_basis - current_price)
-            #   i.e., if the price has fallen below short_cost_basis, we have an unrealized gain.
-            if position["short"] > 0:
-                total_value += position["short"] * (position["short_cost_basis"] - price)
-
-        return total_value
-
     def run_backtest(self):
         # Pre-fetch all data at the start
         self.prefetch_data()
@@ -330,7 +338,6 @@ class Backtester:
                 continue
 
             # Get current prices for all tickers
-            # We assume get_price_data(ticker, start, end) returns a DataFrame with a 'close' column.
             try:
                 current_prices = {
                     ticker: get_price_data(ticker, previous_date_str, current_date_str).iloc[-1]["close"]
@@ -338,13 +345,40 @@ class Backtester:
                 }
             except Exception:
                 # If data is missing or there's an API error, skip this day
-                print(f"Error fetching data for {ticker} between {previous_date_str} and {current_date_str}")
+                print(f"Error fetching prices for {ticker} between {previous_date_str} and {current_date_str}")
                 continue
 
-            # Calculate portfolio value and exposure
+            # ---------------------------------------------------------------
+            # 1) Execute the agent's trades
+            # ---------------------------------------------------------------
+            output = self.agent(
+                tickers=self.tickers,
+                start_date=lookback_start,
+                end_date=current_date_str,
+                portfolio=self.portfolio,
+                model_name=self.model_name,
+                model_provider=self.model_provider,
+                selected_analysts=self.selected_analysts,
+            )
+            decisions = output["decisions"]
+            analyst_signals = output["analyst_signals"]
+
+            # Execute trades for each ticker
+            executed_trades = {}
+            for ticker in self.tickers:
+                decision = decisions.get(ticker, {"action": "hold", "quantity": 0})
+                action, quantity = decision.get("action", "hold"), decision.get("quantity", 0)
+
+                executed_quantity = self.execute_trade(ticker, action, quantity, current_prices[ticker])
+                executed_trades[ticker] = executed_quantity
+
+            # ---------------------------------------------------------------
+            # 2) Now that trades have executed trades, recalculate the final
+            #    portfolio value for this day.
+            # ---------------------------------------------------------------
             total_value = self.calculate_portfolio_value(current_prices)
 
-            # Calculate exposure metrics
+            # Also compute long/short exposures for final post‐trade state
             long_exposure = sum(
                 self.portfolio["positions"][t]["long"] * current_prices[t]
                 for t in self.tickers
@@ -353,12 +387,15 @@ class Backtester:
                 self.portfolio["positions"][t]["short"] * current_prices[t]
                 for t in self.tickers
             )
+
+            # Calculate gross and net exposures
             gross_exposure = long_exposure + short_exposure
             net_exposure = long_exposure - short_exposure
             long_short_ratio = (
                 long_exposure / short_exposure if short_exposure > 1e-9 else float('inf')
             )
 
+            # Track each day's portfolio value in self.portfolio_values
             self.portfolio_values.append({
                 "Date": current_date,
                 "Portfolio Value": total_value,
@@ -369,32 +406,13 @@ class Backtester:
                 "Long/Short Ratio": long_short_ratio
             })
 
-            # Get trading decisions from the agent
-            output = self.agent(
-                tickers=self.tickers,
-                start_date=lookback_start,
-                end_date=current_date_str,
-                portfolio=self.portfolio,
-                model_name=self.model_name,
-                model_provider=self.model_provider,
-                selected_analysts=self.selected_analysts,
-            )
-
-            decisions = output["decisions"]
-            analyst_signals = output["analyst_signals"]
+            # ---------------------------------------------------------------
+            # 3) Build the table rows to display
+            # ---------------------------------------------------------------
             date_rows = []
 
-            # Execute trades for each ticker
-            executed_trades = {}
+            # For each ticker, record signals/trades
             for ticker in self.tickers:
-                decision = decisions.get(ticker, {"action": "hold", "quantity": 0})
-                action, quantity = decision.get("action", "hold"), decision.get("quantity", 0)
-
-                # Execute the trade
-                executed_quantity = self.execute_trade(ticker, action, quantity, current_prices[ticker])
-                executed_trades[ticker] = executed_quantity
-
-                # Count signals
                 ticker_signals = {}
                 for agent_name, signals in analyst_signals.items():
                     if ticker in signals:
@@ -404,19 +422,23 @@ class Backtester:
                 bearish_count = len([s for s in ticker_signals.values() if s.get("signal", "").lower() == "bearish"])
                 neutral_count = len([s for s in ticker_signals.values() if s.get("signal", "").lower() == "neutral"])
 
-                # Net position (long - short) and value
+                # Calculate net position value
                 pos = self.portfolio["positions"][ticker]
                 long_val = pos["long"] * current_prices[ticker]
                 short_val = pos["short"] * current_prices[ticker]
                 net_position_value = long_val - short_val
 
-                # Add row for this ticker
+                # Get the action and quantity from the decisions
+                action = decisions.get(ticker, {}).get("action", "hold")
+                quantity = executed_trades.get(ticker, 0)
+                
+                # Append the agent action to the table rows
                 date_rows.append(
                     format_backtest_row(
                         date=current_date_str,
                         ticker=ticker,
                         action=action,
-                        quantity=executed_quantity,
+                        quantity=quantity,
                         price=current_prices[ticker],
                         shares_owned=pos["long"] - pos["short"],  # net shares
                         position_value=net_position_value,
@@ -425,8 +447,9 @@ class Backtester:
                         neutral_count=neutral_count,
                     )
                 )
-
-            # Calculate total realized gains so far
+            # ---------------------------------------------------------------
+            # 4) Calculate performance summary metrics
+            # ---------------------------------------------------------------
             total_realized_gains = sum(
                 self.portfolio["realized_gains"][t]["long"] +
                 self.portfolio["realized_gains"][t]["short"]
@@ -436,7 +459,7 @@ class Backtester:
             # Calculate cumulative return vs. initial capital
             portfolio_return = ((total_value + total_realized_gains) / self.initial_capital - 1) * 100
 
-            # Add summary row to the start of date rows
+            # Add summary row for this day
             date_rows.append(
                 format_backtest_row(
                     date=current_date_str,
@@ -461,8 +484,6 @@ class Backtester:
             )
 
             table_rows.extend(date_rows)
-
-            # Print the updated table
             print_backtest_results(table_rows)
 
             # Update performance metrics if we have enough data
@@ -501,7 +522,6 @@ class Backtester:
             else:
                 performance_metrics["sortino_ratio"] = float('inf') if mean_excess_return > 0 else 0
         else:
-            # If no negative returns, sortino is effectively infinite if we have positive mean return
             performance_metrics["sortino_ratio"] = float('inf') if mean_excess_return > 0 else 0
 
         # Maximum drawdown
@@ -541,8 +561,7 @@ class Backtester:
 
         # Compute daily returns
         performance_df["Daily Return"] = performance_df["Portfolio Value"].pct_change().fillna(0)
-        # Risk-free rate (annualized 4.34%), daily
-        daily_rf = 0.0434 / 252
+        daily_rf = 0.0434 / 252  # daily risk-free rate
         mean_daily_return = performance_df["Daily Return"].mean()
         std_daily_return = performance_df["Daily Return"].std()
 
@@ -558,7 +577,10 @@ class Backtester:
         drawdown = (performance_df["Portfolio Value"] - rolling_max) / rolling_max
         max_drawdown = drawdown.min()
         max_drawdown_date = drawdown.idxmin()
-        print(f"Maximum Drawdown: {Fore.RED}{max_drawdown * 100:.2f}%{Style.RESET_ALL} (on {max_drawdown_date.strftime('%Y-%m-%d')})")
+        if pd.notnull(max_drawdown_date):
+            print(f"Maximum Drawdown: {Fore.RED}{max_drawdown * 100:.2f}%{Style.RESET_ALL} (on {max_drawdown_date.strftime('%Y-%m-%d')})")
+        else:
+            print(f"Maximum Drawdown: {Fore.RED}0.00%{Style.RESET_ALL}")
 
         # Win Rate
         winning_days = len(performance_df[performance_df["Daily Return"] > 0])
@@ -596,7 +618,6 @@ class Backtester:
 if __name__ == "__main__":
     import argparse
 
-    # Set up argument parser
     parser = argparse.ArgumentParser(description="Run backtesting simulation")
     parser.add_argument(
         "--tickers",
