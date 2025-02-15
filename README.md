@@ -4,9 +4,9 @@ This is a proof of concept for an AI-powered hedge fund.  The goal of this proje
 
 This system employs several agents working together:
 
-1. Ben Graham Agent - Uses Ben Graham's principles to generate trading signals
-2. Bill Ackman Agent - Uses Bill Ackman's principles to generate trading signals
-3. Warren Buffett Agent - Uses Warren Buffett's principles to generate trading signals
+1. Ben Graham Agent - The godfather of value investing
+2. Bill Ackman Agent - The most famous activist investor
+3. Warren Buffett Agent - The most famous value investor
 4. Valuation Agent - Calculates the intrinsic value of a stock and generates trading signals
 5. Sentiment Agent - Analyzes market sentiment and generates trading signals
 6. Fundamentals Agent - Analyzes fundamental data and generates trading signals
