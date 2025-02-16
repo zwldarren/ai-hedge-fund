@@ -3,6 +3,7 @@
 from agents.ben_graham import ben_graham_agent
 from agents.bill_ackman import bill_ackman_agent
 from agents.warren_buffett import warren_buffett_agent
+from agents.cathie_wood import cathie_wood_agent
 from agents.technicals import technical_analyst_agent
 from agents.fundamentals import fundamentals_agent
 from agents.sentiment import sentiment_agent
