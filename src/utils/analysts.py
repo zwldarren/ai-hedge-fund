@@ -25,25 +25,30 @@ ANALYST_CONFIG = {
         "agent_func": warren_buffett_agent,
         "order": 2,
     },
+    "cathie_wood": {
+        "display_name": "Cathie Wood",
+        "agent_func": cathie_wood_agent,
+        "order": 3,
+    },
     "technical_analyst": {
         "display_name": "Technical Analyst",
         "agent_func": technical_analyst_agent,
-        "order": 3,
+        "order": 4,
     },
     "fundamentals_analyst": {
         "display_name": "Fundamentals Analyst",
         "agent_func": fundamentals_agent,
-        "order": 4,
+        "order": 5,
     },
     "sentiment_analyst": {
         "display_name": "Sentiment Analyst",
         "agent_func": sentiment_agent,
-        "order": 5,
+        "order": 6,
     },
     "valuation_analyst": {
         "display_name": "Valuation Analyst",
         "agent_func": valuation_agent,
-        "order": 6,
+        "order": 7,
     },
 }
 
