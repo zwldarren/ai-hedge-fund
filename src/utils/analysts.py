@@ -21,14 +21,14 @@ ANALYST_CONFIG = {
         "agent_func": bill_ackman_agent,
         "order": 1,
     },
-    "warren_buffett": {
-        "display_name": "Warren Buffett",
-        "agent_func": warren_buffett_agent,
-        "order": 2,
-    },
     "cathie_wood": {
         "display_name": "Cathie Wood",
         "agent_func": cathie_wood_agent,
+        "order": 2,
+    },
+    "warren_buffett": {
+        "display_name": "Warren Buffett",
+        "agent_func": warren_buffett_agent,
         "order": 3,
     },
     "technical_analyst": {
