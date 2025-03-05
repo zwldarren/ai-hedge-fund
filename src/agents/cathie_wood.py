@@ -148,14 +148,14 @@ def analyze_disruptive_potential(metrics: list, financial_line_items: list) -> d
         growth_rates = []
         for i in range(len(revenues)-1):
             if revenues[i] and revenues[i+1]:
-                growth_rate = (revenues[i+1] - revenues[i]) / abs(revenues[i])
+                growth_rate = (revenues[i+1] - revenues[i]) / abs(revenues[i]) if revenues[i] != 0 else 0
                 growth_rates.append(growth_rate)
-        
+
         # Check if growth is accelerating
         if len(growth_rates) >= 2 and growth_rates[-1] > growth_rates[0]:
             score += 2
             details.append(f"Revenue growth is accelerating: {(growth_rates[-1]*100):.1f}% vs {(growth_rates[0]*100):.1f}%")
-        
+
         # Check absolute growth rate
         latest_growth = growth_rates[-1] if growth_rates else 0
         if latest_growth > 1.0:
@@ -180,7 +180,7 @@ def analyze_disruptive_potential(metrics: list, financial_line_items: list) -> d
         elif margin_trend > 0:
             score += 1
             details.append(f"Slightly improving gross margins: +{(margin_trend*100):.1f}%")
-        
+
         # Check absolute margin level
         if gross_margins[-1] > 0.50:  # High margin business
             score += 2
@@ -191,11 +191,11 @@ def analyze_disruptive_potential(metrics: list, financial_line_items: list) -> d
     # 3. Operating Leverage Analysis
     revenues = [item.revenue for item in financial_line_items if item.revenue is not None]
     operating_expenses = [item.operating_expense for item in financial_line_items if hasattr(item, 'operating_expense') and item.operating_expense is not None]
-    
+
     if len(revenues) >= 2 and len(operating_expenses) >= 2:
-        rev_growth = (revenues[-1] - revenues[0]) / abs(revenues[0])
-        opex_growth = (operating_expenses[-1] - operating_expenses[0]) / abs(operating_expenses[0])
-        
+        rev_growth = (revenues[-1] - revenues[0]) / abs(revenues[0]) if revenues[0] != 0 else 0
+        opex_growth = (operating_expenses[-1] - operating_expenses[0]) / abs(operating_expenses[0]) if operating_expenses[0] != 0 else 0
+
         if rev_growth > opex_growth:
             score += 2
             details.append("Positive operating leverage: Revenue growing faster than expenses")
@@ -252,17 +252,17 @@ def analyze_innovation_growth(metrics: list, financial_line_items: list) -> dict
     # 1. R&D Investment Trends
     rd_expenses = [item.research_and_development for item in financial_line_items if hasattr(item, 'research_and_development') and item.research_and_development is not None]
     revenues = [item.revenue for item in financial_line_items if item.revenue is not None]
-    
+
     if rd_expenses and revenues and len(rd_expenses) >= 2:
         # Check R&D growth rate
-        rd_growth = (rd_expenses[-1] - rd_expenses[0]) / abs(rd_expenses[0])
+        rd_growth = (rd_expenses[-1] - rd_expenses[0]) / abs(rd_expenses[0]) if rd_expenses[0] != 0 else 0
         if rd_growth > 0.5:  # 50% growth in R&D
             score += 3
             details.append(f"Strong R&D investment growth: +{(rd_growth*100):.1f}%")
         elif rd_growth > 0.2:
             score += 2
             details.append(f"Moderate R&D investment growth: +{(rd_growth*100):.1f}%")
-        
+
         # Check R&D intensity trend
         rd_intensity_start = rd_expenses[0] / revenues[0]
         rd_intensity_end = rd_expenses[-1] / revenues[-1]
@@ -278,7 +278,7 @@ def analyze_innovation_growth(metrics: list, financial_line_items: list) -> dict
         # Check FCF growth and consistency
         fcf_growth = (fcf_vals[-1] - fcf_vals[0]) / abs(fcf_vals[0]) if fcf_vals[0] != 0 else 0
         positive_fcf_count = sum(1 for f in fcf_vals if f > 0)
-        
+
         if fcf_growth > 0.3 and positive_fcf_count == len(fcf_vals):
             score += 3
             details.append("Strong and consistent FCF growth, excellent innovation funding capacity")
@@ -296,7 +296,7 @@ def analyze_innovation_growth(metrics: list, financial_line_items: list) -> dict
     if op_margin_vals and len(op_margin_vals) >= 2:
         # Check margin improvement
         margin_trend = op_margin_vals[-1] - op_margin_vals[0]
-        
+
         if op_margin_vals[-1] > 0.15 and margin_trend > 0:
             score += 3
             details.append(f"Strong and improving operating margin: {(op_margin_vals[-1]*100):.1f}%")
@@ -314,7 +314,7 @@ def analyze_innovation_growth(metrics: list, financial_line_items: list) -> dict
     if capex and revenues and len(capex) >= 2:
         capex_intensity = abs(capex[-1]) / revenues[-1]
         capex_growth = (abs(capex[-1]) - abs(capex[0])) / abs(capex[0]) if capex[0] != 0 else 0
-        
+
         if capex_intensity > 0.10 and capex_growth > 0.2:
             score += 2
             details.append("Strong investment in growth infrastructure")
