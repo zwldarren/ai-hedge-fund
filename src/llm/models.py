@@ -1,5 +1,6 @@
 import os
 from langchain_anthropic import ChatAnthropic
+from langchain_deepseek import ChatDeepSeek
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 from enum import Enum
@@ -9,9 +10,11 @@ from typing import Tuple
 
 class ModelProvider(str, Enum):
     """Enum for supported LLM providers"""
-    OPENAI = "OpenAI"
-    GROQ = "Groq"
     ANTHROPIC = "Anthropic"
+    DEEPSEEK = "DeepSeek"
+    GROQ = "Groq"
+    OPENAI = "OpenAI"
+
 
 
 class LLMModel(BaseModel):
@@ -47,9 +50,14 @@ AVAILABLE_MODELS = [
         provider=ModelProvider.ANTHROPIC
     ),
     LLMModel(
-        display_name="[groq] deepseek-r1 70b",
-        model_name="deepseek-r1-distill-llama-70b",
-        provider=ModelProvider.GROQ
+        display_name="[deepseek] deepseek-r1",
+        model_name="deepseek-reasoner",
+        provider=ModelProvider.DEEPSEEK
+    ),
+    LLMModel(
+        display_name="[deepseek] deepseek-v3",
+        model_name="deepseek-chat",
+        provider=ModelProvider.DEEPSEEK
     ),
     LLMModel(
         display_name="[groq] llama-3.3 70b",
@@ -57,13 +65,13 @@ AVAILABLE_MODELS = [
         provider=ModelProvider.GROQ
     ),
     LLMModel(
-        display_name="[openai] gpt-4o",
-        model_name="gpt-4o",
+        display_name="[openai] gpt-4.5",
+        model_name="gpt-4.5-preview",
         provider=ModelProvider.OPENAI
     ),
     LLMModel(
-        display_name="[openai] gpt-4o-mini",
-        model_name="gpt-4o-mini",
+        display_name="[openai] gpt-4o",
+        model_name="gpt-4o",
         provider=ModelProvider.OPENAI
     ),
     LLMModel(
@@ -107,3 +115,9 @@ def get_model(model_name: str, model_provider: ModelProvider) -> ChatOpenAI | Ch
             print(f"API Key Error: Please make sure ANTHROPIC_API_KEY is set in your .env file.")
             raise ValueError("Anthropic API key not found.  Please make sure ANTHROPIC_API_KEY is set in your .env file.")
         return ChatAnthropic(model=model_name, api_key=api_key)
+    elif model_provider == ModelProvider.DEEPSEEK:
+        api_key = os.getenv("DEEPSEEK_API_KEY")
+        if not api_key:
+            print(f"API Key Error: Please make sure DEEPSEEK_API_KEY is set in your .env file.")
+            raise ValueError("DeepSeek API key not found.  Please make sure DEEPSEEK_API_KEY is set in your .env file.")
+        return ChatDeepSeek(model=model_name, api_key=api_key)
