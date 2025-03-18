@@ -5,8 +5,8 @@ import os
 import json
 
 
-def sort_analyst_signals(signals):
-    """Sort analyst signals in a consistent order."""
+def sort_agent_signals(signals):
+    """Sort agent signals in a consistent order."""
     # Create order mapping from ANALYST_ORDER
     analyst_order = {display: idx for idx, (display, _) in enumerate(ANALYST_ORDER)}
     analyst_order["Risk Management"] = len(ANALYST_ORDER)  # Add Risk Management at the end
@@ -96,13 +96,13 @@ def print_trading_output(result: dict) -> None:
             )
 
         # Sort the signals according to the predefined order
-        table_data = sort_analyst_signals(table_data)
+        table_data = sort_agent_signals(table_data)
 
-        print(f"\n{Fore.WHITE}{Style.BRIGHT}ANALYST SIGNALS:{Style.RESET_ALL} [{Fore.CYAN}{ticker}{Style.RESET_ALL}]")
+        print(f"\n{Fore.WHITE}{Style.BRIGHT}AGENT SIGNALS:{Style.RESET_ALL} [{Fore.CYAN}{ticker}{Style.RESET_ALL}]")
         print(
             tabulate(
                 table_data,
-                headers=[f"{Fore.WHITE}Analyst", "Signal", "Confidence", "Reasoning"],
+                headers=[f"{Fore.WHITE}Agent", "Signal", "Confidence", "Reasoning"],
                 tablefmt="grid",
                 colalign=("left", "center", "right", "left"),
             )
@@ -149,7 +149,7 @@ def print_trading_output(result: dict) -> None:
         ]
         
         print(f"\n{Fore.WHITE}{Style.BRIGHT}TRADING DECISION:{Style.RESET_ALL} [{Fore.CYAN}{ticker}{Style.RESET_ALL}]")
-        print(tabulate(decision_data, tablefmt="grid", colalign=("left", "right")))
+        print(tabulate(decision_data, tablefmt="grid", colalign=("left", "left")))
 
     # Print Portfolio Summary
     print(f"\n{Fore.WHITE}{Style.BRIGHT}PORTFOLIO SUMMARY:{Style.RESET_ALL}")
