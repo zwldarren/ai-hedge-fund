@@ -41,12 +41,15 @@ def parse_hedge_fund_response(response):
         print(f"JSON decoding error: {e}\nResponse: {repr(response)}")
         return None
     except TypeError as e:
-        print(f"Invalid response type (expected string, got {type(response).__name__}): {e}")
+        print(
+            f"Invalid response type (expected string, got {type(response).__name__}): {e}"
+        )
         return None
     except Exception as e:
-        print(f"Unexpected error while parsing response: {e}\nResponse: {repr(response)}")
+        print(
+            f"Unexpected error while parsing response: {e}\nResponse: {repr(response)}"
+        )
         return None
-
 
 
 ##### Run the Hedge Fund #####
@@ -140,42 +143,51 @@ def create_workflow(selected_analysts=None):
     return workflow
 
 
-if __name__ == "__main__":
+def parse_arguments():
+    """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Run the hedge fund trading system")
     parser.add_argument(
         "--initial-cash",
         type=float,
         default=100000.0,
-        help="Initial cash position. Defaults to 100000.0)"
+        help="Initial cash position. Defaults to 100000.0)",
     )
     parser.add_argument(
         "--margin-requirement",
         type=float,
         default=0.0,
-        help="Initial margin requirement. Defaults to 0.0"
+        help="Initial margin requirement. Defaults to 0.0",
     )
-    parser.add_argument("--tickers", type=str, required=True, help="Comma-separated list of stock ticker symbols")
+    parser.add_argument(
+        "--tickers",
+        type=str,
+        required=True,
+        help="Comma-separated list of stock ticker symbols",
+    )
     parser.add_argument(
         "--start-date",
         type=str,
         help="Start date (YYYY-MM-DD). Defaults to 3 months before end date",
     )
-    parser.add_argument("--end-date", type=str, help="End date (YYYY-MM-DD). Defaults to today")
-    parser.add_argument("--show-reasoning", action="store_true", help="Show reasoning from each agent")
+    parser.add_argument(
+        "--end-date", type=str, help="End date (YYYY-MM-DD). Defaults to today"
+    )
+    parser.add_argument(
+        "--show-reasoning", action="store_true", help="Show reasoning from each agent"
+    )
     parser.add_argument(
         "--show-agent-graph", action="store_true", help="Show the agent graph"
     )
+    return parser.parse_args()
 
-    args = parser.parse_args()
 
-    # Parse tickers from comma-separated string
-    tickers = [ticker.strip() for ticker in args.tickers.split(",")]
-
-    # Select analysts
-    selected_analysts = None
+def select_analysts():
+    """Handle analyst selection through interactive prompt."""
     choices = questionary.checkbox(
         "Select your AI analysts.",
-        choices=[questionary.Choice(display, value=value) for display, value in ANALYST_ORDER],
+        choices=[
+            questionary.Choice(display, value=value) for display, value in ANALYST_ORDER
+        ],
         instruction="\n\nInstructions: \n1. Press Space to select/unselect analysts.\n2. Press 'a' to select/unselect all.\n3. Press Enter when done to run the hedge fund.\n",
         validate=lambda x: len(x) > 0 or "You must select at least one analyst.",
         style=questionary.Style(
@@ -191,88 +203,123 @@ if __name__ == "__main__":
     if not choices:
         print("\n\nInterrupt received. Exiting...")
         sys.exit(0)
-    else:
-        selected_analysts = choices
-        print(f"\nSelected analysts: {', '.join(Fore.GREEN + choice.title().replace('_', ' ') + Style.RESET_ALL for choice in choices)}\n")
 
-    # Select LLM model
+    print(
+        f"\nSelected analysts: {', '.join(Fore.GREEN + choice.title().replace('_', ' ') + Style.RESET_ALL for choice in choices)}\n"
+    )
+    return choices
+
+
+def select_model():
+    """Handle LLM model selection through interactive prompt."""
     model_choice = questionary.select(
         "Select your LLM model:",
-        choices=[questionary.Choice(display, value=value) for display, value, _ in LLM_ORDER],
-        style=questionary.Style([
-            ("selected", "fg:green bold"),
-            ("pointer", "fg:green bold"),
-            ("highlighted", "fg:green"),
-            ("answer", "fg:green bold"),
-        ])
+        choices=[
+            questionary.Choice(display, value=value) for display, value, _ in LLM_ORDER
+        ],
+        style=questionary.Style(
+            [
+                ("selected", "fg:green bold"),
+                ("pointer", "fg:green bold"),
+                ("highlighted", "fg:green"),
+                ("answer", "fg:green bold"),
+            ]
+        ),
     ).ask()
 
     if not model_choice:
         print("\n\nInterrupt received. Exiting...")
         sys.exit(0)
-    else:
-        # Get model info using the helper function
-        model_info = get_model_info(model_choice)
-        if model_info:
-            model_provider = model_info.provider.value
-            print(f"\nSelected {Fore.CYAN}{model_provider}{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n")
-        else:
-            model_provider = "Unknown"
-            print(f"\nSelected model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n")
 
-    # Create the workflow with selected analysts
+    model_info = get_model_info(model_choice)
+    if model_info:
+        model_provider = model_info.provider.value
+        print(
+            f"\nSelected {Fore.CYAN}{model_provider}{Style.RESET_ALL} model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n"
+        )
+    else:
+        model_provider = "Unknown"
+        print(
+            f"\nSelected model: {Fore.GREEN + Style.BRIGHT}{model_choice}{Style.RESET_ALL}\n"
+        )
+
+    return model_choice, model_provider
+
+
+def validate_date(date_str: str, date_name: str):
+    """Validate date format."""
+    try:
+        datetime.strptime(date_str, "%Y-%m-%d")
+    except ValueError:
+        raise ValueError(f"{date_name} must be in YYYY-MM-DD format")
+
+
+def process_dates(args):
+    """Process and validate start/end dates."""
+    if args.start_date:
+        validate_date(args.start_date, "Start date")
+    if args.end_date:
+        validate_date(args.end_date, "End date")
+
+    end_date = args.end_date or datetime.now().strftime("%Y-%m-%d")
+    start_date = args.start_date or (
+        datetime.strptime(end_date, "%Y-%m-%d") - relativedelta(months=3)
+    ).strftime("%Y-%m-%d")
+    return start_date, end_date
+
+
+def initialize_portfolio(args, tickers):
+    """Initialize the investment portfolio."""
+    return {
+        "cash": args.initial_cash,
+        "margin_requirement": args.margin_requirement,
+        "positions": {
+            ticker: {
+                "long": 0,
+                "short": 0,
+                "long_cost_basis": 0.0,
+                "short_cost_basis": 0.0,
+            }
+            for ticker in tickers
+        },
+        "realized_gains": {
+            ticker: {
+                "long": 0.0,
+                "short": 0.0,
+            }
+            for ticker in tickers
+        },
+    }
+
+
+def visualize_workflow(app, selected_analysts):
+    """Save workflow visualization if requested."""
+    if selected_analysts:
+        file_path = "_".join(selected_analysts) + "_graph.png"
+        save_graph_as_png(app, file_path)
+
+
+if __name__ == "__main__":
+    # Parse command line arguments
+    args = parse_arguments()
+    tickers = [ticker.strip() for ticker in args.tickers.split(",")]
+
+    # Interactive selections
+    selected_analysts = select_analysts()
+    model_choice, model_provider = select_model()
+
+    # Date processing
+    start_date, end_date = process_dates(args)
+
+    # Initialize portfolio
+    portfolio = initialize_portfolio(args, tickers)
+
+    # Create and optionally visualize workflow
     workflow = create_workflow(selected_analysts)
     app = workflow.compile()
 
     if args.show_agent_graph:
-        file_path = ""
-        if selected_analysts is not None:
-            for selected_analyst in selected_analysts:
-                file_path += selected_analyst + "_"
-            file_path += "graph.png"
-        save_graph_as_png(app, file_path)
-
-    # Validate dates if provided
-    if args.start_date:
-        try:
-            datetime.strptime(args.start_date, "%Y-%m-%d")
-        except ValueError:
-            raise ValueError("Start date must be in YYYY-MM-DD format")
-
-    if args.end_date:
-        try:
-            datetime.strptime(args.end_date, "%Y-%m-%d")
-        except ValueError:
-            raise ValueError("End date must be in YYYY-MM-DD format")
-
-    # Set the start and end dates
-    end_date = args.end_date or datetime.now().strftime("%Y-%m-%d")
-    if not args.start_date:
-        # Calculate 3 months before end_date
-        end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
-        start_date = (end_date_obj - relativedelta(months=3)).strftime("%Y-%m-%d")
-    else:
-        start_date = args.start_date
-
-    # Initialize portfolio with cash amount and stock positions
-    portfolio = {
-        "cash": args.initial_cash,  # Initial cash amount
-        "margin_requirement": args.margin_requirement,  # Initial margin requirement
-        "positions": {
-            ticker: {
-                "long": 0,  # Number of shares held long
-                "short": 0,  # Number of shares held short
-                "long_cost_basis": 0.0,  # Average cost basis for long positions
-                "short_cost_basis": 0.0,  # Average price at which shares were sold short
-            } for ticker in tickers
-        },
-        "realized_gains": {
-            ticker: {
-                "long": 0.0,  # Realized gains from long positions
-                "short": 0.0,  # Realized gains from short positions
-            } for ticker in tickers
-        }
-    }
+        visualize_workflow(app, selected_analysts)
 
     # Run the hedge fund
     result = run_hedge_fund(
