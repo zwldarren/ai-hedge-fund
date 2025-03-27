@@ -1,4 +1,6 @@
 import os
+import yaml
+from pathlib import Path
 from langchain_anthropic import ChatAnthropic
 from langchain_deepseek import ChatDeepSeek
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -41,72 +43,39 @@ class LLMModel(BaseModel):
         """Check if the model is a Gemini model"""
         return self.model_name.startswith("gemini")
 
-
-# Define available models
-AVAILABLE_MODELS = [
-    LLMModel(
-        display_name="[anthropic] claude-3.5-haiku",
-        model_name="claude-3-5-haiku-latest",
-        provider=ModelProvider.ANTHROPIC
-    ),
-    LLMModel(
-        display_name="[anthropic] claude-3.5-sonnet",
-        model_name="claude-3-5-sonnet-latest",
-        provider=ModelProvider.ANTHROPIC
-    ),
-    LLMModel(
-        display_name="[anthropic] claude-3.7-sonnet",
-        model_name="claude-3-7-sonnet-latest",
-        provider=ModelProvider.ANTHROPIC
-    ),
-    LLMModel(
-        display_name="[deepseek] deepseek-r1",
-        model_name="deepseek-reasoner",
-        provider=ModelProvider.DEEPSEEK
-    ),
-    LLMModel(
-        display_name="[deepseek] deepseek-v3",
-        model_name="deepseek-chat",
-        provider=ModelProvider.DEEPSEEK
-    ),
-    LLMModel(
-        display_name="[gemini] gemini-2.0-flash",
-        model_name="gemini-2.0-flash",
-        provider=ModelProvider.GEMINI
-    ),
-    LLMModel(
-        display_name="[gemini] gemini-2.0-pro",
-        model_name="gemini-2.0-pro-exp-02-05",
-        provider=ModelProvider.GEMINI
-    ),
-    LLMModel(
-        display_name="[groq] llama-3.3 70b",
-        model_name="llama-3.3-70b-versatile",
-        provider=ModelProvider.GROQ
-    ),
-    LLMModel(
-        display_name="[openai] gpt-4.5",
-        model_name="gpt-4.5-preview",
-        provider=ModelProvider.OPENAI
-    ),
+# Default models if config file not found
+DEFAULT_MODELS = [
     LLMModel(
         display_name="[openai] gpt-4o",
         model_name="gpt-4o",
         provider=ModelProvider.OPENAI
-    ),
-    LLMModel(
-        display_name="[openai] o1",
-        model_name="o1",
-        provider=ModelProvider.OPENAI
-    ),
-    LLMModel(
-        display_name="[openai] o3-mini",
-        model_name="o3-mini",
-        provider=ModelProvider.OPENAI
-    ),
+    )
 ]
 
-# Create LLM_ORDER in the format expected by the UI
+def load_models_from_config() -> list[LLMModel]:
+    """Load models from config file or return defaults"""
+    config_path = Path(__file__).parent.parent.parent / "models.yaml"
+    if not config_path.exists():
+        return DEFAULT_MODELS
+    
+    try:
+        with open(config_path, "r") as f:
+            config = yaml.safe_load(f)
+            return [
+                LLMModel(
+                    display_name=model["display_name"],
+                    model_name=model["model_name"],
+                    provider=ModelProvider(model["provider"])
+                )
+                for model in config.get("models", [])
+                if all(k in model for k in ["display_name", "model_name", "provider"])
+            ]
+    except Exception as e:
+        print(f"Error loading models config: {e}")
+        return DEFAULT_MODELS
+
+# Load available models
+AVAILABLE_MODELS = load_models_from_config()
 LLM_ORDER = [model.to_choice_tuple() for model in AVAILABLE_MODELS]
 
 def get_model_info(model_name: str) -> LLMModel | None:
@@ -128,7 +97,11 @@ def get_model(model_name: str, model_provider: ModelProvider) -> ChatOpenAI | Ch
             # Print error to console
             print(f"API Key Error: Please make sure OPENAI_API_KEY is set in your .env file.")
             raise ValueError("OpenAI API key not found.  Please make sure OPENAI_API_KEY is set in your .env file.")
-        return ChatOpenAI(model=model_name, api_key=api_key)
+        base_url = os.getenv("OPENAI_API_BASE")
+        if base_url:
+            return ChatOpenAI(model=model_name, api_key=api_key, base_url=base_url)
+        else:
+            return ChatOpenAI(model=model_name, api_key=api_key)
     elif model_provider == ModelProvider.ANTHROPIC:
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
