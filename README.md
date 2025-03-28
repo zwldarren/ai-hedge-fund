@@ -85,6 +85,7 @@ cp .env.example .env
 # For running LLMs hosted by openai (gpt-4o, gpt-4o-mini, etc.)
 # Get your OpenAI API key from https://platform.openai.com/
 OPENAI_API_KEY=your-openai-api-key
+OPENAI_API_BASE=https://api.openai.com/v1
 
 # For running LLMs hosted by groq (deepseek, llama3, etc.)
 # Get your Groq API key from https://groq.com/
@@ -175,27 +176,6 @@ models:
 Then run the hedge fund with your custom models file:
 ```bash
 uv run src/main.py --ticker AAPL,MSFT,NVDA --models-config models.yaml
-```
-
-## Project Structure 
-```
-ai-hedge-fund/
-├── src/
-│   ├── agents/                   # Agent definitions and workflow
-│   │   ├── bill_ackman.py        # Bill Ackman agent
-│   │   ├── fundamentals.py       # Fundamental analysis agent
-│   │   ├── portfolio_manager.py  # Portfolio management agent
-│   │   ├── risk_manager.py       # Risk management agent
-│   │   ├── sentiment.py          # Sentiment analysis agent
-│   │   ├── technicals.py         # Technical analysis agent
-│   │   ├── valuation.py          # Valuation analysis agent
-│   │   ├── warren_buffett.py     # Warren Buffett agent
-│   ├── tools/                    # Agent tools
-│   │   ├── api.py                # API tools
-│   ├── backtester.py             # Backtesting tools
-│   ├── main.py # Main entry point
-├── pyproject.toml
-├── ...
 ```
 
 ## Contributing
