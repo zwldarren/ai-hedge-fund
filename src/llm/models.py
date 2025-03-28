@@ -19,6 +19,15 @@ class ModelProvider(str, Enum):
     GROQ = "Groq"
     OPENAI = "OpenAI"
 
+    @classmethod
+    def case_insensitive_convert(cls, value: str):
+        """Convert string to ModelProvider case-insensitively"""
+        value = value.upper()
+        for member in cls:
+            if member.value.upper() == value:
+                return member
+        raise ValueError(f"'{value}' is not a valid ModelProvider")
+
 
 
 class LLMModel(BaseModel):
@@ -43,36 +52,25 @@ class LLMModel(BaseModel):
         """Check if the model is a Gemini model"""
         return self.model_name.startswith("gemini")
 
-# Default models if config file not found
-DEFAULT_MODELS = [
-    LLMModel(
-        display_name="[openai] gpt-4o",
-        model_name="gpt-4o",
-        provider=ModelProvider.OPENAI
-    )
-]
 
 def load_models_from_config() -> list[LLMModel]:
     """Load models from config file or return defaults"""
     config_path = Path(__file__).parent.parent.parent / "models.yaml"
     if not config_path.exists():
-        return DEFAULT_MODELS
+        raise FileNotFoundError(f"Models config file not found: {config_path}")
     
-    try:
-        with open(config_path, "r") as f:
-            config = yaml.safe_load(f)
-            return [
-                LLMModel(
-                    display_name=model["display_name"],
-                    model_name=model["model_name"],
-                    provider=ModelProvider(model["provider"])
-                )
-                for model in config.get("models", [])
-                if all(k in model for k in ["display_name", "model_name", "provider"])
-            ]
-    except Exception as e:
-        print(f"Error loading models config: {e}")
-        return DEFAULT_MODELS
+    with open(config_path, "r") as f:
+        config = yaml.safe_load(f)
+        return [
+            LLMModel(
+                display_name=model["display_name"],
+                model_name=model["model_name"],
+                provider=ModelProvider.case_insensitive_convert(model["provider"])
+            )
+            for model in config.get("models", [])
+            if all(k in model for k in ["display_name", "model_name", "provider"])
+        ]
+
 
 # Load available models
 AVAILABLE_MODELS = load_models_from_config()
@@ -87,7 +85,7 @@ def get_model(model_name: str, model_provider: ModelProvider) -> ChatOpenAI | Ch
         api_key = os.getenv("GROQ_API_KEY")
         if not api_key:
             # Print error to console
-            print(f"API Key Error: Please make sure GROQ_API_KEY is set in your .env file.")
+            print("API Key Error: Please make sure GROQ_API_KEY is set in your .env file.")
             raise ValueError("Groq API key not found.  Please make sure GROQ_API_KEY is set in your .env file.")
         return ChatGroq(model=model_name, api_key=api_key)
     elif model_provider == ModelProvider.OPENAI:
@@ -95,7 +93,7 @@ def get_model(model_name: str, model_provider: ModelProvider) -> ChatOpenAI | Ch
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             # Print error to console
-            print(f"API Key Error: Please make sure OPENAI_API_KEY is set in your .env file.")
+            print("API Key Error: Please make sure OPENAI_API_KEY is set in your .env file.")
             raise ValueError("OpenAI API key not found.  Please make sure OPENAI_API_KEY is set in your .env file.")
         base_url = os.getenv("OPENAI_API_BASE")
         if base_url:
@@ -105,18 +103,18 @@ def get_model(model_name: str, model_provider: ModelProvider) -> ChatOpenAI | Ch
     elif model_provider == ModelProvider.ANTHROPIC:
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
-            print(f"API Key Error: Please make sure ANTHROPIC_API_KEY is set in your .env file.")
+            print("API Key Error: Please make sure ANTHROPIC_API_KEY is set in your .env file.")
             raise ValueError("Anthropic API key not found.  Please make sure ANTHROPIC_API_KEY is set in your .env file.")
         return ChatAnthropic(model=model_name, api_key=api_key)
     elif model_provider == ModelProvider.DEEPSEEK:
         api_key = os.getenv("DEEPSEEK_API_KEY")
         if not api_key:
-            print(f"API Key Error: Please make sure DEEPSEEK_API_KEY is set in your .env file.")
+            print("API Key Error: Please make sure DEEPSEEK_API_KEY is set in your .env file.")
             raise ValueError("DeepSeek API key not found.  Please make sure DEEPSEEK_API_KEY is set in your .env file.")
         return ChatDeepSeek(model=model_name, api_key=api_key)
     elif model_provider == ModelProvider.GEMINI:
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
-            print(f"API Key Error: Please make sure GOOGLE_API_KEY is set in your .env file.")
+            print("API Key Error: Please make sure GOOGLE_API_KEY is set in your .env file.")
             raise ValueError("Google API key not found.  Please make sure GOOGLE_API_KEY is set in your .env file.")
         return ChatGoogleGenerativeAI(model=model_name, api_key=api_key)

@@ -1,4 +1,5 @@
 import sys
+import yaml
 
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
@@ -135,9 +136,25 @@ def create_workflow(selected_analysts=None):
     return workflow
 
 
+def load_models_config(config_path):
+    """Load models configuration from yaml file."""
+    try:
+        with open(config_path, "r") as f:
+            config = yaml.safe_load(f)
+            return config.get("models", [])
+    except Exception as e:
+        print(f"Error loading models config: {e}")
+        return []
+
+
 def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Run the hedge fund trading system")
+    parser.add_argument(
+        "--models-config",
+        type=str,
+        help="Path to models configuration yaml file",
+    )
     parser.add_argument(
         "--initial-cash",
         type=float,
@@ -202,13 +219,21 @@ def select_analysts():
     return choices
 
 
-def select_model():
+def select_model(models_config=None):
     """Handle LLM model selection through interactive prompt."""
+    if models_config:
+        choices = [
+            questionary.Choice(model["display_name"], value=model["model_name"])
+            for model in models_config
+        ]
+    else:
+        choices = [
+            questionary.Choice(display, value=value) for display, value, _ in LLM_ORDER
+        ]
+
     model_choice = questionary.select(
         "Select your LLM model:",
-        choices=[
-            questionary.Choice(display, value=value) for display, value, _ in LLM_ORDER
-        ],
+        choices=choices,
         style=questionary.Style(
             [
                 ("selected", "fg:green bold"),
@@ -296,9 +321,14 @@ if __name__ == "__main__":
     args = parse_arguments()
     tickers = [ticker.strip() for ticker in args.tickers.split(",")]
 
+    # Load models config if specified
+    models_config = None
+    if args.models_config:
+        models_config = load_models_config(args.models_config)
+
     # Interactive selections
     selected_analysts = select_analysts()
-    model_choice, model_provider = select_model()
+    model_choice, model_provider = select_model(models_config)
 
     # Date processing
     start_date, end_date = process_dates(args)

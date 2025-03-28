@@ -28,9 +28,6 @@ ENV/
 # Environment Variables
 .env
 
-# Model Config File
-models.yaml
-
 # IDE
 .idea/
 .vscode/

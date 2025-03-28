@@ -2,6 +2,12 @@
 
 This is a proof of concept for an AI-powered hedge fund.  The goal of this project is to explore the use of AI to make trading decisions.  This project is for **educational** purposes only and is not intended for real trading or investment.
 
+<div align="center">
+
+**English** · [简体中文](./README_CN.md)
+
+</div>
+
 This system employs several agents working together:
 
 1. Ben Graham Agent - The godfather of value investing, only buys hidden gems with a margin of safety
@@ -42,6 +48,7 @@ By using this software, you agree to use it solely for learning purposes.
 - [Usage](#usage)
   - [Running the Hedge Fund](#running-the-hedge-fund)
   - [Running the Backtester](#running-the-backtester)
+  - [Custom Models](#custom-models)
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
 - [Feature Requests](#feature-requests)
@@ -51,18 +58,18 @@ By using this software, you agree to use it solely for learning purposes.
 
 Clone the repository:
 ```bash
-git clone https://github.com/virattt/ai-hedge-fund.git
+git clone https://github.com/zwldarren/ai-hedge-fund.git
 cd ai-hedge-fund
 ```
 
-1. Install Poetry (if not already installed):
+1. Install UV (if not already installed):
 ```bash
-curl -sSL https://install.python-poetry.org | python3 -
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 2. Install dependencies:
 ```bash
-poetry install
+uv sync
 ```
 
 3. Set up your environment variables:
@@ -71,7 +78,9 @@ poetry install
 cp .env.example .env
 ```
 
-4. Set your API keys:
+4. (Optional) Edit models.yaml to configure custom models (see [Custom Models](#custom-models) section)
+
+5. Set your API keys:
 ```bash
 # For running LLMs hosted by openai (gpt-4o, gpt-4o-mini, etc.)
 # Get your OpenAI API key from https://platform.openai.com/
@@ -96,7 +105,7 @@ For any other ticker, you will need to set the `FINANCIAL_DATASETS_API_KEY` in t
 
 ### Running the Hedge Fund
 ```bash
-poetry run python src/main.py --ticker AAPL,MSFT,NVDA
+uv run src/main.py --ticker AAPL,MSFT,NVDA
 ```
 
 **Example Output:**
@@ -105,18 +114,23 @@ poetry run python src/main.py --ticker AAPL,MSFT,NVDA
 You can also specify a `--show-reasoning` flag to print the reasoning of each agent to the console.
 
 ```bash
-poetry run python src/main.py --ticker AAPL,MSFT,NVDA --show-reasoning
+uv run src/main.py --ticker AAPL,MSFT,NVDA --show-reasoning
+```
+
+You can also specify a custom models configuration file:
+```bash
+uv run src/main.py --ticker AAPL,MSFT,NVDA --models-config models.yaml
 ```
 You can optionally specify the start and end dates to make decisions for a specific time period.
 
 ```bash
-poetry run python src/main.py --ticker AAPL,MSFT,NVDA --start-date 2024-01-01 --end-date 2024-03-01 
+uv run src/main.py --ticker AAPL,MSFT,NVDA --start-date 2024-01-01 --end-date 2024-03-01 
 ```
 
 ### Running the Backtester
 
 ```bash
-poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA
+uv run src/backtester.py --ticker AAPL,MSFT,NVDA
 ```
 
 **Example Output:**
@@ -125,7 +139,42 @@ poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA
 You can optionally specify the start and end dates to backtest over a specific time period.
 
 ```bash
-poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA --start-date 2024-01-01 --end-date 2024-03-01
+uv run src/backtester.py --ticker AAPL,MSFT,NVDA --start-date 2024-01-01 --end-date 2024-03-01
+```
+
+### Custom Models
+
+You can customize the LLM models used by the hedge fund by editing the `models.yaml` file. The system supports models from the following providers:
+
+- Anthropic (claude-3.5-haiku, claude-3.5-sonnet, claude-3.7-sonnet)
+- Deepseek (deepseek-v3, deepseek-r1)
+- Gemini (gemini-2.0-flash, gemini-2.0-pro)
+- Groq (llama-3.3-70b)
+- OpenAI (gpt-4.5, gpt-4o, o1, o3-mini)
+
+To configure custom models:
+
+1. Edit the `models.yaml` file following the existing format
+2. Each model entry should include:
+   - `model_name`: The provider's model identifier
+   - `display_name`: Human-readable name (shown in UI)
+   - `provider`: Lowercase provider name (anthropic, deepseek, gemini, groq, openai)
+
+Example configuration:
+```yaml
+models:
+  - model_name: "claude-3-5-sonnet-latest"
+    display_name: "[anthropic] claude-3.5-sonnet"
+    provider: "anthropic"
+  
+  - model_name: "gpt-4o"
+    display_name: "[openai] gpt-4o" 
+    provider: "openai"
+```
+
+Then run the hedge fund with your custom models file:
+```bash
+uv run src/main.py --ticker AAPL,MSFT,NVDA --models-config models.yaml
 ```
 
 ## Project Structure 
