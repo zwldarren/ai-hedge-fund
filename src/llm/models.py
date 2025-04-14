@@ -125,13 +125,18 @@ AVAILABLE_MODELS = [
 # Define Ollama models separately
 OLLAMA_MODELS = [
     LLMModel(
-        display_name="[ollama] deepseek-r1 (1.5B)",
-        model_name="deepseek-r1:1.5b",
+        display_name="[ollama] gemma3 (4B)",
+        model_name="gemma3:4b",
         provider=ModelProvider.OLLAMA
     ),
     LLMModel(
-        display_name="[ollama] gemma3 (4B)",
-        model_name="gemma3:4b",
+        display_name="[ollama] qwen2.5 (7B)",
+        model_name="qwen2.5",
+        provider=ModelProvider.OLLAMA
+    ),
+    LLMModel(
+        display_name="[ollama] llama3.1 (8B)",
+        model_name="llama3.1:latest",
         provider=ModelProvider.OLLAMA
     ),
     LLMModel(
@@ -140,13 +145,23 @@ OLLAMA_MODELS = [
         provider=ModelProvider.OLLAMA
     ),
     LLMModel(
-        display_name="[ollama] qwq (32B)",
-        model_name="qwq",
+        display_name="[ollama] mistral-small3.1 (24B)",
+        model_name="mistral-small3.1",
+        provider=ModelProvider.OLLAMA
+    ),
+    LLMModel(
+        display_name="[ollama] gemma3 (27B)",
+        model_name="gemma3:27b",
+        provider=ModelProvider.OLLAMA
+    ),
+    LLMModel(
+        display_name="[ollama] qwen2.5 (32B)",
+        model_name="qwen2.5:32b",
         provider=ModelProvider.OLLAMA
     ),
     LLMModel(
         display_name="[ollama] llama-3.3 (70B)",
-        model_name="llama3.3",
+        model_name="llama3.3:70b-instruct-q4_0",
         provider=ModelProvider.OLLAMA
     ),
 ]
@@ -199,13 +214,7 @@ def get_model(model_name: str, model_provider: ModelProvider) -> ChatOpenAI | Ch
     elif model_provider == ModelProvider.OLLAMA:
         # For Ollama, we use a base URL instead of an API key
         base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-        # Add a system message to help guide Ollama models to produce proper JSON
-        system_message = """You are a helpful financial analysis assistant. 
-        When asked to provide analysis or make decisions, respond with valid JSON.
-        Make sure your JSON is properly formatted, with no trailing commas, and all keys are in double quotes.
-        If you include any explanations, put them inside the JSON in a field called "reasoning"."""
         return ChatOllama(
             model=model_name, 
             base_url=base_url,
-            system=system_message
         )
