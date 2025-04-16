@@ -3,18 +3,11 @@ import sys
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 from langgraph.graph import END, StateGraph
-from colorama import Fore, Back, Style, init
+from colorama import Fore, Style, init
 import questionary
-from agents.ben_graham import ben_graham_agent
-from agents.bill_ackman import bill_ackman_agent
-from agents.fundamentals import fundamentals_agent
 from agents.portfolio_manager import portfolio_management_agent
-from agents.technicals import technical_analyst_agent
 from agents.risk_manager import risk_management_agent
-from agents.sentiment import sentiment_agent
-from agents.warren_buffett import warren_buffett_agent
 from graph.state import AgentState
-from agents.valuation import valuation_agent
 from utils.display import print_trading_output
 from utils.analysts import ANALYST_ORDER, get_analyst_nodes
 from utils.progress import progress
@@ -24,7 +17,6 @@ from utils.ollama import ensure_ollama_and_model
 import argparse
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from tabulate import tabulate
 from utils.visualize import save_graph_as_png
 import json
 
