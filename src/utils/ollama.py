@@ -1,12 +1,10 @@
 """Utilities for working with Ollama models"""
 
-import os
 import platform
 import subprocess
-import sys
 import requests
 import time
-from typing import List, Optional
+from typing import List
 import questionary
 from colorama import Fore, Style
 
