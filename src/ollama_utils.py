@@ -7,7 +7,6 @@ This script allows you to delete and re-download Ollama models.
 import argparse
 import sys
 from utils.ollama import (
-    ensure_ollama_and_model,
     is_ollama_installed,
     is_ollama_server_running,
     get_locally_available_models,
