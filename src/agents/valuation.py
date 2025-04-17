@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-"""Valuation Agent – production‑ready version
+"""Valuation Agent
 
 Implements four complementary valuation methodologies and aggregates them with
-configurable weights.  Designed for integration in the AI hedge‑fund agent
-suite.
+configurable weights. 
 """
 
 from statistics import median
@@ -18,10 +17,6 @@ from tools.api import (
     get_market_cap,
     search_line_items,
 )
-
-#############################
-# Main Agent
-#############################
 
 def valuation_agent(state: AgentState):
     """Run valuation across tickers and write signals back to `state`."""
