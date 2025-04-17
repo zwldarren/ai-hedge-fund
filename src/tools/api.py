@@ -15,7 +15,6 @@ from data.models import (
     LineItemResponse,
     InsiderTrade,
     InsiderTradeResponse,
-    CompanyFacts,
     CompanyFactsResponse,
 )
 
