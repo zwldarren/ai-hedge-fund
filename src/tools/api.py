@@ -272,7 +272,6 @@ def get_market_cap(
             
         data = response.json()
         response_model = CompanyFactsResponse(**data)
-        print(f"Market cap for {ticker} is {response_model.company_facts.market_cap}")
         return response_model.company_facts.market_cap
 
     financial_metrics = get_financial_metrics(ticker, end_date)
@@ -280,7 +279,6 @@ def get_market_cap(
         return None
     
     market_cap = financial_metrics[0].market_cap
-    print(f"Getting market cap from financial metrics {market_cap}")
 
     if not market_cap:
         return None
