@@ -87,6 +87,11 @@ def valuation_agent(state: AgentState):
         # Get the market cap
         market_cap = get_market_cap(ticker=ticker, end_date=end_date)
 
+        # Add safety check for market cap
+        if not market_cap:
+            progress.update_status("valuation_agent", ticker, "Failed: Market cap data not available")
+            continue
+
         # Calculate combined valuation gap (average of both methods)
         dcf_gap = (dcf_value - market_cap) / market_cap
         owner_earnings_gap = (owner_earnings_value - market_cap) / market_cap
