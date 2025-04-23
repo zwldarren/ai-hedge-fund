@@ -7,6 +7,7 @@ import time
 from typing import List
 import questionary
 from colorama import Fore, Style
+import os
 
 # Constants
 OLLAMA_SERVER_URL = "http://localhost:11434"
@@ -315,6 +316,163 @@ def download_model(model_name: str) -> bool:
 
 def ensure_ollama_and_model(model_name: str) -> bool:
     """Ensure Ollama is installed, running, and the requested model is available."""
+    # Check if we're running in Docker
+    in_docker = os.environ.get("OLLAMA_BASE_URL", "").startswith("http://ollama:") or \
+                os.environ.get("OLLAMA_BASE_URL", "").startswith("http://host.docker.internal:")
+    
+    # In Docker environment, we need a different approach
+    if in_docker:
+        print(f"{Fore.CYAN}Docker environment detected.{Style.RESET_ALL}")
+        
+        try:
+            # We're using Docker, so we need to connect to the Ollama service
+            import requests
+            import threading
+            import time
+            ollama_url = os.environ.get("OLLAMA_BASE_URL", "http://ollama:11434")
+            
+            # Check if Ollama service is available
+            try:
+                response = requests.get(f"{ollama_url}/api/version", timeout=5)
+                if response.status_code != 200:
+                    print(f"{Fore.RED}Cannot connect to Ollama service at {ollama_url}.{Style.RESET_ALL}")
+                    print(f"{Fore.YELLOW}Make sure the Ollama service is running in your Docker environment.{Style.RESET_ALL}")
+                    return False
+                
+                # Ollama service is available, check for the model
+                response = requests.get(f"{ollama_url}/api/tags", timeout=5)
+                if response.status_code == 200:
+                    models = response.json().get("models", [])
+                    model_names = [m["name"] for m in models]
+                    
+                    if model_name in model_names:
+                        print(f"{Fore.GREEN}Model {model_name} is available in the Docker Ollama container.{Style.RESET_ALL}")
+                        return True
+                    else:
+                        print(f"{Fore.YELLOW}Model {model_name} is not available in the Docker Ollama container.{Style.RESET_ALL}")
+                        
+                        # Get model size info for user information
+                        model_size_info = ""
+                        if "70b" in model_name:
+                            model_size_info = " This is a large model (up to 28GB) and may take a while to download."
+                        elif "34b" in model_name or "8x7b" in model_name:
+                            model_size_info = " This is a medium-sized model (8-16GB) and may take several minutes to download."
+                        elif "13b" in model_name or "12b" in model_name:
+                            model_size_info = " This is a medium-sized model (5-8GB) and may take a few minutes to download."
+                        elif "7b" in model_name or "8b" in model_name:
+                            model_size_info = " This is a smaller model (3-5GB) and should download relatively quickly on a fast connection."
+                        
+                        # Ask if they want to pull the model
+                        if questionary.confirm(f"Do you want to download {model_name}?{model_size_info}").ask():
+                            print(f"{Fore.YELLOW}Downloading model {model_name} to the Docker Ollama container...{Style.RESET_ALL}")
+                            print(f"{Fore.CYAN}This may take some time. Please be patient.{Style.RESET_ALL}")
+                            
+                            try:
+                                # For tracking progress
+                                download_complete = threading.Event()
+                                
+                                def show_progress():
+                                    """Show a spinner during download"""
+                                    spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+                                    idx = 0
+                                    while not download_complete.is_set():
+                                        spinner_char = spinner[idx % len(spinner)]
+                                        print(f"\r{Fore.CYAN}{spinner_char} Downloading model...{Style.RESET_ALL}", end="", flush=True)
+                                        idx += 1
+                                        time.sleep(0.1)
+                                    print("\r" + " " * 30 + "\r", end="") # Clear the spinner line
+                                
+                                # Start the progress display in a separate thread
+                                progress_thread = threading.Thread(target=show_progress)
+                                progress_thread.daemon = True
+                                progress_thread.start()
+                                
+                                try:
+                                    # Initiate the download using the Ollama API (non-blocking)
+                                    response = requests.post(
+                                        f"{ollama_url}/api/pull",
+                                        json={"name": model_name},
+                                        timeout=10 # Short timeout for request initiation
+                                    )
+                                    
+                                    if response.status_code != 200:
+                                        print(f"{Fore.RED}Failed to initiate model download. Status code: {response.status_code}{Style.RESET_ALL}")
+                                        if response.text:
+                                            print(f"{Fore.RED}Error: {response.text}{Style.RESET_ALL}")
+                                        return False
+                                    
+                                    # Poll until we find the model or timeout
+                                    total_wait_time = 0
+                                    max_wait_time = 1800 # 30 minutes max wait
+                                    check_interval = 5 # Check every 5 seconds
+                                    
+                                    print(f"{Fore.CYAN}Download initiated. Waiting for model to become available...{Style.RESET_ALL}")
+                                    
+                                    # Check periodically if the model has been downloaded
+                                    while total_wait_time < max_wait_time:
+                                        try:
+                                            # Check if the model is registered yet
+                                            verify_response = requests.get(f"{ollama_url}/api/tags", timeout=5)
+                                            if verify_response.status_code == 200:
+                                                models = verify_response.json().get("models", [])
+                                                model_names = [m["name"] for m in models]
+                                                if model_name in model_names:
+                                                    print(f"{Fore.GREEN}Model {model_name} downloaded successfully.{Style.RESET_ALL}")
+                                                    return True
+                                            else:
+                                                # Log unexpected status, but continue polling
+                                                print(f"\n{Fore.YELLOW}Warning: Unexpected status {verify_response.status_code} when checking models.{Style.RESET_ALL}")
+                                                
+                                        except requests.RequestException as req_err:
+                                            # Log connection error, but continue polling
+                                            print(f"\n{Fore.YELLOW}Warning: Connection error checking models: {req_err}{Style.RESET_ALL}")
+                                            
+                                        except Exception as poll_err:
+                                            # Log other polling errors, but continue
+                                            print(f"\n{Fore.YELLOW}Warning: Error during polling: {poll_err}{Style.RESET_ALL}")
+
+                                        # Wait before checking again
+                                        time.sleep(check_interval)
+                                        total_wait_time += check_interval
+                                    
+                                    # If we get here, we've timed out
+                                    print(f"\n{Fore.RED}Timed out waiting for model download to complete after {max_wait_time // 60} minutes.{Style.RESET_ALL}")
+                                    return False
+                                    
+                                except requests.Timeout:
+                                    print(f"{Fore.RED}Error: Timed out initiating download request.{Style.RESET_ALL}")
+                                    return False
+                                except requests.RequestException as req_err:
+                                    print(f"{Fore.RED}Error initiating download request: {req_err}{Style.RESET_ALL}")
+                                    return False
+                                except Exception as e:
+                                    print(f"{Fore.RED}An unexpected error occurred during download initiation: {e}{Style.RESET_ALL}")
+                                    return False
+                                finally:
+                                    # Make sure spinner is stopped
+                                    download_complete.set()
+                                    progress_thread.join(timeout=5) # Wait a bit for the thread to finish
+                                    
+                            except Exception as e:
+                                # Catch errors during thread setup or initial checks
+                                print(f"{Fore.RED}Error setting up model download: {e}{Style.RESET_ALL}")
+                                return False
+                        else:
+                            print(f"{Fore.RED}Cannot proceed without the model.{Style.RESET_ALL}")
+                            return False
+                else:
+                    print(f"{Fore.RED}Failed to get available models from Ollama service. Status code: {response.status_code}{Style.RESET_ALL}")
+                    return False
+                    
+            except requests.RequestException as e:
+                print(f"{Fore.RED}Error connecting to Ollama service: {e}{Style.RESET_ALL}")
+                return False
+                
+        except Exception as e:
+            print(f"{Fore.RED}Error in Docker environment setup: {e}{Style.RESET_ALL}")
+            return False
+    
+    # Regular flow for non-Docker environments
     # Check if Ollama is installed
     if not is_ollama_installed():
         print(f"{Fore.YELLOW}Ollama is not installed on your system.{Style.RESET_ALL}")
@@ -351,7 +509,7 @@ def ensure_ollama_and_model(model_name: str) -> bool:
             print(f"{Fore.RED}The model is required to proceed.{Style.RESET_ALL}")
             return False
     
-    return True 
+    return True
 
 
 def delete_model(model_name: str) -> bool:
@@ -380,3 +538,20 @@ def delete_model(model_name: str) -> bool:
     except Exception as e:
         print(f"{Fore.RED}Error deleting model {model_name}: {e}{Style.RESET_ALL}")
         return False 
+
+# Add this at the end of the file for command-line usage
+if __name__ == "__main__":
+    import sys
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Ollama model manager")
+    parser.add_argument("--check-model", help="Check if model exists and download if needed")
+    args = parser.parse_args()
+    
+    if args.check_model:
+        print(f"Ensuring Ollama is installed and model {args.check_model} is available...")
+        result = ensure_ollama_and_model(args.check_model)
+        sys.exit(0 if result else 1)
+    else:
+        print("No action specified. Use --check-model to check if a model exists.")
+        sys.exit(1) 
