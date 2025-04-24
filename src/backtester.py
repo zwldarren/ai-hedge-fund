@@ -259,7 +259,7 @@ class Backtester:
 
             # Short position unrealized PnL = short_shares * (short_cost_basis - current_price)
             if position["short"] > 0:
-                total_value += position["short"] * (position["short_cost_basis"] - price)
+                total_value -= position["short"] * price
 
         return total_value
 
