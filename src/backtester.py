@@ -287,17 +287,6 @@ class Backtester:
 
         print("Data pre-fetch complete.")
 
-    def parse_agent_response(self, agent_output):
-        """Parse JSON output from the agent (fallback to 'hold' if invalid)."""
-        import json
-
-        try:
-            decision = json.loads(agent_output)
-            return decision
-        except Exception:
-            print(f"Error parsing action: {agent_output}")
-            return {"action": "hold", "quantity": 0}
-
     def run_backtest(self):
         # Pre-fetch all data at the start
         self.prefetch_data()
