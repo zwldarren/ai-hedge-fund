@@ -23,23 +23,19 @@ cd ai-hedge-fund
 curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-3. Navigate to the backend directory:
+3. Install dependencies:
 ```bash
-cd app/backend
-```
-
-4. Install dependencies:
-```bash
+# From the root directory
 poetry install
 ```
 
-5. Set up your environment variables:
+4. Set up your environment variables:
 ```bash
 # Create .env file for your API keys (in the root directory)
-cp ../../.env.example ../../.env
+cp .env.example .env
 ```
 
-6. Edit the .env file to add your API keys:
+5. Edit the .env file to add your API keys:
 ```bash
 # For running LLMs hosted by openai (gpt-4o, gpt-4o-mini, etc.)
 OPENAI_API_KEY=your-openai-api-key
@@ -56,8 +52,11 @@ FINANCIAL_DATASETS_API_KEY=your-financial-datasets-api-key
 To run the development server:
 
 ```bash
+# Navigate to the backend directory
 cd app/backend
-fastapi dev main.py
+
+# Start the FastAPI server with uvicorn
+poetry run uvicorn main:app --reload
 ```
 
 This will start the FastAPI server with hot-reloading enabled.
@@ -87,9 +86,7 @@ app/backend/
 │   ├── graph.py              # Agent graph functionality
 │   └── portfolio.py          # Portfolio management
 ├── __init__.py               # Package initialization
-├── main.py                   # FastAPI application entry point
-├── pyproject.toml            # Poetry configuration and dependencies
-└── poetry.lock               # Poetry lock file
+└── main.py                   # FastAPI application entry point
 ```
 
 ## Disclaimer
