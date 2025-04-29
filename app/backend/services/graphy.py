@@ -9,7 +9,6 @@ from src.utils.analysts import ANALYST_CONFIG
 from src.graph.state import AgentState
 
 
-
 # Helper function to create the agent graph
 def create_graph(selected_agents: list[str]) -> StateGraph:
     """Create the workflow with selected agents."""
@@ -17,10 +16,7 @@ def create_graph(selected_agents: list[str]) -> StateGraph:
     graph.add_node("start_node", start)
 
     # Get analyst nodes from the configuration
-    analyst_nodes = {
-        key: (f"{key}_agent", config["agent_func"])
-        for key, config in ANALYST_CONFIG.items()
-    }
+    analyst_nodes = {key: (f"{key}_agent", config["agent_func"]) for key, config in ANALYST_CONFIG.items()}
 
     # Add selected analyst nodes
     for agent_name in selected_agents:

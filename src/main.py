@@ -7,7 +7,7 @@ from colorama import Fore, Style, init
 import questionary
 from agents.portfolio_manager import portfolio_management_agent
 from agents.risk_manager import risk_management_agent
-from graph.state import AgentState
+from src.graph.state import AgentState
 from utils.display import print_trading_output
 from utils.analysts import ANALYST_ORDER, get_analyst_nodes
 from utils.progress import progress
