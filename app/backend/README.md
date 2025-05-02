@@ -1,4 +1,5 @@
-# AI Hedge Fund Backend
+# AI Hedge Fund - Backend [WIP] 🚧
+This project is currently a work in progress.  To track progress, please get updates [here](https://x.com/virattt).
 
 This is the backend server for the AI Hedge Fund project. It provides a simple REST API to interact with the AI Hedge Fund system, allowing you to run the hedge fund through a web interface.
 
