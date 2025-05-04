@@ -55,7 +55,7 @@ def portfolio_management_agent(state: AgentState):
                 ticker_signals[agent] = {"signal": signals[ticker]["signal"], "confidence": signals[ticker]["confidence"]}
         signals_by_ticker[ticker] = ticker_signals
 
-    progress.update_status("portfolio_management_agent", None, "Making trading decisions")
+    progress.update_status("portfolio_management_agent", None, "Generating trading decisions")
 
     # Generate the trading decision
     result = generate_trading_decision(
@@ -77,8 +77,6 @@ def portfolio_management_agent(state: AgentState):
     # Print the decision if the flag is set
     if state["metadata"]["show_reasoning"]:
         show_agent_reasoning({ticker: decision.model_dump() for ticker, decision in result.decisions.items()}, "Portfolio Management Agent")
-
-    progress.update_status("portfolio_management_agent", None, "Done")
 
     return {
         "messages": state["messages"] + [message],
