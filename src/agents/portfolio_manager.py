@@ -29,8 +29,6 @@ def portfolio_management_agent(state: AgentState):
     analyst_signals = state["data"]["analyst_signals"]
     tickers = state["data"]["tickers"]
 
-    progress.update_status("portfolio_management_agent", None, "Analyzing signals")
-
     # Get position limits, current prices, and signals for every ticker
     position_limits = {}
     current_prices = {}
@@ -102,8 +100,8 @@ def generate_trading_decision(
     template = ChatPromptTemplate.from_messages(
         [
             (
-              "system",
-              """You are a portfolio manager making final trading decisions based on multiple tickers.
+                "system",
+                """You are a portfolio manager making final trading decisions based on multiple tickers.
 
               Trading Rules:
               - For long positions:
@@ -140,8 +138,8 @@ def generate_trading_decision(
               """,
             ),
             (
-              "human",
-              """Based on the team's analysis, make your trading decisions for each ticker.
+                "human",
+                """Based on the team's analysis, make your trading decisions for each ticker.
 
               Here are the signals by ticker:
               {signals_by_ticker}
@@ -184,7 +182,7 @@ def generate_trading_decision(
             "current_prices": json.dumps(current_prices, indent=2),
             "max_shares": json.dumps(max_shares, indent=2),
             "portfolio_cash": f"{portfolio.get('cash', 0):.2f}",
-            "portfolio_positions": json.dumps(portfolio.get('positions', {}), indent=2),
+            "portfolio_positions": json.dumps(portfolio.get("positions", {}), indent=2),
             "margin_requirement": f"{portfolio.get('margin_requirement', 0):.2f}",
             "total_margin_used": f"{portfolio.get('margin_used', 0):.2f}",
         }
