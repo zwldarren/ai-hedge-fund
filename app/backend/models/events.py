@@ -21,7 +21,7 @@ class StartEvent(BaseEvent):
 class ProgressUpdateEvent(BaseEvent):
     """Event containing an agent's progress update"""
 
-    type: Literal["progress_update"] = "progress_update"
+    type: Literal["IN_PROGRESS"] = "IN_PROGRESS"
     agent: str
     ticker: Optional[str] = None
     status: str
@@ -30,12 +30,12 @@ class ProgressUpdateEvent(BaseEvent):
 class ErrorEvent(BaseEvent):
     """Event indicating an error occurred"""
 
-    type: Literal["error"] = "error"
+    type: Literal["ERROR"] = "ERROR"
     message: str
 
 
 class CompleteEvent(BaseEvent):
     """Event indicating successful completion with results"""
 
-    type: Literal["complete"] = "complete"
+    type: Literal["COMPLETE"] = "COMPLETE"
     data: Dict[str, Any]
