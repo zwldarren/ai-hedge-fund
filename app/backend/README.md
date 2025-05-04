@@ -68,7 +68,7 @@ The API will be available at:
 
 ## API Endpoints
 
-- `POST /run-hedge-fund`: Run the AI Hedge Fund with specified parameters
+- `POST /hedge-fund/run`: Run the AI Hedge Fund with specified parameters
 - `GET /ping`: Simple endpoint to test server connectivity
 
 ## Project Structure

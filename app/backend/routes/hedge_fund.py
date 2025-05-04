@@ -4,11 +4,11 @@ from app.backend.models.schemas import HedgeFundResponse, ErrorResponse, HedgeFu
 from app.backend.services.graphy import create_graph, parse_hedge_fund_response, run_graph
 from app.backend.services.portfolio import create_portfolio
 
-router = APIRouter()
+router = APIRouter(prefix="/hedge-fund")
 
 
 @router.post(
-    path="/run-hedge-fund",
+    path="/run",
     response_model=HedgeFundResponse,
     responses={
         400: {"model": ErrorResponse, "description": "Invalid request parameters"},
