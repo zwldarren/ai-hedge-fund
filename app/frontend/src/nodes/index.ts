@@ -1,26 +1,33 @@
-import type { NodeTypes } from '@xyflow/react';
+import { Position, type NodeTypes } from '@xyflow/react';
 
+import { AgentNode } from './AgentNode';
 import { PositionLoggerNode } from './PositionLoggerNode';
 import { AppNode } from './types';
 
 export const initialNodes: AppNode[] = [
-  { id: 'a', type: 'input', position: { x: 0, y: 0 }, data: { label: 'wire' } },
+  {
+    id: 'a',
+    type: 'input',
+    position: { x: 0, y: 0 },
+    data: { label: 'Input' },
+    sourcePosition: Position.Right
+  },
   {
     id: 'b',
-    type: 'position-logger',
-    position: { x: -100, y: 100 },
-    data: { label: 'drag me!' },
+    type: 'agent',
+    position: { x: 200, y: 0 },
+    data: { agent_name: 'Warren Buffett', agent_id: 'warren_buffett' },
   },
-  { id: 'c', position: { x: 100, y: 100 }, data: { label: 'your ideas' } },
   {
-    id: 'd',
-    type: 'output',
-    position: { x: 0, y: 200 },
-    data: { label: 'with React Flow' },
+    id: 'c',
+    type: 'agent',
+    position: { x: 400, y: 0 },
+    data: { agent_name: 'Portfolio Manager', agent_id: 'portfolio_manager' },
   },
 ];
 
 export const nodeTypes = {
   'position-logger': PositionLoggerNode,
+  'agent': AgentNode,
   // Add any of your custom nodes here!
 } satisfies NodeTypes;
