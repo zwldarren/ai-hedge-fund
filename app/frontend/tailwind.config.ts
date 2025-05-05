@@ -18,6 +18,20 @@ const config: Config = {
       ]
     },
     extend: {
+      fontSize: {
+        title: [
+          '0.875rem',
+          {
+            lineHeight: '1.25rem'
+          }
+        ],
+        subtitle: [
+          '0.625rem',
+          {
+            lineHeight: '1rem'
+          }
+        ]
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
@@ -62,6 +76,13 @@ const config: Config = {
           foreground: 'hsl(var(--node-foreground))',
           handle: 'hsl(var(--node-handle))',
           border: 'hsl(var(--node-border))'
+        },
+        chart: {
+          '1': 'hsl(var(--chart-1))',
+          '2': 'hsl(var(--chart-2))',
+          '3': 'hsl(var(--chart-3))',
+          '4': 'hsl(var(--chart-4))',
+          '5': 'hsl(var(--chart-5))'
         }
       },
       keyframes: {
