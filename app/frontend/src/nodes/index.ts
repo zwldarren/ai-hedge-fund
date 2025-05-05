@@ -1,7 +1,6 @@
 import { Position, type NodeTypes } from '@xyflow/react';
 
-import { AgentNode } from './AgentNode';
-import { PositionLoggerNode } from './PositionLoggerNode';
+import { AgentNode } from './agent-node';
 import { AppNode } from './types';
 
 export const initialNodes: AppNode[] = [
@@ -27,7 +26,6 @@ export const initialNodes: AppNode[] = [
 ];
 
 export const nodeTypes = {
-  'position-logger': PositionLoggerNode,
   'agent': AgentNode,
   // Add any of your custom nodes here!
 } satisfies NodeTypes;
