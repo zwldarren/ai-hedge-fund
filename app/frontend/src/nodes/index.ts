@@ -15,13 +15,23 @@ export const initialNodes: AppNode[] = [
     id: 'b',
     type: 'agent',
     position: { x: 200, y: 0 },
-    data: { agent_name: 'Warren Buffett', agent_id: 'warren_buffett' },
+    data: {
+      id: 'warren_buffett',
+      name: 'Warren Buffett',
+      description: 'The Oracle of Omaha',
+      status: 'Idle'
+    },
   },
   {
     id: 'c',
     type: 'agent',
-    position: { x: 400, y: 0 },
-    data: { agent_name: 'Portfolio Manager', agent_id: 'portfolio_manager' },
+    position: { x: 500, y: 0 },
+    data: {
+      id: 'portfolio_manager',
+      name: 'Portfolio Manager',
+      description: 'The Decision Maker',
+      status: 'Idle'
+    },
   },
 ];
 
