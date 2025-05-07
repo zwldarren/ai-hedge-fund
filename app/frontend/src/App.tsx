@@ -38,7 +38,7 @@ export default function App() {
       proOptions={proOptions}
       fitView
     >
-      <Background />
+      <Background gap={13}/>
       <Controls />
     </ReactFlow>
   );
