@@ -37,6 +37,7 @@ export function StartNode({
       icon={<Bot className="h-5 w-5" />}
       name={data.name || "Custom Component"}
       description={data.description}
+      hasLeftHandle={false}
     >
       <CardContent className="p-0">
         <div className="border-t border-border p-3">

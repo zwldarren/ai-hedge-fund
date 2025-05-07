@@ -11,6 +11,8 @@ export interface NodeShellProps {
   name: string;
   description?: string;
   children: ReactNode;
+  hasLeftHandle?: boolean;
+  hasRightHandle?: boolean;
 }
 
 export function NodeShell({
@@ -21,6 +23,8 @@ export function NodeShell({
   name,
   description,
   children,
+  hasLeftHandle = true,
+  hasRightHandle = true,
 }: NodeShellProps) {
   return (
     <div
@@ -31,12 +35,14 @@ export function NodeShell({
       data-id={id}
       data-nodeid={id}
     >
-      <Handle
-        type="target"
-        position={Position.Left}
+      {hasLeftHandle && (
+        <Handle
+          type="target"
+          position={Position.Left}
         className="w-3 h-3 rounded-full bg-gray-500 border-2 border-card absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 transition-all duration-200 hover:bg-gray-500 hover:w-4 hover:h-4 hover:shadow-[0_0_5px_2px_rgba(59,130,246,0.3)]"
-        isConnectable={isConnectable}
-      />
+          isConnectable={isConnectable}
+        />
+      )}
       <div className="overflow-hidden rounded-lg">
         <Card className="bg-card rounded-none overflow-hidden border-none">
           <CardHeader className="p-3 bg-secondary flex flex-row items-center space-x-2 rounded-t-sm">
@@ -58,12 +64,14 @@ export function NodeShell({
         </Card>
       </div>
 
-      <Handle
-        type="source"
-        position={Position.Right}
+      {hasRightHandle && (
+        <Handle
+          type="source"
+          position={Position.Right}
         className="w-3 h-3 rounded-full bg-gray-500 border-2 border-card absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 z-10 transition-all duration-200 hover:bg-gray-500 hover:w-4 hover:h-4 hover:shadow-[0_0_5px_2px_rgba(59,130,246,0.3)]"
-        isConnectable={isConnectable}
-      />
+          isConnectable={isConnectable}
+        />
+      )}
     </div>
   );
 } 

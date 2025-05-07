@@ -1,5 +1,5 @@
 import { type NodeProps } from '@xyflow/react';
-import { UserRound } from 'lucide-react';
+import { Bot } from 'lucide-react';
 
 import { CardContent } from '@/components/ui/card';
 import { type AgentNode } from '../types';
@@ -16,7 +16,7 @@ export function AgentNode({
       id={id}
       selected={selected}
       isConnectable={isConnectable}
-      icon={<UserRound className="h-5 w-5" />}
+      icon={<Bot className="h-5 w-5" />}
       name={data.name || "Agent"}
       description={data.description}
     >
