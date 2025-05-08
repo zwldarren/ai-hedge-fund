@@ -2,7 +2,9 @@ import { type NodeProps } from '@xyflow/react';
 import { Bot } from 'lucide-react';
 
 import { CardContent } from '@/components/ui/card';
+import { useNodeStatus } from '@/contexts/node-status-context';
 import { type AgentNode } from '../types';
+import { getStatusColor } from '../utils';
 import { NodeShell } from './node-shell';
 
 export function AgentNode({
@@ -11,12 +13,16 @@ export function AgentNode({
   id,
   isConnectable,
 }: NodeProps<AgentNode>) {
+  const { nodeStates } = useNodeStatus();
+  const status = nodeStates[id] || 'IDLE';
+
   return (
     <NodeShell
       id={id}
       selected={selected}
       isConnectable={isConnectable}
       icon={<Bot className="h-5 w-5" />}
+      iconColor={getStatusColor(status)}
       name={data.name || "Agent"}
       description={data.description}
     >
@@ -27,8 +33,8 @@ export function AgentNode({
               Status
             </div>
 
-            <div className="bg-secondary text-foreground text-xs rounded p-2">
-              {data.status || 'Idle'}
+            <div className={`text-foreground text-xs rounded p-2 ${getStatusColor(status)}`}>
+              {status}
             </div>
           </div>
         </div>

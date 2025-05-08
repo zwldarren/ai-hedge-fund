@@ -8,6 +8,7 @@ export interface NodeShellProps {
   selected?: boolean;
   isConnectable?: boolean;
   icon: ReactNode;
+  iconColor?: string;
   name: string;
   description?: string;
   children: ReactNode;
@@ -20,6 +21,7 @@ export function NodeShell({
   selected,
   isConnectable,
   icon,
+  iconColor,
   name,
   description,
   children,
@@ -46,7 +48,7 @@ export function NodeShell({
       <div className="overflow-hidden rounded-lg">
         <Card className="bg-card rounded-none overflow-hidden border-none">
           <CardHeader className="p-3 bg-secondary flex flex-row items-center space-x-2 rounded-t-sm">
-            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-chart-1 text-white">
+            <div className={cn("flex items-center justify-center h-8 w-8 rounded-lg text-white", iconColor)}>
               {icon}
             </div>
             <div className="text-title font-semibold text-primary">
