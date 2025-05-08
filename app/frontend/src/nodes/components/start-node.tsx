@@ -56,7 +56,6 @@ export function StartNode({
     
     // Get the select agents from the context and filter out the start node and portfolio_manager
     const selectedAgents = getNodes()
-      .filter(node => node.id !== id && node.id !== 'portfolio_manager')
       .map(node => node.id as string)
       .filter(Boolean);
     
