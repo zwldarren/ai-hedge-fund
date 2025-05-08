@@ -1,11 +1,12 @@
-import { type NodeProps } from '@xyflow/react';
+import { useReactFlow, type NodeProps } from '@xyflow/react';
 import { Bot, Play } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useNodeStatus } from '@/contexts/node-status-context';
-import { useState } from 'react';
+import { api } from '@/services/api';
 import { type StartNode } from '../types';
 import { getStatusColor } from '../utils';
 import { NodeShell } from './node-shell';
@@ -18,8 +19,19 @@ export function StartNode({
 }: NodeProps<StartNode>) {
   const [tickers, setTickers] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const { resetAllStatuses, nodeStates } = useNodeStatus();
+  const { resetAllStatuses, nodeStates, updateNodeStatus } = useNodeStatus();
+  const { getNodes } = useReactFlow();
   const status = nodeStates[id] || 'IDLE';
+  const abortControllerRef = useRef<(() => void) | null>(null);
+  
+  // Clean up SSE connection on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current();
+      }
+    };
+  }, []);
   
   const handleTickersChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTickers(e.target.value);
@@ -31,6 +43,43 @@ export function StartNode({
     // First, reset all nodes to IDLE
     resetAllStatuses();
     
+    // Update this node to IN_PROGRESS
+    updateNodeStatus(id, 'IN_PROGRESS');
+    
+    // Clean up any existing connection
+    if (abortControllerRef.current) {
+      abortControllerRef.current();
+    }
+    
+    // Call the backend API with SSE
+    const tickerList = tickers.split(',').map(t => t.trim());
+    
+    // Get the select agents from the context and filter out the start node and portfolio_manager
+    const selectedAgents = getNodes()
+      .filter(node => node.id !== id && node.id !== 'portfolio_manager')
+      .map(node => node.id as string)
+      .filter(Boolean);
+    
+    abortControllerRef.current = api.runHedgeFund(
+      {
+        tickers: tickerList,
+        selected_agents: selectedAgents,
+      },
+      (event) => {
+        // Just log the event for now
+        console.log('Received event:', event);
+        
+        // Basic status updates based on event type
+        if (event.type === 'complete') {
+          setIsProcessing(false);
+          updateNodeStatus(id, 'COMPLETE');
+        } 
+        else if (event.type === 'error') {
+          setIsProcessing(false);
+          updateNodeStatus(id, 'ERROR');
+        }
+      }
+    );
   };
 
   return (
