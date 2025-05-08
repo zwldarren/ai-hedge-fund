@@ -65,9 +65,6 @@ export function StartNode({
         selected_agents: selectedAgents,
       },
       (event) => {
-        // Just log the event for now
-        console.log('Received event:', event);
-        
         // Basic status updates based on event type
         if (event.type === 'complete') {
           setIsProcessing(false);
