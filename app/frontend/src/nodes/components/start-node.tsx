@@ -1,11 +1,13 @@
-import { type NodeProps } from '@xyflow/react';
+import { type NodeProps, useReactFlow } from '@xyflow/react';
 import { Bot, Play } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { useNodeStatus } from '@/contexts/node-status-context';
 import { useState } from 'react';
 import { type StartNode } from '../types';
+import { getStatusColor } from '../utils';
 import { NodeShell } from './node-shell';
 
 export function StartNode({
@@ -16,17 +18,23 @@ export function StartNode({
 }: NodeProps<StartNode>) {
   const [tickers, setTickers] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-
+  const { resetAllStatuses, nodeStates } = useNodeStatus();
+  const { getNodes } = useReactFlow();
+  const status = nodeStates[id] || 'IDLE';
+  
   const handleTickersChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTickers(e.target.value);
   };
 
   const handlePlay = () => {
     setIsProcessing(true);
-    // Simulate processing
-    setTimeout(() => {
-      setIsProcessing(false);
-    }, 1000);
+    
+    // Get all nodes
+    const nodes = getNodes();
+    
+    // First, reset all nodes to IDLE
+    resetAllStatuses();
+    
   };
 
   return (
@@ -35,6 +43,7 @@ export function StartNode({
       selected={selected}
       isConnectable={isConnectable}
       icon={<Bot className="h-5 w-5" />}
+      iconColor={getStatusColor(status)}
       name={data.name || "Custom Component"}
       description={data.description}
       hasLeftHandle={false}
