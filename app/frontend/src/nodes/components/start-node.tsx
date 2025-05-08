@@ -19,7 +19,8 @@ export function StartNode({
 }: NodeProps<StartNode>) {
   const [tickers, setTickers] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const { resetAllStatuses, nodeStates, updateNodeStatus } = useNodeStatus();
+  const nodeStatusContext = useNodeStatus();
+  const { resetAllStatuses, nodeStates, updateNodeStatus } = nodeStatusContext;
   const { getNodes } = useReactFlow();
   const status = nodeStates[id] || 'IDLE';
   const abortControllerRef = useRef<(() => void) | null>(null);
@@ -65,7 +66,7 @@ export function StartNode({
         selected_agents: selectedAgents,
       },
       (event) => {
-        // Basic status updates based on event type
+        // Basic status updates for start node only (agent-specific updates are handled by the API)
         if (event.type === 'complete') {
           setIsProcessing(false);
           updateNodeStatus(id, 'COMPLETE');
@@ -74,7 +75,9 @@ export function StartNode({
           setIsProcessing(false);
           updateNodeStatus(id, 'ERROR');
         }
-      }
+      },
+      // Pass the node status context to the API
+      nodeStatusContext
     );
   };
 
