@@ -9,33 +9,30 @@ export * from './types';
 
 export const initialNodes: AppNode[] = [
   {
-    id: 'a',
+    id: 'start',
     type: 'start',
     position: { x: 0, y: 0 },
     data: {
-      id: 'start',
       name: 'Input',
       description: 'Start Node',
       status: 'Idle',
     },
   },
   {
-    id: 'b',
+    id: 'warren_buffett',
     type: 'agent',
     position: { x: 300, y: 0 },
     data: {
-      id: 'warren_buffett',
       name: 'Warren Buffett',
       description: 'Oracle of Omaha',
       status: 'Idle'
     },
   },
   {
-    id: 'c',
+    id: 'portfolio_manager',
     type: 'agent',
     position: { x: 600, y: 0 },
     data: {
-      id: 'portfolio_manager',
       name: 'Portfolio Manager',
       description: 'Decision Maker',
       status: 'Idle'
