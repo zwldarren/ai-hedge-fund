@@ -1,4 +1,4 @@
-import { type NodeProps, useReactFlow } from '@xyflow/react';
+import { type NodeProps } from '@xyflow/react';
 import { Bot, Play } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,6 @@ export function StartNode({
   const [tickers, setTickers] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const { resetAllStatuses, nodeStates } = useNodeStatus();
-  const { getNodes } = useReactFlow();
   const status = nodeStates[id] || 'IDLE';
   
   const handleTickersChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,9 +27,6 @@ export function StartNode({
 
   const handlePlay = () => {
     setIsProcessing(true);
-    
-    // Get all nodes
-    const nodes = getNodes();
     
     // First, reset all nodes to IDLE
     resetAllStatuses();
