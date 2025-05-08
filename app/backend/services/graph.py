@@ -16,6 +16,9 @@ def create_graph(selected_agents: list[str]) -> StateGraph:
     graph = StateGraph(AgentState)
     graph.add_node("start_node", start)
 
+    # Filter out any agents that are not in analyst.py
+    selected_agents = [agent for agent in selected_agents if agent in ANALYST_CONFIG]
+
     # Get analyst nodes from the configuration
     analyst_nodes = {key: (f"{key}_agent", config["agent_func"]) for key, config in ANALYST_CONFIG.items()}
 
