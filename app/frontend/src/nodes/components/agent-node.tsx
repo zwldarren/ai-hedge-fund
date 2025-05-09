@@ -1,10 +1,12 @@
 import { type NodeProps } from '@xyflow/react';
 import { Bot } from 'lucide-react';
+import { useState } from 'react';
 
 import { CardContent } from '@/components/ui/card';
-import { useNodeStatus } from '@/contexts/node-status-context';
-import { type AgentNode } from '../types';
+import { useNodeStatus } from '@/contexts/node-context';
+import { NodeMessage, type AgentNode } from '../types';
 import { getStatusColor } from '../utils';
+import { AgentOutputDialog } from './agent-output-dialog';
 import { NodeShell } from './node-shell';
 
 export function AgentNode({
@@ -14,7 +16,15 @@ export function AgentNode({
   isConnectable,
 }: NodeProps<AgentNode>) {
   const { nodeStates } = useNodeStatus();
-  const status = nodeStates[id] || 'IDLE';
+  const nodeData = nodeStates[id] || { 
+    status: 'IDLE', 
+    ticker: null, 
+    message: '', 
+    messages: [],
+    lastUpdated: 0
+  };
+  const status = nodeData.status;
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
     <NodeShell
@@ -36,15 +46,22 @@ export function AgentNode({
             <div className={`text-foreground text-xs rounded p-2 ${getStatusColor(status)}`}>
               {status}
             </div>
+            
+            {nodeData.message && (
+              <div className="text-foreground text-subtitle">
+                {nodeData.message}
+                {nodeData.ticker && <span className="ml-1">({nodeData.ticker})</span>}
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="border-t border-border p-3 flex justify-end items-center">
-          <div className="flex items-center gap-1">
-            <div className="text-subtitle text-muted-foreground">Output</div>
-            <div className="text-subtitle text-muted-foreground">≡</div>
-          </div>
-        </div>
+        <AgentOutputDialog
+          isOpen={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          name={data.name || "Agent"}
+          messages={nodeData.messages as NodeMessage[]}
+        />
       </CardContent>
     </NodeShell>
   );
