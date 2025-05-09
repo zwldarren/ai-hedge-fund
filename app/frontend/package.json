@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.13",
     "@radix-ui/react-slot": "^1.2.0",
     "@xyflow/react": "^12.5.1",
     "class-variance-authority": "^0.7.1",
