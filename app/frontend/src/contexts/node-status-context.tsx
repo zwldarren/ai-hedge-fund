@@ -8,9 +8,9 @@ interface NodeState {
 
 interface NodeStatusContextType {
   nodeStates: NodeState;
-  updateNodeStatus: (nodeId: string, status: NodeStatus) => void;
-  updateNodesStatus: (nodeIds: string[], status: NodeStatus) => void;
-  resetAllStatuses: () => void;
+  updateNode: (nodeId: string, status: NodeStatus) => void;
+  updateNodes: (nodeIds: string[], status: NodeStatus) => void;
+  resetAllNodes: () => void;
 }
 
 const NodeStatusContext = createContext<NodeStatusContextType | undefined>(undefined);
@@ -18,14 +18,14 @@ const NodeStatusContext = createContext<NodeStatusContextType | undefined>(undef
 export function NodeStatusProvider({ children }: { children: ReactNode }) {
   const [nodeStates, setNodeStates] = useState<NodeState>({});
 
-  const updateNodeStatus = useCallback((nodeId: string, status: NodeStatus) => {
+  const updateNode = useCallback((nodeId: string, status: NodeStatus) => {
     setNodeStates((prevStates) => ({
       ...prevStates,
       [nodeId]: status,
     }));
   }, []);
 
-  const updateNodesStatus = useCallback((nodeIds: string[], status: NodeStatus) => {
+  const updateNodes = useCallback((nodeIds: string[], status: NodeStatus) => {
     setNodeStates((prevStates) => {
       const newStates = { ...prevStates };
       nodeIds.forEach((id) => {
@@ -35,7 +35,7 @@ export function NodeStatusProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const resetAllStatuses = useCallback(() => {
+  const resetAllNodes = useCallback(() => {
     setNodeStates({});
   }, []);
 
@@ -43,9 +43,9 @@ export function NodeStatusProvider({ children }: { children: ReactNode }) {
     <NodeStatusContext.Provider
       value={{
         nodeStates,
-        updateNodeStatus,
-        updateNodesStatus,
-        resetAllStatuses,
+        updateNode,
+        updateNodes,
+        resetAllNodes,
       }}
     >
       {children}

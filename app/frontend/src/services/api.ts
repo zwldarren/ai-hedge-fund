@@ -126,7 +126,7 @@ export const api = {
                       onEvent(eventData as StartEvent);
                       if (nodeStatusContext) {
                         // Reset all node statuses at the start of a new run
-                        nodeStatusContext.resetAllStatuses();
+                        nodeStatusContext.resetAllNodes();
                       }
                       break;
                     case 'progress':
@@ -139,7 +139,7 @@ export const api = {
                         }
                         // Use the agent name as the node ID
                         const agentId = eventData.agent.replace('_agent', '');
-                        nodeStatusContext.updateNodeStatus(agentId, nodeStatus);
+                        nodeStatusContext.updateNode(agentId, nodeStatus);
                       }
                       break;
                     case 'complete':
@@ -147,7 +147,7 @@ export const api = {
                       if (nodeStatusContext) {
                         // Mark all agents as complete when the whole process is done
                         const agentIds = params.selected_agents || [];
-                        nodeStatusContext.updateNodesStatus(agentIds, 'COMPLETE');
+                        nodeStatusContext.updateNodes(agentIds, 'COMPLETE');
                       }
                       break;
                     case 'error':
@@ -155,7 +155,7 @@ export const api = {
                       if (nodeStatusContext) {
                         // Mark all agents as error when there's an error
                         const agentIds = params.selected_agents || [];
-                        nodeStatusContext.updateNodesStatus(agentIds, 'ERROR');
+                        nodeStatusContext.updateNodes(agentIds, 'ERROR');
                       }
                       break;
                     default:
@@ -177,7 +177,7 @@ export const api = {
             if (nodeStatusContext) {
               // Mark all agents as error when there's a connection error
               const agentIds = params.selected_agents || [];
-              nodeStatusContext.updateNodesStatus(agentIds, 'ERROR');
+              nodeStatusContext.updateNodes(agentIds, 'ERROR');
             }
           }
         }
@@ -196,7 +196,7 @@ export const api = {
         if (nodeStatusContext) {
           // Mark all agents as error when there's a connection error
           const agentIds = params.selected_agents || [];
-          nodeStatusContext.updateNodesStatus(agentIds, 'ERROR');
+          nodeStatusContext.updateNodes(agentIds, 'ERROR');
         }
       }
     });

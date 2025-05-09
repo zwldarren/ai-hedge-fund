@@ -20,7 +20,7 @@ export function StartNode({
   const [tickers, setTickers] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const nodeStatusContext = useNodeStatus();
-  const { resetAllStatuses, nodeStates, updateNodeStatus } = nodeStatusContext;
+  const { resetAllNodes, nodeStates, updateNode } = nodeStatusContext;
   const { getNodes } = useReactFlow();
   const status = nodeStates[id] || 'IDLE';
   const abortControllerRef = useRef<(() => void) | null>(null);
@@ -42,10 +42,10 @@ export function StartNode({
     setIsProcessing(true);
     
     // First, reset all nodes to IDLE
-    resetAllStatuses();
+    resetAllNodes();
     
     // Update this node to IN_PROGRESS
-    updateNodeStatus(id, 'IN_PROGRESS');
+    updateNode(id, 'IN_PROGRESS');
     
     // Clean up any existing connection
     if (abortControllerRef.current) {
@@ -69,11 +69,11 @@ export function StartNode({
         // Basic status updates for start node only (agent-specific updates are handled by the API)
         if (event.type === 'complete') {
           setIsProcessing(false);
-          updateNodeStatus(id, 'COMPLETE');
+          updateNode(id, 'COMPLETE');
         } 
         else if (event.type === 'error') {
           setIsProcessing(false);
-          updateNodeStatus(id, 'ERROR');
+          updateNode(id, 'ERROR');
         }
       },
       // Pass the node status context to the API
