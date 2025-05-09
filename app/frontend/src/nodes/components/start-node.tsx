@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useNodeStatus } from '@/contexts/node-status-context';
+import { useNodeStatus } from '@/contexts/node-context';
 import { api } from '@/services/api';
 import { type StartNode } from '../types';
 import { getStatusColor } from '../utils';
@@ -20,9 +20,9 @@ export function StartNode({
   const [tickers, setTickers] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const nodeStatusContext = useNodeStatus();
-  const { resetAllNodes, nodeStates, updateNode } = nodeStatusContext;
+  const { resetAllNodes, nodeStates, updateNodeStatus } = nodeStatusContext;
   const { getNodes } = useReactFlow();
-  const status = nodeStates[id] || 'IDLE';
+  const status = nodeStates[id]?.status || 'IDLE';
   const abortControllerRef = useRef<(() => void) | null>(null);
   
   // Clean up SSE connection on unmount
@@ -45,7 +45,7 @@ export function StartNode({
     resetAllNodes();
     
     // Update this node to IN_PROGRESS
-    updateNode(id, 'IN_PROGRESS');
+    updateNodeStatus(id, 'IN_PROGRESS');
     
     // Clean up any existing connection
     if (abortControllerRef.current) {
@@ -69,11 +69,11 @@ export function StartNode({
         // Basic status updates for start node only (agent-specific updates are handled by the API)
         if (event.type === 'complete') {
           setIsProcessing(false);
-          updateNode(id, 'COMPLETE');
+          updateNodeStatus(id, 'COMPLETE');
         } 
         else if (event.type === 'error') {
           setIsProcessing(false);
-          updateNode(id, 'ERROR');
+          updateNodeStatus(id, 'ERROR');
         }
       },
       // Pass the node status context to the API
@@ -114,12 +114,6 @@ export function StartNode({
                 <Play className="h-3.5 w-3.5" />
               </Button>
             </div>
-          </div>
-        </div>
-        <div className="border-t border-border p-3 flex justify-end items-center">
-          <div className="flex items-center gap-1">
-            <div className="text-subtitle text-muted-foreground">Output</div>
-            <div className="text-subtitle text-muted-foreground">≡</div>
           </div>
         </div>
       </CardContent>
