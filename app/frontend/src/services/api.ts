@@ -1,4 +1,4 @@
-import { NodeStatus, useNodeStatus } from '@/contexts/node-status-context';
+import { NodeStatus, useNodeStatus } from '@/contexts/node-context';
 import { ModelProvider } from '@/services/types';
 
 interface HedgeFundRequest {
@@ -17,6 +17,7 @@ export type ProgressUpdate = {
   agent: string;
   ticker: string | null;
   status: string;
+  timestamp: string;
 };
 
 export type CompleteEvent = {
@@ -139,7 +140,13 @@ export const api = {
                         }
                         // Use the agent name as the node ID
                         const agentId = eventData.agent.replace('_agent', '');
-                        nodeStatusContext.updateNode(agentId, nodeStatus);
+                        
+                        // Use the enhanced API to update both status and additional data
+                        nodeStatusContext.updateNode(agentId, {
+                          status: nodeStatus,
+                          ticker: eventData.ticker,
+                          message: eventData.status
+                        });
                       }
                       break;
                     case 'complete':
