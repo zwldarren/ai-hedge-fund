@@ -78,6 +78,8 @@ def portfolio_management_agent(state: AgentState):
     if state["metadata"]["show_reasoning"]:
         show_agent_reasoning({ticker: decision.model_dump() for ticker, decision in result.decisions.items()}, "Portfolio Manager")
 
+    progress.update_status("portfolio_manager", None, "Done")
+
     return {
         "messages": state["messages"] + [message],
         "data": state["data"],
