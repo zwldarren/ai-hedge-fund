@@ -21,10 +21,20 @@ export const initialNodes: AppNode[] = [
   {
     id: 'warren_buffett',
     type: 'agent',
-    position: { x: 300, y: 0 },
+    position: { x: 300, y: -200 },
     data: {
       name: 'Warren Buffett',
-      description: 'Oracle of Omaha',
+      description: 'The Oracle of Omaha',
+      status: 'Idle'
+    },
+  },
+  {
+    id: 'charlie_munger',
+    type: 'agent',
+    position: { x: 300, y: 200 },
+    data: {
+      name: 'Charlie Munger',
+      description: 'The Abominable No-Man',
       status: 'Idle'
     },
   },

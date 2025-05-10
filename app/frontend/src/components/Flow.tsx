@@ -12,7 +12,7 @@ import { useCallback, useState } from 'react';
 
 import '@xyflow/react/dist/style.css';
 
-import { edgeTypes, initialEdges } from '../edges';
+import { edgeTypes } from '../edges';
 import { initialNodes, nodeTypes } from '../nodes';
 
 type FlowProps = {
@@ -22,7 +22,7 @@ type FlowProps = {
 export function Flow({ className = '' }: FlowProps) {
   const [colorMode] = useState<ColorMode>('dark');
   const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const proOptions = { hideAttribution: true };
   
   const onConnect: OnConnect = useCallback(

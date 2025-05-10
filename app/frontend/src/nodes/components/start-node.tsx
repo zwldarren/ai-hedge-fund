@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useNodeStatus } from '@/contexts/node-context';
 import { api } from '@/services/api';
 import { type StartNode } from '../types';
-import { getStatusColor } from '../utils';
+import { getNodesInCompletePaths, getStatusColor } from '../utils';
 import { NodeShell } from './node-shell';
 
 export function StartNode({
@@ -21,7 +21,7 @@ export function StartNode({
   const [isProcessing, setIsProcessing] = useState(false);
   const nodeStatusContext = useNodeStatus();
   const { resetAllNodes, nodeStates, updateNodeStatus } = nodeStatusContext;
-  const { getNodes } = useReactFlow();
+  const { getNodes, getEdges } = useReactFlow();
   const status = nodeStates[id]?.status || 'IDLE';
   const abortControllerRef = useRef<(() => void) | null>(null);
   
@@ -55,15 +55,25 @@ export function StartNode({
     // Call the backend API with SSE
     const tickerList = tickers.split(',').map(t => t.trim());
     
-    // Get the select agents from the context and filter out the start node and portfolio_manager
-    const selectedAgents = getNodes()
-      .map(node => node.id as string)
-      .filter(Boolean);
+    // Get the nodes and edges
+    const nodes = getNodes();
+    const edges = getEdges();
+    
+    
+    // Get all nodes in complete paths from start to portfolio_manager
+    const selectedAgents = getNodesInCompletePaths({
+      startNodeId: id,
+      endNodeId: 'portfolio_manager',
+      nodes: nodes,
+      edges: edges,
+    });
+    
+    console.log(`Connected agents: `, Array.from(selectedAgents));
     
     abortControllerRef.current = api.runHedgeFund(
       {
         tickers: tickerList,
-        selected_agents: selectedAgents,
+        selected_agents: Array.from(selectedAgents),
       },
       (event) => {
         // Basic status updates for start node only (agent-specific updates are handled by the API)
