@@ -157,7 +157,8 @@
 
 /* Animated border for in-progress agent nodes */
 .node-in-progress {
-  border-color: transparent !important;
+  position: relative;
+  border: none !important;
 }
 
 .animated-border-container {
@@ -178,8 +179,8 @@
   inset: 0;
   border-radius: 0.5rem;
   background: linear-gradient(90deg, #2383F4, #8F00FF, #2383F4);
-  background-size: 300% 100%;
-  animation: gradientFlow 5s linear infinite;
+  background-size: 200% 100%;
+  animation: gradientFlow 6s ease infinite;
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);
@@ -193,13 +194,13 @@
     background-position: 0% 0%;
   }
   100% {
-    background-position: 300% 0%;
+    background-position: 200% 0%;
   }
 }
 
-/* Icon gradient animation for in-progress nodes */
-.icon-gradient-animation {
+/* Gradient animation for in-progress elements */
+.gradient-animation {
   background: linear-gradient(90deg, #2383F4, #8F00FF, #2383F4);
-  background-size: 300% 100%;
-  animation: gradientFlow 5s linear infinite;
+  background-size: 200% 100%;
+  animation: gradientFlow 6s ease infinite;
 }
