@@ -30,8 +30,8 @@ export function NodeShell({
   hasRightHandle = true,
   status = 'IDLE',
 }: NodeShellProps) {
-  // const isInProgress = status === 'IN_PROGRESS';
-  const isInProgress = true;
+  const isInProgress = status === 'IN_PROGRESS';
+  // const isInProgress = true;
   
   return (
     <div
