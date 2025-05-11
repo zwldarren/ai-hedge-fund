@@ -31,7 +31,6 @@ export function NodeShell({
   status = 'IDLE',
 }: NodeShellProps) {
   const isInProgress = status === 'IN_PROGRESS';
-  // const isInProgress = true;
   
   return (
     <div
