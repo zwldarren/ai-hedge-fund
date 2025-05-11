@@ -196,3 +196,10 @@
     background-position: 300% 0%;
   }
 }
+
+/* Icon gradient animation for in-progress nodes */
+.icon-gradient-animation {
+  background: linear-gradient(90deg, #2383F4, #8F00FF, #2383F4);
+  background-size: 300% 100%;
+  animation: gradientFlow 5s linear infinite;
+}

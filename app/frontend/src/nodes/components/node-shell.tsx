@@ -30,8 +30,8 @@ export function NodeShell({
   hasRightHandle = true,
   status = 'IDLE',
 }: NodeShellProps) {
-  const isInProgress = status === 'IN_PROGRESS';
-  // const isInProgress = true;
+  // const isInProgress = status === 'IN_PROGRESS';
+  const isInProgress = true;
   
   return (
     <div
@@ -58,7 +58,10 @@ export function NodeShell({
       <div className="overflow-hidden rounded-lg">
         <Card className="bg-card rounded-none overflow-hidden border-none">
           <CardHeader className="p-3 bg-secondary flex flex-row items-center space-x-2 rounded-t-sm">
-            <div className={cn("flex items-center justify-center h-8 w-8 rounded-lg text-white", iconColor)}>
+            <div className={cn(
+              "flex items-center justify-center h-8 w-8 rounded-lg text-white",
+              isInProgress ? "icon-gradient-animation" : iconColor
+            )}>
               {icon}
             </div>
             <div className="text-title font-semibold text-primary">
