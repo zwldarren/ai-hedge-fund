@@ -6,7 +6,7 @@ This system employs several agents working together:
 
 1. Aswath Damodaran Agent - The Dean of Valuation, focuses on story, numbers, and disciplined valuation
 2. Ben Graham Agent - The godfather of value investing, only buys hidden gems with a margin of safety
-3. Bill Ackman Agent - An activist investors, takes bold positions and pushes for change
+3. Bill Ackman Agent - An activist investor, takes bold positions and pushes for change
 4. Cathie Wood Agent - The queen of growth investing, believes in the power of innovation and disruption
 5. Charlie Munger Agent - Warren Buffett's partner, only buys wonderful businesses at fair prices
 6. Michael Burry Agent - The Big Short contrarian who hunts for deep value
