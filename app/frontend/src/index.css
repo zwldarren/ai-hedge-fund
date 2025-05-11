@@ -178,9 +178,11 @@
   position: absolute;
   inset: 0;
   border-radius: 0.5rem;
-  background: linear-gradient(90deg, #2383F4, #8F00FF, #2383F4);
+  background: linear-gradient(90deg, 
+    #2383F4, #5e61e7, #8F00FF, #7831d4, #2383F4
+  );
   background-size: 200% 100%;
-  animation: gradientFlow 6s ease infinite;
+  animation: gradientFlow 3s linear infinite;
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);
@@ -200,7 +202,9 @@
 
 /* Gradient animation for in-progress elements */
 .gradient-animation {
-  background: linear-gradient(90deg, #2383F4, #8F00FF, #2383F4);
+  background: linear-gradient(90deg, 
+    #2383F4, #5e61e7, #8F00FF, #7831d4, #2383F4
+  );
   background-size: 200% 100%;
-  animation: gradientFlow 6s ease infinite;
+  animation: gradientFlow 3s linear infinite;
 }
