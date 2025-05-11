@@ -87,7 +87,6 @@ class AgentProgress:
         for agent_name, info in sorted(self.agent_status.items(), key=sort_key):
             status = info["status"]
             ticker = info["ticker"]
-            timestamp = info["timestamp"]
             # Create the status text with appropriate styling
             if status.lower() == "done":
                 style = Style(color="green", bold=True)
@@ -107,9 +106,6 @@ class AgentProgress:
             if ticker:
                 status_text.append(f"[{ticker}] ", style=Style(color="cyan"))
             status_text.append(status, style=style)
-
-            if timestamp:
-                status_text.append(f"[{timestamp}] ", style=Style(color="cyan"))
 
             self.table.add_row(status_text)
 
