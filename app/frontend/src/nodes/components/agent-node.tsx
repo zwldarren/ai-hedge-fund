@@ -35,6 +35,7 @@ export function AgentNode({
       iconColor={getStatusColor(status)}
       name={data.name || "Agent"}
       description={data.description}
+      status={status}
     >
       <CardContent className="p-0">
         <div className="border-t border-border p-3">
