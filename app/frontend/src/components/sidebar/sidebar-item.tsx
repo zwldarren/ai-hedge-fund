@@ -1,11 +1,13 @@
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, Plus } from "lucide-react";
 import { useState } from "react";
 
 interface SidebarItemProps {
   icon: LucideIcon;
   label: string;
   onClick?: () => void;
+  onAddClick?: () => void;
   className?: string;
   isActive?: boolean;
 }
@@ -14,10 +16,16 @@ export function SidebarItem({
   icon: Icon, 
   label, 
   onClick, 
+  onAddClick,
   className, 
   isActive = false 
 }: SidebarItemProps) {
   const [isHovered, setIsHovered] = useState(false);
+  
+  const handlePlusClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the parent onClick
+    if (onAddClick) onAddClick();
+  };
   
   return (
     <div 
@@ -43,16 +51,17 @@ export function SidebarItem({
       </div>
       <span className="truncate">{label}</span>
       
-      {/* Drag handle with group-hover visibility */}
+      {/* Add button using shadcn Button */}
       <div className="ml-auto opacity-0 group-hover:opacity-100">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
-          <circle cx="9" cy="12" r="1" />
-          <circle cx="9" cy="5" r="1" />
-          <circle cx="9" cy="19" r="1" />
-          <circle cx="15" cy="12" r="1" />
-          <circle cx="15" cy="5" r="1" />
-          <circle cx="15" cy="19" r="1" />
-        </svg>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5 w-5 p-0 hover:bg-transparent hover:text-white text-gray-500"
+          onClick={handlePlusClick}
+          aria-label="Add"
+        >
+          <Plus size={14} />
+        </Button>
       </div>
     </div>
   );
