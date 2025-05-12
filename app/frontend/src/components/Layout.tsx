@@ -2,7 +2,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { PanelLeft } from 'lucide-react';
 import { ReactNode, useState } from 'react';
-import { LeftSidebar } from './left-sidebar'; // Import the new component
+import { LeftSidebar } from './sidebar/left-sidebar'; // Import the new component
 import { Button } from './ui/button';
 
 type LayoutProps = {
