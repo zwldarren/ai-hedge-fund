@@ -4,7 +4,7 @@ import { componentGroups } from '@/data/sidebar-components';
 import { useComponentGroups } from '@/hooks/use-component-groups';
 import { useResizable } from '@/hooks/use-resizable';
 import { cn } from '@/lib/utils';
-import { PanelLeft, Plus } from 'lucide-react';
+import { PanelLeft } from 'lucide-react';
 import { ReactNode } from 'react';
 import { ComponentGroupItem } from './component-group';
 import { SearchBox } from './search-box';
@@ -46,17 +46,9 @@ export function LeftSidebar({
         borderRight: isDragging ? 'none' : '1px solid var(--ramp-grey-900)' 
       }}
     >
-      <div className="p-2 flex justify-between flex-shrink-0 items-center border-b border-ramp-grey-700">
+      <div className="p-2 flex justify-between flex-shrink-0 items-center border-b border-ramp-grey-700 mt-4">
         <span className="text-white text-sm font-medium ml-4">Components</span>
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-white hover:bg-ramp-grey-700"
-            aria-label="Add new component"
-          >
-            <Plus size={16} />
-          </Button>
           <Button
             variant="ghost"
             size="icon"
