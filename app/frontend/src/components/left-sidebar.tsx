@@ -91,7 +91,7 @@ export function LeftSidebar({
       <div className="pt-2 flex-grow overflow-auto">
         {children}
       </div>
-      
+      ˇ
       {/* Resize handle - completely hidden during dragging */}
       {!isDragging && (
         <div 
