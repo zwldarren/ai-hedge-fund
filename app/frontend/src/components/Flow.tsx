@@ -46,13 +46,13 @@ export function Flow({ className = '' }: FlowProps) {
       >
         <Background gap={13}/>
         <div 
-          className="absolute bottom-8 left-1/2 z-10"
+          className="absolute bottom-4 left-1/2 z-10"
           style={{ 
             width: 'auto',
-            transform: 'translateX(calc(-50% - 60px))'
+            transform: 'translateX(calc(-50% - 80px))'
           }}
         >
-          <Controls orientation='horizontal' showInteractive={false}/>
+          <Controls orientation='horizontal' />
         </div>
       </ReactFlow>
     </div>
