@@ -17,7 +17,7 @@ export function LeftSidebar({
   onToggleCollapse,
 }: LeftSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(300); // Default width
+  const [width, setWidth] = useState(250); // Default width
   const [isDragging, setIsDragging] = useState(false);
   // Add a ref for tracking dragging state - updates synchronously unlike state
   const isDraggingRef = useRef(false);
