@@ -1,0 +1,67 @@
+import { AppNode } from "@/nodes/types";
+
+// Map of sidebar item names to node creation functions
+export interface NodeTypeDefinition {
+  type: string;
+  createNode: (id: string, position: { x: number, y: number }) => AppNode;
+}
+
+// Define node creation functions for each type
+const nodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
+  "Text Input": {
+    type: "start",
+    createNode: (id: string, position: { x: number, y: number }): AppNode => ({
+      id: `start_${id}`,
+      type: "start",
+      position,
+      data: {
+        name: "Input",
+        description: "Start Node",
+        status: "Idle",
+      },
+    }),
+  },
+  "Ben Graham": {
+    type: "agent",
+    createNode: (id: string, position: { x: number, y: number }): AppNode => ({
+      id: `ben_graham_${id}`,
+      type: "agent",
+      position,
+      data: {
+        name: "Ben Graham",
+        description: "The Father of Value Investing",
+        status: "Idle",
+      },
+    }),
+  },
+  "Charlie Munger": {
+    type: "agent",
+    createNode: (id: string, position: { x: number, y: number }): AppNode => ({
+      id: `charlie_munger_${id}`,
+      type: "agent",
+      position,
+      data: {
+        name: "Charlie Munger",
+        description: "The Abominable No-Man",
+        status: "Idle",
+      },
+    }),
+  },
+  "Warren Buffett": {
+    type: "agent",
+    createNode: (id: string, position: { x: number, y: number }): AppNode => ({
+      id: `warren_buffett_${id}`,
+      type: "agent", 
+      position,
+      data: {
+        name: "Warren Buffett",
+        description: "The Oracle of Omaha",
+        status: "Idle",
+      },
+    }),
+  },
+};
+
+export function getNodeTypeDefinition(componentName: string): NodeTypeDefinition | null {
+  return nodeTypeDefinitions[componentName] || null;
+} 
