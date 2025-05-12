@@ -1,4 +1,4 @@
-import { useReactFlow, type NodeProps } from '@xyflow/react';
+import { getConnectedEdges, useReactFlow, type NodeProps } from '@xyflow/react';
 import { Bot, Play } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useNodeStatus } from '@/contexts/node-context';
 import { api } from '@/services/api';
 import { type StartNode } from '../types';
-import { getNodesInCompletePaths, getStatusColor } from '../utils';
+import { getStatusColor } from '../utils';
 import { NodeShell } from './node-shell';
 
 export function StartNode({
@@ -58,14 +58,28 @@ export function StartNode({
     // Get the nodes and edges
     const nodes = getNodes();
     const edges = getEdges();
+    const connectedEdges = getConnectedEdges(nodes, edges);
+
+    console.log(`Nodes: `, nodes);
+    console.log(`Edges: `, edges);
+    console.log(`Connected edges: `, connectedEdges);
     
+    // Get all nodes that are agents and are connected in the flow
+    const selectedAgents = new Set<string>();
     
-    // Get all nodes in complete paths from start to portfolio_manager
-    const selectedAgents = getNodesInCompletePaths({
-      startNodeId: id,
-      endNodeId: 'portfolio_manager',
-      nodes: nodes,
-      edges: edges,
+    // First, collect all the target node IDs from connected edges
+    const connectedNodeIds = new Set<string>();
+    connectedEdges.forEach(edge => {
+      if (edge.source === id) {
+        connectedNodeIds.add(edge.target);
+      }
+    });
+    
+    // Then filter for nodes that are agents
+    nodes.forEach(node => {
+      if (node.type === 'agent' && connectedNodeIds.has(node.id)) {
+        selectedAgents.add(node.id);
+      }
     });
     
     console.log(`Connected agents: `, Array.from(selectedAgents));
