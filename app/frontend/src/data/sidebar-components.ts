@@ -1,6 +1,8 @@
 import {
   ArrowDownToLine,
+  ArrowUpFromLine,
   Bot,
+  Code,
   LucideIcon,
   Type
 } from 'lucide-react';
@@ -26,20 +28,19 @@ export const componentGroups: ComponentGroup[] = [
     iconColor: "text-blue-400",
     items: [
       // { name: "Chat Input", icon: MessageSquare },
-      { name: "Simple Input", icon: Type },
+      { name: "Text Input", icon: Type },
       // { name: "File Input", icon: FileText }
     ]
   },
-  // {
-  //   name: "outputs",
-  //   icon: ArrowUpFromLine,
-  //   iconColor: "text-green-400",
-  //   items: [
-  //     { name: "Chat Output", icon: MessageSquare },
-  //     { name: "Text Output", icon: Type },
-  //     { name: "File Output", icon: FileText }
-  //   ]
-  // },
+    {
+      name: "outputs",
+      icon: ArrowUpFromLine,
+      iconColor: "text-green-400",
+      items: [
+        { name: "Text Output", icon: Type },
+        { name: "JSON Output", icon: Code }
+      ]
+    },
   // {
   //   name: "data",
   //   icon: Database,
