@@ -6,12 +6,14 @@ interface ComponentGroupProps {
   group: ComponentGroup;
   activeItem: string | null;
   onItemClick: (itemName: string) => void;
+  onComponentAdd?: (componentName: string) => void;
 }
 
 export function ComponentGroupItem({ 
   group, 
   activeItem, 
-  onItemClick 
+  onItemClick,
+  onComponentAdd
 }: ComponentGroupProps) {
   const { name, icon: Icon, iconColor, items } = group;
   
@@ -32,6 +34,7 @@ export function ComponentGroupItem({
               label={item.name} 
               isActive={activeItem === item.name}
               onClick={() => onItemClick(item.name)}
+              onAddClick={onComponentAdd ? () => onComponentAdd(item.name) : undefined}
             />
           ))}
         </div>
