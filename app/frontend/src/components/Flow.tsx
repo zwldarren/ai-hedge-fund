@@ -45,7 +45,15 @@ export function Flow({ className = '' }: FlowProps) {
         fitView
       >
         <Background gap={13}/>
-        <Controls />
+        <div 
+          className="absolute bottom-8 left-1/2 z-10"
+          style={{ 
+            width: 'auto',
+            transform: 'translateX(calc(-50% - 60px))'
+          }}
+        >
+          <Controls orientation='horizontal' showInteractive={false}/>
+        </div>
       </ReactFlow>
     </div>
   );
