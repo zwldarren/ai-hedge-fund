@@ -2,7 +2,6 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   Bot,
-  Code,
   LucideIcon,
   Type
 } from 'lucide-react';
@@ -38,7 +37,6 @@ export const componentGroups: ComponentGroup[] = [
       iconColor: "text-green-400",
       items: [
         { name: "Text Output", icon: Type },
-        { name: "JSON Output", icon: Code }
       ]
     },
   // {

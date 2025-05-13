@@ -9,10 +9,10 @@ export interface NodeTypeDefinition {
 // Define node creation functions for each type
 const nodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
   "Text Input": {
-    type: "start",
+    type: "text-input-node",
     createNode: (position: { x: number, y: number }): AppNode => ({
       id: `start`,
-      type: "start",
+      type: "text-input-node",
       position,
       data: {
         name: "Input",

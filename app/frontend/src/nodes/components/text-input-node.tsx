@@ -7,22 +7,20 @@ import { CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useNodeStatus } from '@/contexts/node-context';
 import { api } from '@/services/api';
-import { type StartNode } from '../types';
-import { getStatusColor } from '../utils';
+import { type TextInputNode } from '../types';
 import { NodeShell } from './node-shell';
 
-export function StartNode({
+export function TextInputNode({
   data,
   selected,
   id,
   isConnectable,
-}: NodeProps<StartNode>) {
+}: NodeProps<TextInputNode>) {
   const [tickers, setTickers] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const nodeStatusContext = useNodeStatus();
   const { resetAllNodes, nodeStates, updateNodeStatus } = nodeStatusContext;
   const { getNodes, getEdges } = useReactFlow();
-  const status = nodeStates[id]?.status || 'IDLE';
   const abortControllerRef = useRef<(() => void) | null>(null);
   
   // Clean up SSE connection on unmount
@@ -59,10 +57,6 @@ export function StartNode({
     const nodes = getNodes();
     const edges = getEdges();
     const connectedEdges = getConnectedEdges(nodes, edges);
-
-    console.log(`Nodes: `, nodes);
-    console.log(`Edges: `, edges);
-    console.log(`Connected edges: `, connectedEdges);
     
     // Get all nodes that are agents and are connected in the flow
     const selectedAgents = new Set<string>();
@@ -111,7 +105,6 @@ export function StartNode({
       selected={selected}
       isConnectable={isConnectable}
       icon={<Bot className="h-5 w-5" />}
-      iconColor={getStatusColor(status)}
       name={data.name || "Custom Component"}
       description={data.description}
       hasLeftHandle={false}
