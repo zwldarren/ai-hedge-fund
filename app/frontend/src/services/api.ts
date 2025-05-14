@@ -48,13 +48,13 @@ export const api = {
    * Runs a hedge fund simulation with the given parameters and streams the results
    * @param params The hedge fund request parameters
    * @param onEvent Callback for each SSE event
-   * @param nodeStatusContext Optional node status context for updating node states
+   * @param nodeContext Node context for updating node states
    * @returns A function to abort the SSE connection
    */
   runHedgeFund: (
     params: HedgeFundRequest, 
     onEvent: EventCallback, 
-    nodeStatusContext?: ReturnType<typeof useNodeContext>
+    nodeContext: ReturnType<typeof useNodeContext>
   ): (() => void) => {
     // Convert tickers string to array if needed
     if (typeof params.tickers === 'string') {
@@ -125,14 +125,12 @@ export const api = {
                   switch (eventType) {
                     case 'start':
                       onEvent(eventData as StartEvent);
-                      if (nodeStatusContext) {
-                        // Reset all node statuses at the start of a new run
-                        nodeStatusContext.resetAllNodes();
-                      }
+                        // Reset all nodes at the start of a new run
+                        nodeContext.resetAllNodes();
                       break;
                     case 'progress':
                       onEvent(eventData as ProgressUpdate);
-                      if (nodeStatusContext && eventData.agent) {
+                      if (eventData.agent) {
                         // Map the progress to a node status
                         let nodeStatus: NodeStatus = 'IN_PROGRESS';
                         if (eventData.status === 'Done') {
@@ -142,7 +140,7 @@ export const api = {
                         const agentId = eventData.agent.replace('_agent', '');
                         
                         // Use the enhanced API to update both status and additional data
-                        nodeStatusContext.updateNode(agentId, {
+                        nodeContext.updateNode(agentId, {
                           status: nodeStatus,
                           ticker: eventData.ticker,
                           message: eventData.status
@@ -151,19 +149,13 @@ export const api = {
                       break;
                     case 'complete':
                       onEvent(eventData as CompleteEvent);
-                      if (nodeStatusContext) {
-                        // Mark all agents as complete when the whole process is done
-                        const agentIds = params.selected_agents || [];
-                        nodeStatusContext.updateNodeStatuses(agentIds, 'COMPLETE');
-                      }
+                      // Mark all agents as complete when the whole process is done
+                      nodeContext.updateNodes(params.selected_agents || [], 'COMPLETE');
                       break;
                     case 'error':
                       onEvent(eventData as ErrorEvent);
-                      if (nodeStatusContext) {
-                        // Mark all agents as error when there's an error
-                        const agentIds = params.selected_agents || [];
-                        nodeStatusContext.updateNodeStatuses(agentIds, 'ERROR');
-                      }
+                      // Mark all agents as error when there's an error
+                      nodeContext.updateNodes(params.selected_agents || [], 'ERROR');
                       break;
                     default:
                       console.warn('Unknown event type:', eventType);
@@ -181,11 +173,9 @@ export const api = {
               type: 'error',
               message: `Connection error: ${error.message || 'Unknown error'}`
             });
-            if (nodeStatusContext) {
-              // Mark all agents as error when there's a connection error
-              const agentIds = params.selected_agents || [];
-              nodeStatusContext.updateNodeStatuses(agentIds, 'ERROR');
-            }
+            // Mark all agents as error when there's a connection error
+            const agentIds = params.selected_agents || [];
+            nodeContext.updateNodes(agentIds, 'ERROR');
           }
         }
       };
@@ -200,11 +190,9 @@ export const api = {
           type: 'error',
           message: `Connection error: ${error.message || 'Unknown error'}`
         });
-        if (nodeStatusContext) {
-          // Mark all agents as error when there's a connection error
-          const agentIds = params.selected_agents || [];
-          nodeStatusContext.updateNodeStatuses(agentIds, 'ERROR');
-        }
+        // Mark all agents as error when there's a connection error
+        const agentIds = params.selected_agents || [];
+        nodeContext.updateNodes(agentIds, 'ERROR');
       }
     });
 

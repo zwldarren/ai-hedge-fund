@@ -18,8 +18,8 @@ export function TextInputNode({
 }: NodeProps<TextInputNode>) {
   const [tickers, setTickers] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const nodeStatusContext = useNodeContext();
-  const { resetAllNodes, updateNodeStatus } = nodeStatusContext;
+  const nodeContext = useNodeContext();
+  const { resetAllNodes, updateNode } = nodeContext;
   const { getNodes, getEdges } = useReactFlow();
   const abortControllerRef = useRef<(() => void) | null>(null);
   
@@ -43,7 +43,7 @@ export function TextInputNode({
     resetAllNodes();
     
     // Update this node to IN_PROGRESS
-    updateNodeStatus(id, 'IN_PROGRESS');
+    updateNode(id, 'IN_PROGRESS');
     
     // Clean up any existing connection
     if (abortControllerRef.current) {
@@ -87,15 +87,15 @@ export function TextInputNode({
         // Basic status updates for start node only (agent-specific updates are handled by the API)
         if (event.type === 'complete') {
           setIsProcessing(false);
-          updateNodeStatus(id, 'COMPLETE');
+          updateNode(id, 'COMPLETE');
         } 
         else if (event.type === 'error') {
           setIsProcessing(false);
-          updateNodeStatus(id, 'ERROR');
+          updateNode(id, 'ERROR');
         }
       },
       // Pass the node status context to the API
-      nodeStatusContext
+      nodeContext
     );
   };
 

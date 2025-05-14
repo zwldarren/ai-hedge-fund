@@ -9,21 +9,29 @@ export interface MessageItem {
   ticker: string | null;
 }
 
-// Enhanced node state structure
+// Node state structure
 export interface NodeData {
   status: NodeStatus;
   ticker: string | null;
   message: string;
   lastUpdated: number;
-  messages: MessageItem[]; // History of all messages for this agent
-  timestamp?: string; // Optional timestamp for the current state
+  messages: MessageItem[];
+  timestamp?: string;
 }
+
+// Default node state
+const DEFAULT_NODE_STATE: NodeData = {
+  status: 'IDLE',
+  ticker: null,
+  message: '',
+  messages: [],
+  lastUpdated: Date.now()
+};
 
 interface NodeContextType {
   nodeStates: Record<string, NodeData>;
-  updateNode: (nodeId: string, data: Partial<NodeData>) => void;
-  updateNodeStatus: (nodeId: string, status: NodeStatus) => void;
-  updateNodeStatuses: (nodeIds: string[], status: NodeStatus) => void;
+  updateNode: (nodeId: string, data: Partial<NodeData> | NodeStatus) => void;
+  updateNodes: (nodeIds: string[], status: NodeStatus) => void;
   resetAllNodes: () => void;
 }
 
@@ -32,19 +40,29 @@ const NodeContext = createContext<NodeContextType | undefined>(undefined);
 export function NodeProvider({ children }: { children: ReactNode }) {
   const [nodeStates, setNodeStates] = useState<Record<string, NodeData>>({});
 
-  const updateNode = useCallback((nodeId: string, data: Partial<NodeData>) => {
-    setNodeStates((prev) => {
-      // Get the existing node or create a default one
-      const existingNode = prev[nodeId] || {
-        status: 'IDLE',
-        ticker: null,
-        message: '',
-        messages: [],
-        lastUpdated: Date.now()
-      };
-      
-      // If there's a new message, add it to the history
+  const updateNode = useCallback((nodeId: string, data: Partial<NodeData> | NodeStatus) => {
+    // Handle string status shorthand (just passing a status string)
+    if (typeof data === 'string') {
+      setNodeStates(prev => {
+        const existingNode = prev[nodeId] || { ...DEFAULT_NODE_STATE };
+        return {
+          ...prev,
+          [nodeId]: {
+            ...existingNode,
+            status: data,
+            lastUpdated: Date.now()
+          }
+        };
+      });
+      return;
+    }
+
+    // Handle data object - full update
+    setNodeStates(prev => {
+      const existingNode = prev[nodeId] || { ...DEFAULT_NODE_STATE };
       const newMessages = [...existingNode.messages];
+      
+      // Add message to history if it's new
       if (data.message && data.message !== existingNode.message) {
         newMessages.push({
           timestamp: data.timestamp || new Date().toISOString(),
@@ -65,44 +83,32 @@ export function NodeProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Keep the old API for compatibility
-  const updateNodeStatus = useCallback((nodeId: string, status: NodeStatus) => {
-    updateNode(nodeId, { status });
-  }, [updateNode]);
-
-  // Update multiple nodes at once (keep for compatibility)
-  const updateNodeStatuses = useCallback((nodeIds: string[], status: NodeStatus) => {
-    setNodeStates((prev) => {
+  const updateNodes = useCallback((nodeIds: string[], status: NodeStatus) => {
+    if (nodeIds.length === 0) return;
+    
+    setNodeStates(prev => {
       const newStates = { ...prev };
-      nodeIds.forEach((id) => {
-        const existingNode = newStates[id] || {
-          ticker: null,
-          message: '',
-          messages: [],
-          lastUpdated: Date.now()
-        };
-        
+      
+      nodeIds.forEach(id => {
         newStates[id] = {
-          ...existingNode,
+          ...(newStates[id] || { ...DEFAULT_NODE_STATE }),
           status,
           lastUpdated: Date.now()
-        } as NodeData;
+        };
       });
+      
       return newStates;
     });
   }, []);
 
-  const resetAllNodes = useCallback(() => {
-    setNodeStates({});
-  }, []);
+  const resetAllNodes = useCallback(() => setNodeStates({}), []);
 
   return (
     <NodeContext.Provider
       value={{
         nodeStates,
         updateNode,
-        updateNodeStatus,
-        updateNodeStatuses,
+        updateNodes,
         resetAllNodes,
       }}
     >

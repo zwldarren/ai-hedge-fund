@@ -14,7 +14,7 @@ export function TextOutputNode({
   isConnectable,
 }: NodeProps<TextOutputNode>) {
   const nodeStatusContext = useNodeContext();
-  const { updateNodeStatus } = nodeStatusContext;
+  const { updateNode } = nodeStatusContext;
   
   const handleViewOutput = () => {
     console.log('View Output');
