@@ -16,7 +16,7 @@ export function TextInputNode({
   id,
   isConnectable,
 }: NodeProps<TextInputNode>) {
-  const [tickers, setTickers] = useState('AAPL');
+  const [tickers, setTickers] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const nodeStatusContext = useNodeContext();
   const { resetAllNodes, updateNodeStatus } = nodeStatusContext;
