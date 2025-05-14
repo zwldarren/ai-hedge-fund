@@ -19,7 +19,7 @@ export function TextInputNode({
   const [tickers, setTickers] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const nodeStatusContext = useNodeStatus();
-  const { resetAllNodes, nodeStates, updateNodeStatus } = nodeStatusContext;
+  const { resetAllNodes, updateNodeStatus } = nodeStatusContext;
   const { getNodes, getEdges } = useReactFlow();
   const abortControllerRef = useRef<(() => void) | null>(null);
   
