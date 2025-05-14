@@ -29,10 +29,6 @@ export function TextOutputNode({
     setShowOutput(true);
   }
 
-  const formatJSON = (json: any) => {
-    return JSON.stringify(json, null, 2);
-  }
-
   return (
     <>
       <NodeShell
