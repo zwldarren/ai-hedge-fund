@@ -2,6 +2,7 @@ import { type NodeTypes, Edge, MarkerType } from '@xyflow/react';
 
 import { AgentNode } from './components/agent-node';
 import { TextInputNode } from './components/text-input-node';
+import { TextOutputNode } from './components/text-output-node';
 import { type AppNode } from './types';
 
 // Types
@@ -9,12 +10,32 @@ export * from './types';
 
 export const initialNodes: AppNode[] = [
   {
-    id: 'start',
-    type: 'text-input-node',
+    id: 'text-input-node',
+    type: 'input-node',
     position: { x: 0, y: 0 },
     data: {
       name: 'Input',
       description: 'Start Node',
+      status: 'Idle',
+    },
+  },
+  {
+    id: 'text-output-node',
+    type: 'output-node',
+    position: { x: 600, y: 0 },
+    data: {
+      name: 'Output',
+      description: 'Output Node',
+      status: 'Idle',
+    },
+  },
+  {
+    id: 'warren_buffett',
+    type: 'agent-node',
+    position: { x: 300, y: 0 },
+    data: {
+      name: 'Warren Buffett',
+      description: 'The Oracle of Omaha',
       status: 'Idle',
     },
   },
@@ -31,25 +52,9 @@ export const initialEdges: Edge[] = [
     },
   },
   {
-    id: 'start-to-charlie',
-    source: 'text-input-node',
-    target: 'charlie_munger',
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-    },
-  },
-  {
-    id: 'warren-to-portfolio',
+    id: 'warren-to-output',
     source: 'warren_buffett',
-    target: 'portfolio_manager',
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-    },
-  },
-  {
-    id: 'charlie-to-portfolio',
-    source: 'charlie_munger',
-    target: 'portfolio_manager',
+    target: 'text-output-node',
     markerEnd: {
       type: MarkerType.ArrowClosed,
     },
@@ -57,6 +62,7 @@ export const initialEdges: Edge[] = [
 ];
 
 export const nodeTypes = {
-  'agent': AgentNode,
-  'text-input-node': TextInputNode,
+  'agent-node': AgentNode,
+  'input-node': TextInputNode,
+  'output-node': TextOutputNode,
 } satisfies NodeTypes;

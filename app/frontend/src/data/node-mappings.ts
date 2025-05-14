@@ -2,17 +2,15 @@ import { AppNode } from "@/nodes/types";
 
 // Map of sidebar item names to node creation functions
 export interface NodeTypeDefinition {
-  type: string;
   createNode: (position: { x: number, y: number }) => AppNode;
 }
 
 // Define node creation functions for each type
 const nodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
   "Text Input": {
-    type: "text-input-node",
     createNode: (position: { x: number, y: number }): AppNode => ({
-      id: `start`,
-      type: "text-input-node",
+      id: `text-input-node`,
+      type: "input-node",
       position,
       data: {
         name: "Input",
@@ -21,11 +19,22 @@ const nodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
       },
     }),
   },
+  "Text Output": {
+    createNode: (position: { x: number, y: number }): AppNode => ({
+      id: `text-output-node`,
+      type: "output-node",
+      position,
+      data: {
+        name: "Output",
+        description: "Output Node",
+        status: "Idle",
+      },
+    }),
+  },
   "Ben Graham": {
-    type: "agent",
     createNode: (position: { x: number, y: number }): AppNode => ({
       id: `ben_graham`,
-      type: "agent",
+      type: "agent-node",
       position,
       data: {
         name: "Ben Graham",
@@ -35,10 +44,9 @@ const nodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
     }),
   },
   "Charlie Munger": {
-    type: "agent",
     createNode: (position: { x: number, y: number }): AppNode => ({
       id: `charlie_munger`,
-      type: "agent",
+      type: "agent-node",
       position,
       data: {
         name: "Charlie Munger",
@@ -48,10 +56,9 @@ const nodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
     }),
   },
   "Warren Buffett": {
-    type: "agent",
     createNode: (position: { x: number, y: number }): AppNode => ({
       id: `warren_buffett`,
-      type: "agent", 
+      type: "agent-node", 
       position,
       data: {
         name: "Warren Buffett",
