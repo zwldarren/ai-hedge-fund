@@ -61,7 +61,6 @@ export function AgentNode({
             )}
           </div>
         </div>
-
         <AgentOutputDialog
           isOpen={isDialogOpen}
           onOpenChange={setIsDialogOpen}

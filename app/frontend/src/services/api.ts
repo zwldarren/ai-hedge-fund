@@ -125,8 +125,8 @@ export const api = {
                   switch (eventType) {
                     case 'start':
                       onEvent(eventData as StartEvent);
-                        // Reset all nodes at the start of a new run
-                        nodeContext.resetAllNodes();
+                      // Reset all nodes at the start of a new run
+                      nodeContext.resetAllNodes();
                       break;
                     case 'progress':
                       onEvent(eventData as ProgressUpdate);

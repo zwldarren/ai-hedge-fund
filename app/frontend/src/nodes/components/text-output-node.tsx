@@ -3,7 +3,6 @@ import { Bot } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
-import { useNodeContext } from '@/contexts/node-context';
 import { type TextOutputNode } from '../types';
 import { NodeShell } from './node-shell';
 
@@ -12,12 +11,9 @@ export function TextOutputNode({
   selected,
   id,
   isConnectable,
-}: NodeProps<TextOutputNode>) {
-  const nodeStatusContext = useNodeContext();
-  const { updateNode } = nodeStatusContext;
-  
+}: NodeProps<TextOutputNode>) {  
   const handleViewOutput = () => {
-    console.log('View Output');
+    console.log('Clicked View Output');
   }
 
   return (
