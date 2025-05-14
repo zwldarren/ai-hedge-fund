@@ -23,7 +23,7 @@ interface NodeContextType {
   nodeStates: Record<string, NodeData>;
   updateNode: (nodeId: string, data: Partial<NodeData>) => void;
   updateNodeStatus: (nodeId: string, status: NodeStatus) => void;
-  updateNodes: (nodeIds: string[], status: NodeStatus) => void;
+  updateNodeStatuses: (nodeIds: string[], status: NodeStatus) => void;
   resetAllNodes: () => void;
 }
 
@@ -71,7 +71,7 @@ export function NodeProvider({ children }: { children: ReactNode }) {
   }, [updateNode]);
 
   // Update multiple nodes at once (keep for compatibility)
-  const updateNodes = useCallback((nodeIds: string[], status: NodeStatus) => {
+  const updateNodeStatuses = useCallback((nodeIds: string[], status: NodeStatus) => {
     setNodeStates((prev) => {
       const newStates = { ...prev };
       nodeIds.forEach((id) => {
@@ -102,7 +102,7 @@ export function NodeProvider({ children }: { children: ReactNode }) {
         nodeStates,
         updateNode,
         updateNodeStatus,
-        updateNodes,
+        updateNodeStatuses,
         resetAllNodes,
       }}
     >
@@ -111,11 +111,11 @@ export function NodeProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useNodeStatus() {
+export function useNodeContext() {
   const context = useContext(NodeContext);
   
   if (context === undefined) {
-    throw new Error('useNodeStatus must be used within a NodeProvider');
+    throw new Error('useNodeContext must be used within a NodeProvider');
   }
   
   return context;

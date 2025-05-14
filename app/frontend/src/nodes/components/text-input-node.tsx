@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useNodeStatus } from '@/contexts/node-context';
+import { useNodeContext } from '@/contexts/node-context';
 import { api } from '@/services/api';
 import { type TextInputNode } from '../types';
 import { NodeShell } from './node-shell';
@@ -16,9 +16,9 @@ export function TextInputNode({
   id,
   isConnectable,
 }: NodeProps<TextInputNode>) {
-  const [tickers, setTickers] = useState('');
+  const [tickers, setTickers] = useState('AAPL');
   const [isProcessing, setIsProcessing] = useState(false);
-  const nodeStatusContext = useNodeStatus();
+  const nodeStatusContext = useNodeContext();
   const { resetAllNodes, updateNodeStatus } = nodeStatusContext;
   const { getNodes, getEdges } = useReactFlow();
   const abortControllerRef = useRef<(() => void) | null>(null);

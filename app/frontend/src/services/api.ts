@@ -1,4 +1,4 @@
-import { NodeStatus, useNodeStatus } from '@/contexts/node-context';
+import { NodeStatus, useNodeContext } from '@/contexts/node-context';
 import { ModelProvider } from '@/services/types';
 
 interface HedgeFundRequest {
@@ -54,7 +54,7 @@ export const api = {
   runHedgeFund: (
     params: HedgeFundRequest, 
     onEvent: EventCallback, 
-    nodeStatusContext?: ReturnType<typeof useNodeStatus>
+    nodeStatusContext?: ReturnType<typeof useNodeContext>
   ): (() => void) => {
     // Convert tickers string to array if needed
     if (typeof params.tickers === 'string') {
@@ -154,7 +154,7 @@ export const api = {
                       if (nodeStatusContext) {
                         // Mark all agents as complete when the whole process is done
                         const agentIds = params.selected_agents || [];
-                        nodeStatusContext.updateNodes(agentIds, 'COMPLETE');
+                        nodeStatusContext.updateNodeStatuses(agentIds, 'COMPLETE');
                       }
                       break;
                     case 'error':
@@ -162,7 +162,7 @@ export const api = {
                       if (nodeStatusContext) {
                         // Mark all agents as error when there's an error
                         const agentIds = params.selected_agents || [];
-                        nodeStatusContext.updateNodes(agentIds, 'ERROR');
+                        nodeStatusContext.updateNodeStatuses(agentIds, 'ERROR');
                       }
                       break;
                     default:
@@ -184,7 +184,7 @@ export const api = {
             if (nodeStatusContext) {
               // Mark all agents as error when there's a connection error
               const agentIds = params.selected_agents || [];
-              nodeStatusContext.updateNodes(agentIds, 'ERROR');
+              nodeStatusContext.updateNodeStatuses(agentIds, 'ERROR');
             }
           }
         }
@@ -203,7 +203,7 @@ export const api = {
         if (nodeStatusContext) {
           // Mark all agents as error when there's a connection error
           const agentIds = params.selected_agents || [];
-          nodeStatusContext.updateNodes(agentIds, 'ERROR');
+          nodeStatusContext.updateNodeStatuses(agentIds, 'ERROR');
         }
       }
     });

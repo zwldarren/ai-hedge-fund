@@ -3,7 +3,7 @@ import { Bot } from 'lucide-react';
 import { useState } from 'react';
 
 import { CardContent } from '@/components/ui/card';
-import { useNodeStatus } from '@/contexts/node-context';
+import { useNodeContext } from '@/contexts/node-context';
 import { cn } from '@/lib/utils';
 import { NodeMessage, type AgentNode } from '../types';
 import { getStatusColor } from '../utils';
@@ -16,7 +16,7 @@ export function AgentNode({
   id,
   isConnectable,
 }: NodeProps<AgentNode>) {
-  const { nodeStates } = useNodeStatus();
+  const { nodeStates } = useNodeContext();
   const nodeData = nodeStates[id] || { 
     status: 'IDLE', 
     ticker: null, 
