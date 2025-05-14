@@ -1,13 +1,13 @@
 import { type NodeProps } from '@xyflow/react';
-import { Bot } from 'lucide-react';
+import { Bot, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useNodeContext } from '@/contexts/node-context';
 import { type TextOutputNode } from '../types';
 import { NodeShell } from './node-shell';
+import { TextOutputDialog } from './text-output-dialog';
 
 export function TextOutputNode({
   data,
@@ -18,7 +18,12 @@ export function TextOutputNode({
   const { outputNodeData, agentNodeData } = useNodeContext();
   const [showOutput, setShowOutput] = useState(false);
   
-  const isOutputAvailable = !!outputNodeData && agentNodeData.output?.status === 'COMPLETE';
+  // Check if any agent is in progress
+  const isProcessing = Object.values(agentNodeData).some(
+    agent => agent.status === 'IN_PROGRESS'
+  );
+  
+  const isOutputAvailable = !!outputNodeData;
 
   const handleViewOutput = () => {
     setShowOutput(true);
@@ -46,46 +51,36 @@ export function TextOutputNode({
                 Results
               </div>
               <div className="flex gap-2">
-                <Button 
-                  size="icon" 
-                  variant="secondary"
-                  className="w-full flex-shrink-0 transition-all duration-200 hover:bg-primary hover:text-primary-foreground active:scale-95"
-                  onClick={handleViewOutput}
-                  disabled={!isOutputAvailable}
-                >
-                 View Output
-                </Button>
+                {isProcessing ? (
+                  <Button 
+                    variant="secondary"
+                    className="w-full flex-shrink-0 transition-all duration-200 hover:bg-primary hover:text-primary-foreground active:scale-95 text-subtitle"
+                    disabled
+                  >
+                    <Loader2 className="h-2 w-2 animate-spin" />
+                    Processing...
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="secondary"
+                    className="w-full flex-shrink-0 transition-all duration-200 hover:bg-primary hover:text-primary-foreground active:scale-95 text-subtitle"
+                    onClick={handleViewOutput}
+                    disabled={!isOutputAvailable}
+                  >
+                   View Output
+                  </Button>
+                )}
               </div>
             </div>
           </div>
         </CardContent>
       </NodeShell>
 
-      <Dialog open={showOutput} onOpenChange={setShowOutput}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Analysis Results</DialogTitle>
-          </DialogHeader>
-          
-          {outputNodeData && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-bold mb-2">Trading Decisions</h3>
-                <pre className="bg-muted p-4 rounded-md overflow-x-auto">
-                  {formatJSON(outputNodeData.decisions)}
-                </pre>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-bold mb-2">Analyst Signals</h3>
-                <pre className="bg-muted p-4 rounded-md overflow-x-auto">
-                  {formatJSON(outputNodeData.analyst_signals)}
-                </pre>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <TextOutputDialog 
+        isOpen={showOutput} 
+        onOpenChange={setShowOutput} 
+        outputNodeData={outputNodeData} 
+      />
     </>
   );
 }

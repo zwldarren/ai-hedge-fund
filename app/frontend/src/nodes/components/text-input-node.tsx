@@ -1,5 +1,5 @@
 import { getConnectedEdges, useReactFlow, type NodeProps } from '@xyflow/react';
-import { Bot, Play } from 'lucide-react';
+import { Bot, Loader2, Play } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -17,11 +17,15 @@ export function TextInputNode({
   isConnectable,
 }: NodeProps<TextInputNode>) {
   const [tickers, setTickers] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
   const nodeContext = useNodeContext();
-  const { resetAllNodes } = nodeContext;
+  const { resetAllNodes, agentNodeData } = nodeContext;
   const { getNodes, getEdges } = useReactFlow();
   const abortControllerRef = useRef<(() => void) | null>(null);
+  
+  // Check if any agent is in progress
+  const isProcessing = Object.values(agentNodeData).some(
+    agent => agent.status === 'IN_PROGRESS'
+  );
   
   // Clean up SSE connection on unmount
   useEffect(() => {
@@ -37,8 +41,6 @@ export function TextInputNode({
   };
 
   const handlePlay = () => {
-    setIsProcessing(true);
-    
     // First, reset all nodes to IDLE
     resetAllNodes();
     
@@ -78,12 +80,6 @@ export function TextInputNode({
         tickers: tickerList,
         selected_agents: Array.from(selectedAgents),
       },
-      (event) => {
-        // Basic status updates for start node only (agent-specific updates are handled by the API)
-        if (event.type === 'complete' || event.type === 'start') {
-          setIsProcessing(false);
-        }
-      },
       // Pass the node status context to the API
       nodeContext
     );
@@ -118,7 +114,11 @@ export function TextInputNode({
                 onClick={handlePlay}
                 disabled={isProcessing || !tickers.trim()}
               >
-                <Play className="h-3.5 w-3.5" />
+                {isProcessing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Play className="h-3.5 w-3.5" />
+                )}
               </Button>
             </div>
           </div>

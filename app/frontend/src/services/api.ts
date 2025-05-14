@@ -12,48 +12,17 @@ interface HedgeFundRequest {
   margin_requirement?: number;
 }
 
-export type ProgressUpdate = {
-  type: 'progress';
-  agent: string;
-  ticker: string | null;
-  status: string;
-  timestamp: string;
-};
-
-export type CompleteEvent = {
-  type: 'complete';
-  data: {
-    decisions: Record<string, any>;
-    analyst_signals: Record<string, any>;
-  };
-};
-
-export type ErrorEvent = {
-  type: 'error';
-  message: string;
-};
-
-export type StartEvent = {
-  type: 'start';
-};
-
-export type HedgeFundEvent = ProgressUpdate | CompleteEvent | ErrorEvent | StartEvent;
-
-export type EventCallback = (event: HedgeFundEvent) => void;
-
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const api = {
   /**
    * Runs a hedge fund simulation with the given parameters and streams the results
    * @param params The hedge fund request parameters
-   * @param onEvent Callback for each SSE event
    * @param nodeContext Node context for updating node states
    * @returns A function to abort the SSE connection
    */
   runHedgeFund: (
     params: HedgeFundRequest, 
-    onEvent: EventCallback, 
     nodeContext: ReturnType<typeof useNodeContext>
   ): (() => void) => {
     // Convert tickers string to array if needed
@@ -124,12 +93,10 @@ export const api = {
                   // Process based on event type
                   switch (eventType) {
                     case 'start':
-                      onEvent(eventData as StartEvent);
                       // Reset all nodes at the start of a new run
                       nodeContext.resetAllNodes();
                       break;
                     case 'progress':
-                      onEvent(eventData as ProgressUpdate);
                       if (eventData.agent) {
                         // Map the progress to a node status
                         let nodeStatus: NodeStatus = 'IN_PROGRESS';
@@ -148,7 +115,6 @@ export const api = {
                       }
                       break;
                     case 'complete':
-                      onEvent(eventData as CompleteEvent);
                       // Store the complete event data in the node context
                       if (eventData.data) {
                         nodeContext.setOutputNodeData(eventData.data as OutputNodeData);
@@ -162,7 +128,6 @@ export const api = {
                       });
                       break;
                     case 'error':
-                      onEvent(eventData as ErrorEvent);
                       // Mark all agents as error when there's an error
                       nodeContext.updateAgentNodes(params.selected_agents || [], 'ERROR');
                       break;
@@ -178,10 +143,6 @@ export const api = {
         } catch (error: any) { // Type assertion for error
           if (error.name !== 'AbortError') {
             console.error('Error reading SSE stream:', error);
-            onEvent({
-              type: 'error',
-              message: `Connection error: ${error.message || 'Unknown error'}`
-            });
             // Mark all agents as error when there's a connection error
             const agentIds = params.selected_agents || [];
             nodeContext.updateAgentNodes(agentIds, 'ERROR');
@@ -195,10 +156,6 @@ export const api = {
     .catch((error: any) => { // Type assertion for error
       if (error.name !== 'AbortError') {
         console.error('SSE connection error:', error);
-        onEvent({
-          type: 'error',
-          message: `Connection error: ${error.message || 'Unknown error'}`
-        });
         // Mark all agents as error when there's a connection error
         const agentIds = params.selected_agents || [];
         nodeContext.updateAgentNodes(agentIds, 'ERROR');
