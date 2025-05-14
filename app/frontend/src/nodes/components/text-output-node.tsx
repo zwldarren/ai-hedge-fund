@@ -15,10 +15,10 @@ export function TextOutputNode({
   id,
   isConnectable,
 }: NodeProps<TextOutputNode>) {  
-  const { outputData, nodeStates } = useNodeContext();
+  const { outputNodeData, agentNodeData } = useNodeContext();
   const [showOutput, setShowOutput] = useState(false);
   
-  const isOutputAvailable = !!outputData && nodeStates.output?.status === 'COMPLETE';
+  const isOutputAvailable = !!outputNodeData && agentNodeData.output?.status === 'COMPLETE';
 
   const handleViewOutput = () => {
     setShowOutput(true);
@@ -67,19 +67,19 @@ export function TextOutputNode({
             <DialogTitle>Analysis Results</DialogTitle>
           </DialogHeader>
           
-          {outputData && (
+          {outputNodeData && (
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-bold mb-2">Trading Decisions</h3>
                 <pre className="bg-muted p-4 rounded-md overflow-x-auto">
-                  {formatJSON(outputData.decisions)}
+                  {formatJSON(outputNodeData.decisions)}
                 </pre>
               </div>
               
               <div>
                 <h3 className="text-lg font-bold mb-2">Analyst Signals</h3>
                 <pre className="bg-muted p-4 rounded-md overflow-x-auto">
-                  {formatJSON(outputData.analyst_signals)}
+                  {formatJSON(outputNodeData.analyst_signals)}
                 </pre>
               </div>
             </div>

@@ -19,7 +19,7 @@ export function TextInputNode({
   const [tickers, setTickers] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const nodeContext = useNodeContext();
-  const { resetAllNodes, updateNode } = nodeContext;
+  const { resetAllNodes } = nodeContext;
   const { getNodes, getEdges } = useReactFlow();
   const abortControllerRef = useRef<(() => void) | null>(null);
   
@@ -41,9 +41,6 @@ export function TextInputNode({
     
     // First, reset all nodes to IDLE
     resetAllNodes();
-    
-    // Update this node to IN_PROGRESS
-    updateNode(id, 'IN_PROGRESS');
     
     // Clean up any existing connection
     if (abortControllerRef.current) {
@@ -75,9 +72,7 @@ export function TextInputNode({
         selectedAgents.add(node.id);
       }
     });
-    
-    console.log(`Connected agents: `, Array.from(selectedAgents));
-    
+        
     abortControllerRef.current = api.runHedgeFund(
       {
         tickers: tickerList,
@@ -85,13 +80,8 @@ export function TextInputNode({
       },
       (event) => {
         // Basic status updates for start node only (agent-specific updates are handled by the API)
-        if (event.type === 'complete') {
+        if (event.type === 'complete' || event.type === 'start') {
           setIsProcessing(false);
-          updateNode(id, 'COMPLETE');
-        } 
-        else if (event.type === 'error') {
-          setIsProcessing(false);
-          updateNode(id, 'ERROR');
         }
       },
       // Pass the node status context to the API

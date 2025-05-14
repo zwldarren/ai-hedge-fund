@@ -1,4 +1,4 @@
-import { NodeStatus, OutputData, useNodeContext } from '@/contexts/node-context';
+import { NodeStatus, OutputNodeData, useNodeContext } from '@/contexts/node-context';
 import { ModelProvider } from '@/services/types';
 
 interface HedgeFundRequest {
@@ -140,7 +140,7 @@ export const api = {
                         const agentId = eventData.agent.replace('_agent', '');
                         
                         // Use the enhanced API to update both status and additional data
-                        nodeContext.updateNode(agentId, {
+                        nodeContext.updateAgentNode(agentId, {
                           status: nodeStatus,
                           ticker: eventData.ticker,
                           message: eventData.status
@@ -151,12 +151,12 @@ export const api = {
                       onEvent(eventData as CompleteEvent);
                       // Store the complete event data in the node context
                       if (eventData.data) {
-                        nodeContext.setOutputData(eventData.data as OutputData);
+                        nodeContext.setOutputNodeData(eventData.data as OutputNodeData);
                       }
                       // Mark all agents as complete when the whole process is done
-                      nodeContext.updateNodes(params.selected_agents || [], 'COMPLETE');
+                      nodeContext.updateAgentNodes(params.selected_agents || [], 'COMPLETE');
                       // Also update the output node
-                      nodeContext.updateNode('output', {
+                      nodeContext.updateAgentNode('output', {
                         status: 'COMPLETE',
                         message: 'Analysis complete'
                       });
@@ -164,7 +164,7 @@ export const api = {
                     case 'error':
                       onEvent(eventData as ErrorEvent);
                       // Mark all agents as error when there's an error
-                      nodeContext.updateNodes(params.selected_agents || [], 'ERROR');
+                      nodeContext.updateAgentNodes(params.selected_agents || [], 'ERROR');
                       break;
                     default:
                       console.warn('Unknown event type:', eventType);
@@ -184,7 +184,7 @@ export const api = {
             });
             // Mark all agents as error when there's a connection error
             const agentIds = params.selected_agents || [];
-            nodeContext.updateNodes(agentIds, 'ERROR');
+            nodeContext.updateAgentNodes(agentIds, 'ERROR');
           }
         }
       };
@@ -201,7 +201,7 @@ export const api = {
         });
         // Mark all agents as error when there's a connection error
         const agentIds = params.selected_agents || [];
-        nodeContext.updateNodes(agentIds, 'ERROR');
+        nodeContext.updateAgentNodes(agentIds, 'ERROR');
       }
     });
 

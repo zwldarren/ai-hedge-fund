@@ -16,8 +16,8 @@ export function AgentNode({
   id,
   isConnectable,
 }: NodeProps<AgentNode>) {
-  const { nodeStates } = useNodeContext();
-  const nodeData = nodeStates[id] || { 
+  const { agentNodeData } = useNodeContext();
+  const nodeData = agentNodeData[id] || { 
     status: 'IDLE', 
     ticker: null, 
     message: '', 
