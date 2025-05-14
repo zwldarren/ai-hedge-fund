@@ -19,6 +19,12 @@ export interface NodeData {
   timestamp?: string;
 }
 
+// Data structure for the complete event output
+export interface OutputData {
+  decisions: Record<string, any>;
+  analyst_signals: Record<string, any>;
+}
+
 // Default node state
 const DEFAULT_NODE_STATE: NodeData = {
   status: 'IDLE',
@@ -30,8 +36,10 @@ const DEFAULT_NODE_STATE: NodeData = {
 
 interface NodeContextType {
   nodeStates: Record<string, NodeData>;
+  outputData: OutputData | null;
   updateNode: (nodeId: string, data: Partial<NodeData> | NodeStatus) => void;
   updateNodes: (nodeIds: string[], status: NodeStatus) => void;
+  setOutputData: (data: OutputData) => void;
   resetAllNodes: () => void;
 }
 
@@ -39,6 +47,7 @@ const NodeContext = createContext<NodeContextType | undefined>(undefined);
 
 export function NodeProvider({ children }: { children: ReactNode }) {
   const [nodeStates, setNodeStates] = useState<Record<string, NodeData>>({});
+  const [outputData, setOutputData] = useState<OutputData | null>(null);
 
   const updateNode = useCallback((nodeId: string, data: Partial<NodeData> | NodeStatus) => {
     // Handle string status shorthand (just passing a status string)
@@ -101,14 +110,19 @@ export function NodeProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const resetAllNodes = useCallback(() => setNodeStates({}), []);
+  const resetAllNodes = useCallback(() => {
+    setNodeStates({});
+    setOutputData(null);
+  }, []);
 
   return (
     <NodeContext.Provider
       value={{
         nodeStates,
+        outputData,
         updateNode,
         updateNodes,
+        setOutputData,
         resetAllNodes,
       }}
     >

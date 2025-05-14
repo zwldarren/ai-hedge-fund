@@ -1,4 +1,4 @@
-import { NodeStatus, useNodeContext } from '@/contexts/node-context';
+import { NodeStatus, OutputData, useNodeContext } from '@/contexts/node-context';
 import { ModelProvider } from '@/services/types';
 
 interface HedgeFundRequest {
@@ -149,8 +149,17 @@ export const api = {
                       break;
                     case 'complete':
                       onEvent(eventData as CompleteEvent);
+                      // Store the complete event data in the node context
+                      if (eventData.data) {
+                        nodeContext.setOutputData(eventData.data as OutputData);
+                      }
                       // Mark all agents as complete when the whole process is done
                       nodeContext.updateNodes(params.selected_agents || [], 'COMPLETE');
+                      // Also update the output node
+                      nodeContext.updateNode('output', {
+                        status: 'COMPLETE',
+                        message: 'Analysis complete'
+                      });
                       break;
                     case 'error':
                       onEvent(eventData as ErrorEvent);
