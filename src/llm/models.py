@@ -1,4 +1,5 @@
 import os
+import json
 from langchain_anthropic import ChatAnthropic
 from langchain_deepseek import ChatDeepSeek
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -7,7 +8,8 @@ from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
 from enum import Enum
 from pydantic import BaseModel
-from typing import Tuple
+from typing import Tuple, List
+from pathlib import Path
 
 
 class ModelProvider(str, Enum):
@@ -54,22 +56,32 @@ class LLMModel(BaseModel):
         return self.provider == ModelProvider.OLLAMA
 
 
-# Define available models
-AVAILABLE_MODELS = [
-    LLMModel(display_name="[anthropic] claude-3.5-haiku", model_name="claude-3-5-haiku-latest", provider=ModelProvider.ANTHROPIC),
-    LLMModel(display_name="[anthropic] claude-3.5-sonnet", model_name="claude-3-5-sonnet-latest", provider=ModelProvider.ANTHROPIC),
-    LLMModel(display_name="[anthropic] claude-3.7-sonnet", model_name="claude-3-7-sonnet-latest", provider=ModelProvider.ANTHROPIC),
-    LLMModel(display_name="[deepseek] deepseek-r1", model_name="deepseek-reasoner", provider=ModelProvider.DEEPSEEK),
-    LLMModel(display_name="[deepseek] deepseek-v3", model_name="deepseek-chat", provider=ModelProvider.DEEPSEEK),
-    LLMModel(display_name="[gemini] gemini-2.0-flash", model_name="gemini-2.0-flash", provider=ModelProvider.GEMINI),
-    LLMModel(display_name="[gemini] gemini-2.5-pro", model_name="gemini-2.5-pro-exp-03-25", provider=ModelProvider.GEMINI),
-    LLMModel(display_name="[groq] llama-4-scout-17b", model_name="meta-llama/llama-4-scout-17b-16e-instruct", provider=ModelProvider.GROQ),
-    LLMModel(display_name="[groq] llama-4-maverick-17b", model_name="meta-llama/llama-4-maverick-17b-128e-instruct", provider=ModelProvider.GROQ),
-    LLMModel(display_name="[openai] gpt-4.5", model_name="gpt-4.5-preview", provider=ModelProvider.OPENAI),
-    LLMModel(display_name="[openai] gpt-4o", model_name="gpt-4o", provider=ModelProvider.OPENAI),
-    LLMModel(display_name="[openai] o3", model_name="o3", provider=ModelProvider.OPENAI),
-    LLMModel(display_name="[openai] o4-mini", model_name="o4-mini", provider=ModelProvider.OPENAI),
-]
+# Load models from JSON file
+def load_models_from_json(json_path: str) -> List[LLMModel]:
+    """Load models from a JSON file"""
+    with open(json_path, 'r') as f:
+        models_data = json.load(f)
+    
+    models = []
+    for model_data in models_data:
+        # Convert string provider to ModelProvider enum
+        provider_enum = ModelProvider(model_data["provider"])
+        models.append(
+            LLMModel(
+                display_name=model_data["display_name"],
+                model_name=model_data["model_name"],
+                provider=provider_enum
+            )
+        )
+    return models
+
+
+# Get the path to the models.json file
+current_dir = Path(__file__).parent
+models_json_path = current_dir / "models.json"
+
+# Load available models from JSON
+AVAILABLE_MODELS = load_models_from_json(str(models_json_path))
 
 # Define Ollama models separately
 OLLAMA_MODELS = [
