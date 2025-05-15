@@ -76,24 +76,16 @@ def load_models_from_json(json_path: str) -> List[LLMModel]:
     return models
 
 
-# Get the path to the models.json file
+# Get the path to the JSON files
 current_dir = Path(__file__).parent
-models_json_path = current_dir / "models.json"
+models_json_path = current_dir / "api_models.json"
+ollama_models_json_path = current_dir / "ollama_models.json"
 
 # Load available models from JSON
 AVAILABLE_MODELS = load_models_from_json(str(models_json_path))
 
-# Define Ollama models separately
-OLLAMA_MODELS = [
-    LLMModel(display_name="[google] gemma3 (4B)", model_name="gemma3:4b", provider=ModelProvider.OLLAMA),
-    LLMModel(display_name="[alibaba] qwen3 (4B)", model_name="qwen3:4b", provider=ModelProvider.OLLAMA),
-    LLMModel(display_name="[meta] llama3.1 (8B)", model_name="llama3.1:latest", provider=ModelProvider.OLLAMA),
-    LLMModel(display_name="[google] gemma3 (12B)", model_name="gemma3:12b", provider=ModelProvider.OLLAMA),
-    LLMModel(display_name="[mistral] mistral-small3.1 (24B)", model_name="mistral-small3.1", provider=ModelProvider.OLLAMA),
-    LLMModel(display_name="[google] gemma3 (27B)", model_name="gemma3:27b", provider=ModelProvider.OLLAMA),
-    LLMModel(display_name="[alibaba] qwen3 (30B-a3B)", model_name="qwen3:30b-a3b", provider=ModelProvider.OLLAMA),
-    LLMModel(display_name="[meta] llama-3.3 (70B)", model_name="llama3.3:70b-instruct-q4_0", provider=ModelProvider.OLLAMA),
-]
+# Load Ollama models from JSON
+OLLAMA_MODELS = load_models_from_json(str(ollama_models_json_path))
 
 # Create LLM_ORDER in the format expected by the UI
 LLM_ORDER = [model.to_choice_tuple() for model in AVAILABLE_MODELS]
