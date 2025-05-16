@@ -4,6 +4,9 @@ This project is currently a work in progress. To track progress, please get upda
 
 The AI Hedge Fund app is a complete system with both frontend and backend components that enables you to run an AI-powered hedge fund trading system through a web interface.
 
+<img width="1649" alt="Screenshot 2025-05-15 at 8 57 05 PM" src="https://github.com/user-attachments/assets/d1760013-0d90-4402-9797-4be9fff11e08" />
+
+
 ## Overview
 
 The AI Hedge Fund consists of:
