@@ -56,7 +56,7 @@ export function FlowProvider({ children }: FlowProviderProps) {
     
     // Add some randomness to prevent perfect overlap if multiple nodes are added
     position.x += Math.random() * 100 - 50;
-    position.y += Math.random() * 100 - 50;
+    position.y = 0;
     
     // Create the new node
     const newNode = nodeTypeDefinition.createNode(position);
