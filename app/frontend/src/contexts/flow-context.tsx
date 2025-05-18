@@ -20,13 +20,6 @@ interface FlowProviderProps {
   children: ReactNode;
 }
 
-/**
- * Generate a unique ID string
- */
-function generateId(prefix: string = ''): string {
-  return `${prefix}${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 10)}`;
-}
-
 export function FlowProvider({ children }: FlowProviderProps) {
   const reactFlowInstance = useReactFlow();
 
