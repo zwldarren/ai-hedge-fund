@@ -72,8 +72,7 @@ export function TextOutputDialog({
     if (confidence >= 50) variant = 'success';
     else if (confidence >= 0) variant = 'warning';
     else variant = 'outline';
-    // Fix: round to 1 decimal place for display
-    const rounded = Math.round((confidence + Number.EPSILON) * 10) / 10;
+    const rounded = Number(confidence.toFixed(1));
     return (
       <Badge variant={variant as any}>
         {rounded}%
