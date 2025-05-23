@@ -6,7 +6,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { MessageItem } from '@/contexts/node-context';
-import { Copy, MessageSquare } from 'lucide-react';
+import { formatTimeFromTimestamp } from '@/utils/date-utils';
+import { formatTextIntoParagraphs } from '@/utils/text-utils';
+import { Copy, Loader2, MessageSquare } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface AgentOutputDialogProps {
@@ -26,22 +28,9 @@ export function AgentOutputDialog({
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
   const initialFocusRef = useRef<HTMLDivElement>(null);
 
-  // Format ISO timestamp to local browser time
-  const formatTime = (timestamp: string) => {
-    // Parse ISO timestamp string into Date object
-    const date = new Date(timestamp);
-    
-    // Format as HH:MM:SS in local browser timezone
-    return date.toLocaleTimeString(undefined, {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
-  };
-
-  // Collect all decisions from all messages into a single decision dictionary
-  const allDecisions = messages.reduce<Record<string, string>>((acc, msg) => {
-    // Add decisions from this message to our accumulated decisions
+  // Collect all analysis from all messages into a single analysis dictionary
+  const allAnalysis = messages.reduce<Record<string, string>>((acc, msg) => {
+    // Add analysis from this message to our accumulated analysis
     if (msg.analysis && Object.keys(msg.analysis).length > 0) {
       // Filter out null values before adding to our accumulated decisions
       const validDecisions = Object.entries(msg.analysis)
@@ -60,7 +49,7 @@ export function AgentOutputDialog({
   }, {});
 
   // Get all unique tickers that have decisions
-  const tickersWithDecisions = Object.keys(allDecisions);
+  const tickersWithDecisions = Object.keys(allAnalysis);
 
   // If no ticker is selected but we have decisions, select the first one
   useEffect(() => {
@@ -70,7 +59,7 @@ export function AgentOutputDialog({
   }, [tickersWithDecisions, selectedTicker]);
 
   // Get the selected decision text
-  const selectedDecision = selectedTicker && allDecisions[selectedTicker] ? allDecisions[selectedTicker] : null;
+  const selectedDecision = selectedTicker && allAnalysis[selectedTicker] ? allAnalysis[selectedTicker] : null;
 
   const copyToClipboard = () => {
     if (selectedDecision) {
@@ -83,45 +72,6 @@ export function AgentOutputDialog({
           console.error('Failed to copy text: ', err);
         });
     }
-  };
-
-  // Split text into smaller paragraphs for better readability
-  const formatReasoningText = (text: string) => {
-    if (!text) return [];
-    
-    // First split by any existing paragraphs
-    const paragraphs = text.split('\n').filter(p => p.trim().length > 0);
-    
-    const formattedParagraphs: string[] = [];
-    
-    // Process each paragraph
-    paragraphs.forEach(paragraph => {
-      // Split into sentences using period, question mark, or exclamation mark followed by space
-      const sentences = paragraph.match(/[^.!?]+[.!?]+\s*/g) || [paragraph];
-      
-      let currentChunk = '';
-      let sentenceCount = 0;
-      
-      // Group every 2-3 sentences
-      sentences.forEach(sentence => {
-        currentChunk += sentence;
-        sentenceCount++;
-        
-        // After 2-3 sentences, create a new paragraph
-        if (sentenceCount >= 2 && (sentenceCount % 3 === 0 || sentence.endsWith('. '))) {
-          formattedParagraphs.push(currentChunk.trim());
-          currentChunk = '';
-          sentenceCount = 0;
-        }
-      });
-      
-      // Add any remaining text
-      if (currentChunk.trim()) {
-        formattedParagraphs.push(currentChunk.trim());
-      }
-    });
-    
-    return formattedParagraphs;
   };
 
   return (
@@ -158,7 +108,7 @@ export function AgentOutputDialog({
                   {messages.map((msg, idx) => (
                     <div key={idx} className="border-l-2 border-primary pl-3 text-sm">
                       <div className="text-blue-500">
-                        {formatTime(msg.timestamp)}
+                        {formatTimeFromTimestamp(msg.timestamp)}
                       </div>
                       <div className="text-foreground">
                         {msg.ticker && <span className="ml-1">[{msg.ticker}] </span>}
@@ -219,18 +169,19 @@ export function AgentOutputDialog({
                     </div>
                   )}
                   {selectedDecision ? (
-                    formatReasoningText(selectedDecision).map((paragraph, idx) => (
+                    formatTextIntoParagraphs(selectedDecision).map((paragraph, idx) => (
                       <p key={idx} className="mb-3 last:mb-0">{paragraph}</p>
                     ))
                   ) : (
-                    <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
-                      <p>No analysis available for {selectedTicker}</p>
-                      <p className="text-xs mt-2">The backend might not have provided reasoning data for this ticker yet.</p>
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                      Analysis in progress...
                     </div>
                   )}
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
                   Analysis in progress...
                 </div>
               )}
