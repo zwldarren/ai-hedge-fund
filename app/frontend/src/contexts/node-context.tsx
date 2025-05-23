@@ -77,7 +77,7 @@ export function NodeProvider({ children }: { children: ReactNode }) {
       // Add message to history if it's new based on timestamp
       if (data.message && data.timestamp !== existingNode.timestamp) {
         // Get the reasoning for the current ticker if available
-        const ticker = data.ticker || existingNode.ticker;
+        const ticker = data.ticker || null;
 
         const messageItem: MessageItem = {
           timestamp: data.timestamp || new Date().toISOString(),

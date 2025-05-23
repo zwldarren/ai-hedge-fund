@@ -7,8 +7,8 @@ import {
 } from '@/components/ui/dialog';
 import { useNodeContext } from '@/contexts/node-context';
 import { formatTimeFromTimestamp } from '@/utils/date-utils';
-import { formatTextIntoParagraphs } from '@/utils/text-utils';
-import { Copy, Loader2, MessageSquare } from 'lucide-react';
+import { createHighlightedJson, formatContent } from '@/utils/text-utils';
+import { AlignJustify, Copy, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface AgentOutputDialogProps {
@@ -92,8 +92,8 @@ export function AgentOutputDialog({
       <DialogTrigger asChild>
         <div className="border-t border-border p-3 flex justify-end items-center cursor-pointer hover:bg-accent/50" onClick={() => onOpenChange(true)}>
           <div className="flex items-center gap-1">
-            <div className="text-subtitle text-muted-foreground">Messages</div>
-            <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className="text-subtitle text-muted-foreground">Output</div>
+            <AlignJustify className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
         </div>
       </DialogTrigger>
@@ -109,18 +109,18 @@ export function AgentOutputDialog({
         <div className="grid grid-cols-2 gap-6 pt-4" ref={initialFocusRef} tabIndex={-1}>
           {/* Activity Log Section */}
           <div>
-            <h3 className="font-medium mb-3 text-primary">Activity Log</h3>
+            <h3 className="font-medium mb-3 text-primary">Log</h3>
             <div className="h-[400px] overflow-y-auto border border-border rounded-lg p-3">
               {messages.length > 0 ? (
                 <div className="p-3 space-y-3">
-                  {messages.map((msg, idx) => (
+                  {[...messages].reverse().map((msg, idx) => (
                     <div key={idx} className="border-l-2 border-primary pl-3 text-sm">
-                      <div className="text-blue-500">
-                        {formatTimeFromTimestamp(msg.timestamp)}
-                      </div>
                       <div className="text-foreground">
-                        {msg.ticker && <span className="ml-1">[{msg.ticker}] </span>}
+                        {msg.ticker && <span>[{msg.ticker}] </span>}
                         {msg.message}
+                      </div>
+                      <div className="text-muted-foreground">
+                        {formatTimeFromTimestamp(msg.timestamp)}
                       </div>
                     </div>
                   ))}
@@ -141,7 +141,7 @@ export function AgentOutputDialog({
                 {/* Ticker selector */}
                 {tickersWithDecisions.length > 0 && (
                   <div className="flex items-center gap-1">
-                    <span className="text-xs text-muted-foreground">Ticker:</span>
+                    <span className="text-xs text-muted-foreground font-medium">Ticker:</span>
                     <select 
                       className="text-xs p-1 rounded bg-background border border-border cursor-pointer"
                       value={selectedTicker || ''}
@@ -163,7 +163,7 @@ export function AgentOutputDialog({
                 <div className="p-3 rounded-lg text-sm leading-relaxed">
                   {selectedTicker && (
                     <div className="mb-3 flex justify-between items-center">
-                      <div className=" text-blue-500 font-medium">{selectedTicker}</div>
+                      <div className=" text-muted-foreground font-medium">Summary for {selectedTicker}</div>
                       {selectedDecision && (
                         <button 
                           onClick={copyToClipboard}
@@ -171,15 +171,43 @@ export function AgentOutputDialog({
                           title="Copy to clipboard"
                         >
                           <Copy className="h-3.5 w-3.5 " />
-                          <span>{copySuccess ? 'Copied!' : 'Copy'}</span>
+                          <span className="font-medium">{copySuccess ? 'Copied!' : 'Copy'}</span>
                         </button>
                       )}
                     </div>
                   )}
                   {selectedDecision ? (
-                    formatTextIntoParagraphs(selectedDecision).map((paragraph, idx) => (
-                      <p key={idx} className="mb-3 last:mb-0">{paragraph}</p>
-                    ))
+                    (() => {
+                      const { isJson, formattedContent } = formatContent(selectedDecision);
+                      
+                      if (isJson) {
+                        // Use our custom JSON highlighter without line numbers
+                        const highlightedJson = createHighlightedJson(formattedContent as string);
+                        
+                        return (
+                          <div className="rounded-md overflow-auto text-sm">
+                            <pre 
+                              className="overflow-auto whitespace-pre"
+                              style={{ 
+                                fontFamily: 'monospace',
+                                lineHeight: 1.5,
+                                color: '#d4d4d4',
+                                margin: 0,
+                              }}
+                            >
+                              <code dangerouslySetInnerHTML={{ __html: highlightedJson }} />
+                            </pre>
+                          </div>
+                        );
+                      } else {
+                        // Display as regular text paragraphs
+                        return (
+                          (formattedContent as string[]).map((paragraph, idx) => (
+                            <p key={idx} className="mb-3 last:mb-0">{paragraph}</p>
+                          ))
+                        );
+                      }
+                    })()
                   ) : (
                     <div className="flex items-center justify-center h-full text-muted-foreground">
                       <Loader2 className="h-5 w-5 animate-spin mr-2" />
