@@ -115,7 +115,7 @@ def technical_analyst_agent(state: AgentState):
                 },
             },
         }
-        progress.update_status("technical_analyst_agent", ticker, "Done")
+        progress.update_status("technical_analyst_agent", ticker, "Done", analysis=technical_analysis)
 
     # Create the technical analyst message
     message = HumanMessage(

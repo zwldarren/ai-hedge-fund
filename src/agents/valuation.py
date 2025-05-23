@@ -145,7 +145,7 @@ def valuation_agent(state: AgentState):
             "confidence": confidence,
             "reasoning": reasoning,
         }
-        progress.update_status("valuation_agent", ticker, "Done")
+        progress.update_status("valuation_agent", ticker, "Done", analysis=reasoning)
 
     # ---- Emit message (for LLM tool chain) ----
     msg = HumanMessage(content=json.dumps(valuation_analysis), name="valuation_agent")

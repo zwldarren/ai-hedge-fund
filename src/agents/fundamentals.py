@@ -138,7 +138,7 @@ def fundamentals_agent(state: AgentState):
             "reasoning": reasoning,
         }
 
-        progress.update_status("fundamentals_agent", ticker, "Done")
+        progress.update_status("fundamentals_agent", ticker, "Done", analysis=reasoning)
 
     # Create the fundamental analysis message
     message = HumanMessage(
