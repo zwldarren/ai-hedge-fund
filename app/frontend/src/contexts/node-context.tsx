@@ -79,8 +79,6 @@ export function NodeProvider({ children }: { children: ReactNode }) {
         // Get the reasoning for the current ticker if available
         const ticker = data.ticker || existingNode.ticker;
 
-        console.log("data.analysis", data.analysis)
-
         const messageItem: MessageItem = {
           timestamp: data.timestamp || new Date().toISOString(),
           message: data.message,
