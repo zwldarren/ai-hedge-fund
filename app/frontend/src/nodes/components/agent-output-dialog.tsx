@@ -5,7 +5,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { MessageItem } from '@/contexts/node-context';
+import { useNodeContext } from '@/contexts/node-context';
 import { formatTimeFromTimestamp } from '@/utils/date-utils';
 import { formatTextIntoParagraphs } from '@/utils/text-utils';
 import { Copy, Loader2, MessageSquare } from 'lucide-react';
@@ -15,15 +15,18 @@ interface AgentOutputDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   name: string;
-  messages: MessageItem[];
+  nodeId: string;
 }
 
 export function AgentOutputDialog({ 
   isOpen, 
   onOpenChange, 
   name, 
-  messages 
+  nodeId 
 }: AgentOutputDialogProps) {
+  const { agentNodeData } = useNodeContext();
+  const messages = agentNodeData[nodeId]?.messages || [];
+  
   const [copySuccess, setCopySuccess] = useState(false);
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
   const initialFocusRef = useRef<HTMLDivElement>(null);
@@ -50,6 +53,11 @@ export function AgentOutputDialog({
 
   // Get all unique tickers that have decisions
   const tickersWithDecisions = Object.keys(allAnalysis);
+
+  // Reset selected ticker when node changes
+  useEffect(() => {
+    setSelectedTicker(null);
+  }, [nodeId]);
 
   // If no ticker is selected but we have decisions, select the first one
   useEffect(() => {
