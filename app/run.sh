@@ -87,9 +87,32 @@ check_prerequisites() {
         missing_deps+=("Python 3 (https://python.org/)")
     fi
     
-    # Check for Poetry
+    # Check for Poetry - offer to install if missing
     if ! command_exists poetry; then
-        missing_deps+=("Poetry (https://python-poetry.org/)")
+        print_warning "Poetry is not installed."
+        print_status "Poetry is required to manage Python dependencies for this project."
+        echo ""
+        read -p "Would you like to install Poetry automatically? (y/N): " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            print_status "Installing Poetry..."
+            if python3 -m pip install poetry; then
+                print_success "Poetry installed successfully!"
+                print_status "Refreshing environment..."
+                # Try to refresh the PATH for this session
+                export PATH="$HOME/.local/bin:$PATH"
+                if ! command_exists poetry; then
+                    print_warning "Poetry may not be in PATH. You might need to restart your terminal."
+                    print_warning "Alternatively, try: source ~/.bashrc or source ~/.zshrc"
+                fi
+            else
+                print_error "Failed to install Poetry automatically."
+                print_error "Please install Poetry manually from https://python-poetry.org/"
+                exit 1
+            fi
+        else
+            missing_deps+=("Poetry (https://python-poetry.org/)")
+        fi
     fi
     
     if [[ ${#missing_deps[@]} -gt 0 ]]; then

@@ -37,9 +37,29 @@ if %errorlevel% neq 0 (
 
 where poetry >nul 2>&1
 if %errorlevel% neq 0 (
-    echo %ERROR% Poetry is not installed. Please install from https://python-poetry.org/
-    pause
-    exit /b 1
+    echo %WARNING% Poetry is not installed.
+    echo %INFO% Poetry is required to manage Python dependencies for this project.
+    echo.
+    set /p install_poetry="Would you like to install Poetry automatically? (y/N): "
+    if /i "!install_poetry!"=="y" (
+        echo %INFO% Installing Poetry...
+        python -m pip install poetry
+        if !errorlevel! neq 0 (
+            echo %ERROR% Failed to install Poetry automatically.
+            echo %ERROR% Please install Poetry manually from https://python-poetry.org/
+            pause
+            exit /b 1
+        )
+        echo %SUCCESS% Poetry installed successfully!
+        echo %INFO% Refreshing environment...
+        REM Refresh the PATH for this session
+        call refreshenv >nul 2>&1 || echo %WARNING% Could not refresh environment. You may need to restart your terminal.
+    ) else (
+        echo %ERROR% Poetry is required to run this application.
+        echo %ERROR% Please install Poetry from https://python-poetry.org/ and run this script again.
+        pause
+        exit /b 1
+    )
 )
 
 REM Check if we're in the right directory
