@@ -2,17 +2,17 @@ import { AccordionContent, AccordionItem, AccordionTrigger } from '@/components/
 import { ComponentGroup, ComponentItem } from '@/data/sidebar-components';
 import { SidebarItem } from './sidebar-item';
 
-interface ComponentGroupProps {
+interface SidebarItemGroupProps {
   group: ComponentGroup;
   activeItem: string | null;
   onComponentAdd?: (componentName: string) => void;
 }
 
-export function ComponentGroupItem({ 
+export function SidebarItemGroup({ 
   group, 
   activeItem, 
   onComponentAdd
-}: ComponentGroupProps) {
+}: SidebarItemGroupProps) {
   const { name, icon: Icon, iconColor, items } = group;
   
   return (
