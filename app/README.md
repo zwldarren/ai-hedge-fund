@@ -14,6 +14,18 @@ The AI Hedge Fund consists of:
 - **Backend**: A FastAPI application that provides a REST API to run the hedge fund trading system and backtester
 - **Frontend**: A React/Vite application that offers a user-friendly interface to visualize and control the hedge fund operations
 
+## Table of Contents
+
+- [🚀 Quick Start (For Non-Technical Users)](#-quick-start-for-non-technical-users)
+  - [Option 1: Using 1-Line Shell Script (Recommended)](#option-1-using-1-line-shell-script-recommended)
+  - [Option 2: Using npm (Alternative)](#option-2-using-npm-alternative)
+- [🛠️ Manual Setup (For Developers)](#️-manual-setup-for-developers)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Running the Application](#running-the-application)
+- [Detailed Documentation](#detailed-documentation)
+- [Disclaimer](#disclaimer)
+
 ## 🚀 Quick Start (For Non-Technical Users)
 
 **One-line setup and run command:**
@@ -37,7 +49,7 @@ bash run.sh
 
 #### For Windows:
 ```cmd
-cd app && run.bat
+run.bat
 ```
 
 ### Option 2: Using npm (Alternative)
