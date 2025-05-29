@@ -13,10 +13,10 @@ export function SidebarItemGroup({
   activeItem
 }: SidebarItemGroupProps) {
   const { name, icon: Icon, iconColor, items } = group;
-  const { addNodeFromComponent } = useFlowContext();
+  const { addComponentToFlow } = useFlowContext();
 
-  const handleComponentAdd = (componentName: string) => {
-    addNodeFromComponent(componentName);
+  const handleItemClick = (componentName: string) => {
+    addComponentToFlow(componentName);
   };
   
   return (
@@ -35,8 +35,7 @@ export function SidebarItemGroup({
               icon={item.icon} 
               label={item.name} 
               isActive={activeItem === item.name}
-              onClick={() => handleComponentAdd(item.name)}
-              onAddClick={() => handleComponentAdd(item.name)}
+              onClick={() => handleItemClick(item.name)}
             />
           ))}
         </div>

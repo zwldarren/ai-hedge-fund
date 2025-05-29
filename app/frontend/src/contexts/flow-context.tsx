@@ -3,7 +3,7 @@ import { useReactFlow, XYPosition } from '@xyflow/react';
 import { createContext, ReactNode, useCallback, useContext } from 'react';
 
 interface FlowContextType {
-  addNodeFromComponent: (componentName: string) => void;
+  addComponentToFlow: (componentName: string) => void;
 }
 
 const FlowContext = createContext<FlowContextType | null>(null);
@@ -24,7 +24,7 @@ export function FlowProvider({ children }: FlowProviderProps) {
   const reactFlowInstance = useReactFlow();
 
   // Add a node to the flow from a component in the sidebar
-  const addNodeFromComponent = useCallback((componentName: string) => {
+  const addComponentToFlow = useCallback((componentName: string) => {
     const nodeTypeDefinition = getNodeTypeDefinition(componentName);
     if (!nodeTypeDefinition) {
       console.warn(`No node type definition found for component: ${componentName}`);
@@ -66,7 +66,7 @@ export function FlowProvider({ children }: FlowProviderProps) {
   }, [reactFlowInstance]);
 
   const value = {
-    addNodeFromComponent,
+    addComponentToFlow,
   };
 
   return (
