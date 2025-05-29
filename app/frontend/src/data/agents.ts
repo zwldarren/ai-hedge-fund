@@ -93,7 +93,7 @@ export const agents: AgentItem[] = [
   {
     "key": "rakesh_jhunjhunwala",
     "display_name": "Rakesh Jhunjhunwala",
-    "description": "The Oracle of India",
+    "description": "The Big Bull of India",
     "order": 14
   }
 ];
