@@ -14,6 +14,7 @@ from src.agents.stanley_druckenmiller import stanley_druckenmiller_agent
 from src.agents.technicals import technical_analyst_agent
 from src.agents.valuation import valuation_analyst_agent
 from src.agents.warren_buffett import warren_buffett_agent
+from src.agents.rakesh_jhunjhunwala import rakesh_jhunjhunwala_agent
 
 # Define analyst configuration - single source of truth
 ANALYST_CONFIG = {
@@ -87,6 +88,11 @@ ANALYST_CONFIG = {
         "agent_func": valuation_analyst_agent,
         "order": 13,
     },
+    "rakesh_jhunjhunwala": {
+        "display_name": "Rakesh Jhunjhunwala",
+        "agent_func": rakesh_jhunjhunwala_agent,
+        "order": 14,
+    }
 }
 
 # Derive ANALYST_ORDER from ANALYST_CONFIG for backwards compatibility

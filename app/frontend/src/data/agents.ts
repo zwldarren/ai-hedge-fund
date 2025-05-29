@@ -89,6 +89,12 @@ export const agents: AgentItem[] = [
     "display_name": "Valuation Analyst",
     "description": "Company Valuation Specialist",
     "order": 13
+  },
+  {
+    "key": "rakesh_jhunjhunwala",
+    "display_name": "Rakesh Jhunjhunwala",
+    "description": "The Oracle of India",
+    "order": 14
   }
 ];
 
