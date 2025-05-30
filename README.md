@@ -12,7 +12,7 @@ This system employs several agents working together:
 6. Michael Burry Agent - The Big Short contrarian who hunts for deep value
 7. Peter Lynch Agent - Practical investor who seeks "ten-baggers" in everyday businesses
 8. Phil Fisher Agent - Meticulous growth investor who uses deep "scuttlebutt" research 
-9. Rakesh Jhunjhunwala Agent - The Big Bull of India, rides on conviction, patience, and long-term India growth stories.
+9. Rakesh Jhunjhunwala Agent - The Big Bull of India
 10. Stanley Druckenmiller Agent - Macro legend who hunts for asymmetric opportunities with growth potential
 11. Warren Buffett Agent - The oracle of Omaha, seeks wonderful companies at a fair price
 12. Valuation Agent - Calculates the intrinsic value of a stock and generates trading signals
