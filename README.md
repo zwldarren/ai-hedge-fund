@@ -48,7 +48,6 @@ By using this software, you agree to use it solely for learning purposes.
 - [Usage](#usage)
   - [Running the Hedge Fund](#running-the-hedge-fund)
   - [Running the Backtester](#running-the-backtester)
-- [Project Structure](#project-structure)
 - [Contributing](#contributing)
 - [Feature Requests](#feature-requests)
 - [License](#license)
@@ -230,33 +229,6 @@ poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA --ollama
 
 # With Docker (on Windows):
 run.bat --ticker AAPL,MSFT,NVDA --ollama backtest
-```
-
-
-## Project Structure 
-```
-ai-hedge-fund/
-├── src/
-│   ├── agents/                     # Agent definitions and workflow
-│   │   ├── bill_ackman.py          # Bill Ackman agent
-│   │   ├── fundamentals.py         # Fundamental analysis agent
-│   │   ├── portfolio_manager.py    # Portfolio management agent
-│   │   ├── risk_manager.py         # Risk management agent
-│   │   ├── sentiment.py            # Sentiment analysis agent
-│   │   ├── technicals.py           # Technical analysis agent
-│   │   ├── valuation.py            # Valuation analysis agent
-│   │   ├── ...                     # Other agents
-│   │   ├── warren_buffett.py       # Warren Buffett agent
-│   │   ├── aswath_damodaran.py     # Aswath Damodaran agent
-│   │   ├── rakesh_jhunjhunwala.py  # Rakesh_Jhunjhunwala agent
-│   │   ├── ...                     # Other agents
-│   │   ├── ...                     # Other agents
-│   ├── tools/                      # Agent tools
-│   │   ├── api.py                  # API tools
-│   ├── backtester.py               # Backtesting tools
-│   ├── main.py # Main entry point
-├── pyproject.toml
-├── ...
 ```
 
 ## Contributing
