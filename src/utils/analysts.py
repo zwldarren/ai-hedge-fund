@@ -58,41 +58,41 @@ ANALYST_CONFIG = {
         "agent_func": phil_fisher_agent,
         "order": 7,
     },
+    "rakesh_jhunjhunwala": {
+        "display_name": "Rakesh Jhunjhunwala",
+        "agent_func": rakesh_jhunjhunwala_agent,
+        "order": 8,
+    },
     "stanley_druckenmiller": {
         "display_name": "Stanley Druckenmiller",
         "agent_func": stanley_druckenmiller_agent,
-        "order": 8,
+        "order": 9,
     },
     "warren_buffett": {
         "display_name": "Warren Buffett",
         "agent_func": warren_buffett_agent,
-        "order": 9,
+        "order": 10,
     },
     "technical_analyst": {
         "display_name": "Technical Analyst",
         "agent_func": technical_analyst_agent,
-        "order": 10,
+        "order": 11,
     },
     "fundamentals_analyst": {
         "display_name": "Fundamentals Analyst",
         "agent_func": fundamentals_analyst_agent,
-        "order": 11,
+        "order": 12,
     },
     "sentiment_analyst": {
         "display_name": "Sentiment Analyst",
         "agent_func": sentiment_analyst_agent,
-        "order": 12,
+        "order": 13,
     },
     "valuation_analyst": {
         "display_name": "Valuation Analyst",
         "agent_func": valuation_analyst_agent,
-        "order": 13,
-    },
-    "rakesh_jhunjhunwala": {
-        "display_name": "Rakesh Jhunjhunwala",
-        "agent_func": rakesh_jhunjhunwala_agent,
         "order": 14,
-    }
+    },
 }
 
 # Derive ANALYST_ORDER from ANALYST_CONFIG for backwards compatibility
