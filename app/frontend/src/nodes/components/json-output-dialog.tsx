@@ -59,7 +59,7 @@ export function JsonOutputDialog({
   };
 
   // Format the output data as JSON
-  const { isJson, formattedContent } = formatContent(jsonString);
+  const { formattedContent } = formatContent(jsonString);
   
   // Use our custom JSON highlighter
   const highlightedJson = createHighlightedJson(formattedContent as string);
