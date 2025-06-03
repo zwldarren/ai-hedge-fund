@@ -1,14 +1,23 @@
 import { type NodeProps } from '@xyflow/react';
 import { Bot } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { CardContent } from '@/components/ui/card';
+import { ModelSelector } from '@/components/ui/llm-selector';
 import { useNodeContext } from '@/contexts/node-context';
+import { apiModels, ModelItem } from '@/data/models';
 import { cn } from '@/lib/utils';
 import { type AgentNode } from '../types';
 import { getStatusColor } from '../utils';
 import { AgentOutputDialog } from './agent-output-dialog';
 import { NodeShell } from './node-shell';
+
+// Default model - gpt-4o as requested
+const DEFAULT_MODEL: ModelItem = {
+  model_name: 'gpt-4o',
+  provider: 'OpenAI',
+  display_name: 'GPT-4o'
+};
 
 export function AgentNode({
   data,
@@ -16,7 +25,7 @@ export function AgentNode({
   id,
   isConnectable,
 }: NodeProps<AgentNode>) {
-  const { agentNodeData } = useNodeContext();
+  const { agentNodeData, setAgentModel, getAgentModel } = useNodeContext();
   const nodeData = agentNodeData[id] || { 
     status: 'IDLE', 
     ticker: null, 
@@ -27,6 +36,29 @@ export function AgentNode({
   const status = nodeData.status;
   const isInProgress = status === 'IN_PROGRESS';
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Get the current model for this agent, or use default
+  const currentModel = getAgentModel(id) || DEFAULT_MODEL;
+  const [selectedModel, setSelectedModel] = useState<ModelItem | null>(currentModel);
+
+  // Update the node context when the model changes
+  useEffect(() => {
+    if (selectedModel) {
+      setAgentModel(id, selectedModel);
+    }
+  }, [selectedModel, id, setAgentModel]);
+
+  // Initialize with default model if none is set
+  useEffect(() => {
+    if (!getAgentModel(id)) {
+      setAgentModel(id, DEFAULT_MODEL);
+      setSelectedModel(DEFAULT_MODEL);
+    }
+  }, [id, getAgentModel, setAgentModel]);
+
+  const handleModelChange = (model: ModelItem | null) => {
+    setSelectedModel(model);
+  };
 
   return (
     <NodeShell
@@ -59,6 +91,18 @@ export function AgentNode({
                 {nodeData.ticker && <span className="ml-1">({nodeData.ticker})</span>}
               </div>
             )}
+            
+            <div className="flex flex-col gap-2 pt-2">
+              <div className="text-subtitle text-muted-foreground flex items-center gap-1">
+                Model
+              </div>
+              <ModelSelector
+                models={apiModels}
+                value={selectedModel?.model_name || ""}
+                onChange={handleModelChange}
+                placeholder="Select a model..."
+              />
+            </div>
           </div>
         </div>
         <AgentOutputDialog

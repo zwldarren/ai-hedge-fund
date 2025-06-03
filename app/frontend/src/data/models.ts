@@ -1,7 +1,30 @@
+import { ModelProvider } from '@/services/types';
+
 export interface ModelItem {
   display_name: string;
   model_name: string;
   provider: "Anthropic" | "DeepSeek" | "Gemini" | "Groq" | "OpenAI";
+}
+
+// Helper function to map frontend provider strings to backend ModelProvider enum
+export function mapProviderToEnum(provider: string): ModelProvider | undefined {
+  switch (provider.toLowerCase()) {
+    case 'openai':
+      return ModelProvider.OPENAI;
+    case 'anthropic':
+      return ModelProvider.ANTHROPIC;
+    case 'google':
+    case 'gemini':
+      return ModelProvider.GOOGLE;
+    case 'azure':
+      return ModelProvider.AZURE;
+    case 'deepseek':
+      return ModelProvider.DEEPSEEK;
+    case 'groq':
+      return ModelProvider.GROQ;
+    default:
+      return undefined;
+  }
 }
 
 export const apiModels: ModelItem[] = [
