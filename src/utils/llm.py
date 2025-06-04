@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from langchain_core.prompts import BasePromptTemplate
 from src.llm.models import get_model, get_model_info, ModelProvider
 from src.utils.progress import progress
+from src.graph.state import AgentState
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -14,9 +15,7 @@ def call_llm(
     prompt: Any,
     pydantic_model: Type[T],
     agent_name: Optional[str] = None,
-    state: Optional[dict] = None,
-    model_name: Optional[str] = None,
-    model_provider: Optional[str] = None,
+    state: Optional[AgentState] = None,
     max_retries: int = 3,
     default_factory=None,
 ) -> T:
@@ -28,8 +27,6 @@ def call_llm(
         pydantic_model: The Pydantic model class to structure the output
         agent_name: Optional name of the agent for progress updates and model config extraction
         state: Optional state object to extract agent-specific model configuration
-        model_name: Name of the model to use (optional if state is provided)
-        model_provider: Provider of the model (optional if state is provided)
         max_retries: Maximum number of retries (default: 3)
         default_factory: Optional factory function to create default response on failure
 
@@ -37,11 +34,9 @@ def call_llm(
         An instance of the specified Pydantic model
     """
     
-    # Auto-extract model configuration if state is provided and agent_name is available
-    if state and agent_name and (not model_name or not model_provider):
-        extracted_model_name, extracted_model_provider = get_agent_model_config(state, agent_name)
-        model_name = model_name or extracted_model_name
-        model_provider = model_provider or extracted_model_provider
+    # Extract model configuration if state is provided and agent_name is available
+    if state and agent_name:
+        model_name, model_provider = get_agent_model_config(state, agent_name)
     
     # Fallback to defaults if still not provided
     if not model_name:
@@ -131,6 +126,12 @@ def get_agent_model_config(state, agent_name):
     Falls back to global model configuration if agent-specific config is not available.
     """
     request = state.get("metadata", {}).get("request")
+
+    if agent_name == 'portfolio_manager':
+        # Get the model and provider from state metadata
+        model_name = state.get("metadata", {}).get("model_name", "gpt-4o")
+        model_provider = state.get("metadata", {}).get("model_provider", "OPENAI")
+        return model_name, model_provider
     
     if request and hasattr(request, 'get_agent_model_config'):
         # Get agent-specific model configuration
