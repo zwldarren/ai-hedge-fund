@@ -1,24 +1,20 @@
 """Helper functions for LLM"""
 
 import json
-from typing import TypeVar, Type, Optional, Any
 from pydantic import BaseModel
-from langchain_core.prompts import BasePromptTemplate
-from src.llm.models import get_model, get_model_info, ModelProvider
+from src.llm.models import get_model, get_model_info
 from src.utils.progress import progress
 from src.graph.state import AgentState
 
-T = TypeVar("T", bound=BaseModel)
-
 
 def call_llm(
-    prompt: Any,
-    pydantic_model: Type[T],
-    agent_name: Optional[str] = None,
-    state: Optional[AgentState] = None,
+    prompt: any,
+    pydantic_model: type[BaseModel],
+    agent_name: str | None = None,
+    state: AgentState | None = None,
     max_retries: int = 3,
     default_factory=None,
-) -> T:
+) -> BaseModel:
     """
     Makes an LLM call with retry logic, handling both JSON supported and non-JSON supported models.
 
@@ -83,7 +79,7 @@ def call_llm(
     return create_default_response(pydantic_model)
 
 
-def create_default_response(model_class: Type[T]) -> T:
+def create_default_response(model_class: type[BaseModel]) -> BaseModel:
     """Creates a safe default response based on the model's fields."""
     default_values = {}
     for field_name, field in model_class.model_fields.items():
@@ -105,7 +101,7 @@ def create_default_response(model_class: Type[T]) -> T:
     return model_class(**default_values)
 
 
-def extract_json_from_response(content: str) -> Optional[dict]:
+def extract_json_from_response(content: str) -> dict | None:
     """Extracts JSON from markdown-formatted response."""
     try:
         json_start = content.find("```json")
