@@ -41,13 +41,13 @@ const DEFAULT_AGENT_NODE_STATE: AgentNodeData = {
 interface NodeContextType {
   agentNodeData: Record<string, AgentNodeData>;
   outputNodeData: OutputNodeData | null;
-  agentModels: Record<string, ModelItem>;
+  agentModels: Record<string, ModelItem | null>;
   updateAgentNode: (nodeId: string, data: Partial<AgentNodeData> | NodeStatus) => void;
   updateAgentNodes: (nodeIds: string[], status: NodeStatus) => void;
   setOutputNodeData: (data: OutputNodeData) => void;
-  setAgentModel: (nodeId: string, model: ModelItem) => void;
+  setAgentModel: (nodeId: string, model: ModelItem | null) => void;
   getAgentModel: (nodeId: string) => ModelItem | null;
-  getAllAgentModels: () => Record<string, ModelItem>;
+  getAllAgentModels: () => Record<string, ModelItem | null>;
   resetAllNodes: () => void;
 }
 
@@ -56,7 +56,7 @@ const NodeContext = createContext<NodeContextType | undefined>(undefined);
 export function NodeProvider({ children }: { children: ReactNode }) {
   const [agentNodeData, setAgentNodeData] = useState<Record<string, AgentNodeData>>({});
   const [outputNodeData, setOutputNodeData] = useState<OutputNodeData | null>(null);
-  const [agentModels, setAgentModels] = useState<Record<string, ModelItem>>({});
+  const [agentModels, setAgentModels] = useState<Record<string, ModelItem | null>>({});
 
   const updateAgentNode = useCallback((nodeId: string, data: Partial<AgentNodeData> | NodeStatus) => {
     // Handle string status shorthand (just passing a status string)
@@ -130,18 +130,27 @@ export function NodeProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const setAgentModel = useCallback((nodeId: string, model: ModelItem) => {
-    setAgentModels(prev => ({
-      ...prev,
-      [nodeId]: model
-    }));
+  const setAgentModel = useCallback((nodeId: string, model: ModelItem | null) => {
+    setAgentModels(prev => {
+      if (model === null) {
+        // Remove the agent model if setting to null
+        const { [nodeId]: removed, ...rest } = prev;
+        return rest;
+      } else {
+        // Set the agent model
+        return {
+          ...prev,
+          [nodeId]: model
+        };
+      }
+    });
   }, []);
 
   const getAgentModel = useCallback((nodeId: string): ModelItem | null => {
     return agentModels[nodeId] || null;
   }, [agentModels]);
 
-  const getAllAgentModels = useCallback((): Record<string, ModelItem> => {
+  const getAllAgentModels = useCallback((): Record<string, ModelItem | null> => {
     return agentModels;
   }, [agentModels]);
 
