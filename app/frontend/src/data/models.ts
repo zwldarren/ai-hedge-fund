@@ -74,13 +74,18 @@ export const apiModels: ModelItem[] = [
     "provider": "Groq"
   },
   {
-    "display_name": "GPT 4.5",
-    "model_name": "gpt-4.5-preview",
+    "display_name": "GPT 4o",
+    "model_name": "gpt-4o",
     "provider": "OpenAI"
   },
   {
-    "display_name": "GPT 4o",
-    "model_name": "gpt-4o",
+    "display_name": "GPT 4.1",
+    "model_name": "gpt-4.1-2025-04-14",
+    "provider": "OpenAI"
+  },
+  {
+    "display_name": "GPT 4.5",
+    "model_name": "gpt-4.5-preview",
     "provider": "OpenAI"
   },
   {
