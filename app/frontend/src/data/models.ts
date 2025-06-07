@@ -60,7 +60,7 @@ export const apiModels: ModelItem[] = [
   },
   {
     "display_name": "Gemini 2.5 Pro",
-    "model_name": "gemini-2.5-pro-exp-03-25",
+    "model_name": "gemini-2.5-pro-preview-06-05",
     "provider": "Gemini"
   },
   {
