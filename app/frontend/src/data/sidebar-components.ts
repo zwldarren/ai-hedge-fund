@@ -3,6 +3,7 @@ import {
   ArrowUpFromLine,
   BadgeDollarSign,
   Bot,
+  Brain,
   FileJson,
   LucideIcon,
   Type,
@@ -40,7 +41,7 @@ export const componentGroups: ComponentGroup[] = [
     iconColor: "text-blue-400",
     items: [
       // { name: "Chat Input", icon: MessageSquare },
-      { name: "Text Input", icon: Type },
+      { name: "Portfolio Manager", icon: Brain },
       // { name: "File Input", icon: FileText }
     ]
   },

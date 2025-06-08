@@ -11,15 +11,15 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useNodeContext } from '@/contexts/node-context';
 import { apiModels, defaultModel, mapProviderToEnum, ModelItem } from '@/data/models';
 import { api } from '@/services/api';
-import { type TextInputNode } from '../types';
+import { type PortfolioManagerNode } from '../types';
 import { NodeShell } from './node-shell';
 
-export function TextInputNode({
+export function PortfolioManagerNode({
   data,
   selected,
   id,
   isConnectable,
-}: NodeProps<TextInputNode>) {
+}: NodeProps<PortfolioManagerNode>) {
   const [tickers, setTickers] = useState('');
   const [selectedModel, setSelectedModel] = useState<ModelItem | null>(defaultModel);
   

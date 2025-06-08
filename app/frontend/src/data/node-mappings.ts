@@ -8,14 +8,14 @@ export interface NodeTypeDefinition {
 
 // Define node creation functions for each type
 const nodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
-  "Text Input": {
+  "Portfolio Manager": {
     createNode: (position: { x: number, y: number }): AppNode => ({
-      id: `text-input-node`,
-      type: "input-node",
+      id: `portfolio-manager-node`,
+      type: "portfolio-manager-node",
       position,
       data: {
-        name: "Input",
-        description: "Start Node",
+        name: "Portfolio Manager",
+        description: "The Decision Maker",
         status: "Idle",
       },
     }),
@@ -68,8 +68,8 @@ export function getNodeTypeDefinition(componentName: string): NodeTypeDefinition
 
 // Get the node ID that would be generated for a component
 export function getNodeIdForComponent(componentName: string): string | null {
-  if (componentName === "Text Input") {
-    return "text-input-node";
+  if (componentName === "Portfolio Manager") {
+    return "portfolio-manager-node";
   }
   if (componentName === "Text Output") {
     return "text-output-node";
