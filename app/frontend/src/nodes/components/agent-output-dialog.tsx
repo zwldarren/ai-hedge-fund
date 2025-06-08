@@ -7,9 +7,11 @@ import {
 } from '@/components/ui/dialog';
 import { useNodeContext } from '@/contexts/node-context';
 import { formatTimeFromTimestamp } from '@/utils/date-utils';
-import { createHighlightedJson, formatContent } from '@/utils/text-utils';
+import { formatContent } from '@/utils/text-utils';
 import { AlignJustify, Copy, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface AgentOutputDialogProps {
   isOpen: boolean;
@@ -181,22 +183,27 @@ export function AgentOutputDialog({
                       const { isJson, formattedContent } = formatContent(selectedDecision);
                       
                       if (isJson) {
-                        // Use our custom JSON highlighter without line numbers
-                        const highlightedJson = createHighlightedJson(formattedContent as string);
-                        
+                        // Use react-syntax-highlighter for better JSON rendering
                         return (
-                          <div className="rounded-md overflow-auto text-sm">
-                            <pre 
-                              className="overflow-auto whitespace-pre"
-                              style={{ 
-                                fontFamily: 'monospace',
-                                lineHeight: 1.5,
-                                color: '#d4d4d4',
+                          <div className="overflow-auto rounded-md text-xs">
+                            <SyntaxHighlighter
+                              language="json"
+                              style={oneDark}
+                              customStyle={{
                                 margin: 0,
+                                padding: '0.75rem',
+                                fontSize: '0.875rem',
+                                lineHeight: 1.5,
+                                whiteSpace: 'pre-wrap',
+                                wordWrap: 'break-word',
+                                overflowWrap: 'break-word',
                               }}
+                              showLineNumbers={false}
+                              wrapLines={true}
+                              wrapLongLines={true}
                             >
-                              <code dangerouslySetInnerHTML={{ __html: highlightedJson }} />
-                            </pre>
+                              {formattedContent as string}
+                            </SyntaxHighlighter>
                           </div>
                         );
                       } else {

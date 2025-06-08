@@ -1,5 +1,7 @@
 import { Copy, Download } from 'lucide-react';
 import { useState } from 'react';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -8,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { createHighlightedJson, formatContent } from '@/utils/text-utils';
 
 interface JsonOutputDialogProps {
   isOpen: boolean;
@@ -58,12 +59,6 @@ export function JsonOutputDialog({
     }
   };
 
-  // Format the output data as JSON
-  const { formattedContent } = formatContent(jsonString);
-  
-  // Use our custom JSON highlighter
-  const highlightedJson = createHighlightedJson(formattedContent as string);
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -93,23 +88,26 @@ export function JsonOutputDialog({
           </DialogTitle>
         </DialogHeader>
         
-        <div className="flex-1 min-h-0 my-4">
-          <div className="h-full rounded-md border border-border overflow-auto bg-muted/30">
-            <div className="p-4 w-full">
-              <pre 
-                className="whitespace-pre text-sm w-full"
-                style={{ 
-                  fontFamily: 'monospace',
-                  lineHeight: 1.5,
-                  color: '#d4d4d4',
-                  margin: 0,
-                  minWidth: 'max-content',
-                }}
-              >
-                <code dangerouslySetInnerHTML={{ __html: highlightedJson }} />
-              </pre>
-            </div>
-          </div>
+        <div className="flex-1 min-h-0 my-4 overflow-auto rounded-md border border-border bg-muted/30">
+          <SyntaxHighlighter
+            language="json"
+            style={oneDark}
+            customStyle={{
+              margin: 0,
+              padding: '1rem',
+              fontSize: '0.875rem',
+              lineHeight: 1.5,
+              backgroundColor: 'transparent',
+              whiteSpace: 'pre-wrap',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+            }}
+            showLineNumbers={true}
+            wrapLines={true}
+            wrapLongLines={true}
+          >
+            {jsonString}
+          </SyntaxHighlighter>
         </div>
       </DialogContent>
     </Dialog>
