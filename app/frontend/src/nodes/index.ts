@@ -1,9 +1,9 @@
 import { type NodeTypes } from '@xyflow/react';
 
 import { AgentNode } from './components/agent-node';
+import { InvestmentReportNode } from './components/investment-report-node';
 import { JsonOutputNode } from './components/json-output-node';
 import { PortfolioManagerNode } from './components/portfolio-manager-node';
-import { TextOutputNode } from './components/text-output-node';
 import { type AppNode } from './types';
 
 // Types
@@ -16,7 +16,7 @@ export const initialNodes: AppNode[] = [
     position: { x: 0, y: 0 },
     data: {
       name: 'Portfolio Manager',
-      description: 'The Decision Maker',
+      description: 'Start Node',
       status: 'Idle',
     },
   },
@@ -25,6 +25,6 @@ export const initialNodes: AppNode[] = [
 export const nodeTypes = {
   'agent-node': AgentNode,
   'portfolio-manager-node': PortfolioManagerNode,
-  'text-output-node': TextOutputNode,
+  'investment-report-node': InvestmentReportNode,
   'json-output-node': JsonOutputNode,
 } satisfies NodeTypes;

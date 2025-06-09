@@ -5,8 +5,8 @@ import {
   Bot,
   Brain,
   FileJson,
+  FileText,
   LucideIcon,
-  Type,
   Users
 } from 'lucide-react';
 import { agents } from './agents';
@@ -51,7 +51,7 @@ export const componentGroups: ComponentGroup[] = [
     iconColor: "text-green-400",
     items: [
       { name: "JSON Output", icon: FileJson },
-      { name: "Text Output", icon: Type },
+      { name: "Investment Report", icon: FileText },
     ]
   },
   {

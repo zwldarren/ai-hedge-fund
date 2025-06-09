@@ -1,6 +1,6 @@
 import { ModelSelector } from '@/components/ui/llm-selector';
 import { getConnectedEdges, useReactFlow, type NodeProps } from '@xyflow/react';
-import { Bot, Loader2, Play } from 'lucide-react';
+import { Brain, Loader2, Play } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -133,8 +133,8 @@ export function PortfolioManagerNode({
         id={id}
         selected={selected}
         isConnectable={isConnectable}
-        icon={<Bot className="h-5 w-5" />}
-        name={data.name || "Custom Component"}
+        icon={<Brain className="h-5 w-5" />}
+        name={data.name || "Portfolio Manager"}
         description={data.description}
         hasLeftHandle={false}
       >

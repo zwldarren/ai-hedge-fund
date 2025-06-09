@@ -1,20 +1,20 @@
 import { type NodeProps } from '@xyflow/react';
-import { Loader2, Type } from 'lucide-react';
+import { FileText, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { useNodeContext } from '@/contexts/node-context';
-import { type TextOutputNode } from '../types';
+import { type InvestmentReportNode } from '../types';
+import { InvestmentReportDialog } from './investment-report-dialog';
 import { NodeShell } from './node-shell';
-import { TextOutputDialog } from './text-output-dialog';
 
-export function TextOutputNode({
+export function InvestmentReportNode({
   data,
   selected,
   id,
   isConnectable,
-}: NodeProps<TextOutputNode>) {  
+}: NodeProps<InvestmentReportNode>) {  
   const { outputNodeData, agentNodeData } = useNodeContext();
   const [showOutput, setShowOutput] = useState(false);
   
@@ -35,8 +35,8 @@ export function TextOutputNode({
         id={id}
         selected={selected}
         isConnectable={isConnectable}
-        icon={<Type className="h-5 w-5" />}
-        name={data.name || "Text Output"}
+        icon={<FileText className="h-5 w-5" />}
+        name={data.name || "Investment Report"}
         description={data.description}
         hasRightHandle={false}
       >
@@ -72,7 +72,7 @@ export function TextOutputNode({
         </CardContent>
       </NodeShell>
 
-      <TextOutputDialog 
+      <InvestmentReportDialog 
         isOpen={showOutput} 
         onOpenChange={setShowOutput} 
         outputNodeData={outputNodeData} 

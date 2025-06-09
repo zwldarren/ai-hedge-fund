@@ -15,7 +15,7 @@ const nodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
       position,
       data: {
         name: "Portfolio Manager",
-        description: "The Decision Maker",
+        description: "Start Node",
         status: "Idle",
       },
     }),
@@ -32,13 +32,13 @@ const nodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
       },
     }),
   },
-  "Text Output": {
+  "Investment Report": {
     createNode: (position: { x: number, y: number }): AppNode => ({
-      id: `text-output-node`,
-      type: "text-output-node",
+      id: `investment-report-node`,
+      type: "investment-report-node",
       position,
       data: {
-        name: "Text Output",
+        name: "Investment Report",
         description: "Output Node",
         status: "Idle",
       },
@@ -71,8 +71,8 @@ export function getNodeIdForComponent(componentName: string): string | null {
   if (componentName === "Portfolio Manager") {
     return "portfolio-manager-node";
   }
-  if (componentName === "Text Output") {
-    return "text-output-node";
+  if (componentName === "Investment Report") {
+    return "investment-report-node";
   }
   if (componentName === "JSON Output") {
     return "json-output-node";
