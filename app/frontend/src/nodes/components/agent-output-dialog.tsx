@@ -11,7 +11,7 @@ import { formatContent } from '@/utils/text-utils';
 import { AlignJustify, Copy, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface AgentOutputDialogProps {
   isOpen: boolean;
@@ -188,7 +188,7 @@ export function AgentOutputDialog({
                           <div className="overflow-auto rounded-md text-xs">
                             <SyntaxHighlighter
                               language="json"
-                              style={oneDark}
+                              style={vscDarkPlus}
                               customStyle={{
                                 margin: 0,
                                 padding: '0.75rem',

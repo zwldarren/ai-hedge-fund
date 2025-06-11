@@ -2,6 +2,7 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   BadgeDollarSign,
+  BarChart,
   Bot,
   Brain,
   FileJson,
@@ -59,6 +60,7 @@ export const componentGroups: ComponentGroup[] = [
     icon: Users,
     iconColor: "text-yellow-400",
     items: [
+      { name: "Data Wizards", icon: BarChart },
       { name: "Value Investors", icon: BadgeDollarSign },
     ]
   }
