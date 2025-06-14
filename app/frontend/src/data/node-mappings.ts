@@ -1,13 +1,16 @@
 import { AppNode } from "@/nodes/types";
-import { agents } from "./agents";
+import { Agent, getAgents } from "./agents";
 
 // Map of sidebar item names to node creation functions
 export interface NodeTypeDefinition {
   createNode: (position: { x: number, y: number }) => AppNode;
 }
 
-// Define node creation functions for each type
-const nodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
+// Cache for node type definitions to avoid repeated API calls
+let nodeTypeDefinitionsCache: Record<string, NodeTypeDefinition> | null = null;
+
+// Define base node creation functions (non-agent nodes)
+const baseNodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
   "Portfolio Manager": {
     createNode: (position: { x: number, y: number }): AppNode => ({
       id: `portfolio-manager-node`,
@@ -44,8 +47,20 @@ const nodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
       },
     }),
   },
-  // Dynamic node creation for all agents
-  ...agents.reduce((acc, agent) => {
+};
+
+/**
+ * Get all node type definitions, including agents fetched from the backend
+ */
+const getNodeTypeDefinitions = async (): Promise<Record<string, NodeTypeDefinition>> => {
+  if (nodeTypeDefinitionsCache) {
+    return nodeTypeDefinitionsCache;
+  }
+
+  const agents = await getAgents();
+  
+  // Create agent node definitions
+  const agentNodeDefinitions = agents.reduce((acc: Record<string, NodeTypeDefinition>, agent: Agent) => {
     acc[agent.display_name] = {
       createNode: (position: { x: number, y: number }): AppNode => ({
         id: agent.key,
@@ -59,16 +74,25 @@ const nodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
       }),
     };
     return acc;
-  }, {} as Record<string, NodeTypeDefinition>),
+  }, {});
+
+  // Combine base and agent definitions
+  nodeTypeDefinitionsCache = {
+    ...baseNodeTypeDefinitions,
+    ...agentNodeDefinitions,
+  };
+
+  return nodeTypeDefinitionsCache;
 };
 
-export function getNodeTypeDefinition(componentName: string): NodeTypeDefinition | null {
+export async function getNodeTypeDefinition(componentName: string): Promise<NodeTypeDefinition | null> {
+  const nodeTypeDefinitions = await getNodeTypeDefinitions();
   return nodeTypeDefinitions[componentName] || null;
 }
 
 // Get the node ID that would be generated for a component
-export function getNodeIdForComponent(componentName: string): string | null {
-  const nodeTypeDefinition = nodeTypeDefinitions[componentName];
+export async function getNodeIdForComponent(componentName: string): Promise<string | null> {
+  const nodeTypeDefinition = await getNodeTypeDefinition(componentName);
   if (!nodeTypeDefinition) {
     return null;
   }
@@ -76,4 +100,11 @@ export function getNodeIdForComponent(componentName: string): string | null {
   // Extract ID by creating a temporary node (position doesn't matter for ID extraction)
   const tempNode = nodeTypeDefinition.createNode({ x: 0, y: 0 });
   return tempNode.id;
-} 
+}
+
+/**
+ * Clear the node type definitions cache - useful for testing or when you want to force a refresh
+ */
+export const clearNodeTypeDefinitionsCache = () => {
+  nodeTypeDefinitionsCache = null;
+}; 
