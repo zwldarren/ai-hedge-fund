@@ -20,7 +20,7 @@ export function PortfolioManagerNode({
   id,
   isConnectable,
 }: NodeProps<PortfolioManagerNode>) {
-  const [tickers, setTickers] = useState('AAPL');
+  const [tickers, setTickers] = useState('AAPL,NVDA,TSLA');
   const [selectedModel, setSelectedModel] = useState<LanguageModel | null>(null);
   const [availableModels, setAvailableModels] = useState<LanguageModel[]>([]);
   

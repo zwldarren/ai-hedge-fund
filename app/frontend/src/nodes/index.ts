@@ -26,7 +26,7 @@ export const initialNodes: AppNode[] = [
     position: { x: 300, y: 25 },
     data: {
       name: 'Valuation Analyst',
-      description: 'Valuation Analyst',
+      description: 'Company Valuation Specialist',
       status: 'Idle',
     },
   },
