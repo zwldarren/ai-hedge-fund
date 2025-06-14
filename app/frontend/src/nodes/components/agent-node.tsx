@@ -6,7 +6,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { CardContent } from '@/components/ui/card';
 import { ModelSelector } from '@/components/ui/llm-selector';
 import { useNodeContext } from '@/contexts/node-context';
-import { apiModels, ModelItem } from '@/data/models';
+import { getModels, LanguageModel } from '@/data/models';
 import { cn } from '@/lib/utils';
 import { type AgentNode } from '../types';
 import { getStatusColor } from '../utils';
@@ -30,10 +30,26 @@ export function AgentNode({
   const status = nodeData.status;
   const isInProgress = status === 'IN_PROGRESS';
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [availableModels, setAvailableModels] = useState<LanguageModel[]>([]);
   
   // Get the current model for this agent (null if using global model)
   const currentModel = getAgentModel(id);
-  const [selectedModel, setSelectedModel] = useState<ModelItem | null>(currentModel);
+  const [selectedModel, setSelectedModel] = useState<LanguageModel | null>(currentModel);
+
+  // Load models on mount
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        const models = await getModels();
+        setAvailableModels(models);
+      } catch (error) {
+        console.error('Failed to load models:', error);
+        // Keep empty array as fallback
+      }
+    };
+    
+    loadModels();
+  }, []);
 
   // Update the node context when the model changes
   useEffect(() => {
@@ -42,7 +58,7 @@ export function AgentNode({
     }
   }, [selectedModel, id, setAgentModel, currentModel]);
 
-  const handleModelChange = (model: ModelItem | null) => {
+  const handleModelChange = (model: LanguageModel | null) => {
     setSelectedModel(model);
   };
 
@@ -92,17 +108,17 @@ export function AgentNode({
                       Model
                     </div>
                     <ModelSelector
-                      models={apiModels}
+                      models={availableModels}
                       value={selectedModel?.model_name || ""}
                       onChange={handleModelChange}
-                      placeholder="Auto-select"
+                      placeholder="Auto"
                     />
                     {selectedModel && (
                       <button
                         onClick={handleUseGlobalModel}
                         className="text-subtitle text-muted-foreground hover:text-foreground transition-colors text-left"
                       >
-                        Reset to global model
+                        Reset to Auto
                       </button>
                     )}
                   </div>

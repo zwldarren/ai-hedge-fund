@@ -9,7 +9,7 @@ import { CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNodeContext } from '@/contexts/node-context';
-import { apiModels, defaultModel, mapProviderToEnum, ModelItem } from '@/data/models';
+import { getDefaultModel, getModels, LanguageModel } from '@/data/models';
 import { api } from '@/services/api';
 import { type PortfolioManagerNode } from '../types';
 import { NodeShell } from './node-shell';
@@ -21,7 +21,8 @@ export function PortfolioManagerNode({
   isConnectable,
 }: NodeProps<PortfolioManagerNode>) {
   const [tickers, setTickers] = useState('');
-  const [selectedModel, setSelectedModel] = useState<ModelItem | null>(defaultModel);
+  const [selectedModel, setSelectedModel] = useState<LanguageModel | null>(null);
+  const [availableModels, setAvailableModels] = useState<LanguageModel[]>([]);
   
   // Calculate default dates
   const today = new Date();
@@ -40,6 +41,25 @@ export function PortfolioManagerNode({
   const isProcessing = Object.values(agentNodeData).some(
     agent => agent.status === 'IN_PROGRESS'
   );
+  
+  // Load models and set default on mount
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        const [models, defaultModel] = await Promise.all([
+          getModels(),
+          getDefaultModel()
+        ]);
+        setAvailableModels(models);
+        setSelectedModel(defaultModel);
+      } catch (error) {
+        console.error('Failed to load models:', error);
+        // Keep empty array and null as fallback
+      }
+    };
+    
+    loadModels();
+  }, []);
   
   // Clean up SSE connection on unmount
   useEffect(() => {
@@ -106,7 +126,7 @@ export function PortfolioManagerNode({
         agentModels.push({
           agent_id: agentId,
           model_name: model.model_name,
-          model_provider: mapProviderToEnum(model.provider)
+          model_provider: model.provider as any
         });
       }
     }
@@ -178,7 +198,7 @@ export function PortfolioManagerNode({
                   Model
                 </div>
                 <ModelSelector
-                  models={apiModels}
+                  models={availableModels}
                   value={selectedModel?.model_name || ""}
                   onChange={setSelectedModel}
                   placeholder="Select a model..."

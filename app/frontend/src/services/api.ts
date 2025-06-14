@@ -1,5 +1,6 @@
 import { NodeStatus, OutputNodeData, useNodeContext } from '@/contexts/node-context';
 import { Agent } from '@/data/agents';
+import { LanguageModel } from '@/data/models';
 import { ModelProvider } from '@/services/types';
 
 interface AgentModelConfig {
@@ -37,6 +38,24 @@ export const api = {
       return data.agents;
     } catch (error) {
       console.error('Failed to fetch agents:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Gets the list of available models from the backend
+   * @returns Promise that resolves to the list of models
+   */
+  getLanguageModels: async (): Promise<LanguageModel[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/hedge-fund/language-models`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.models;
+    } catch (error) {
+      console.error('Failed to fetch models:', error);
       throw error;
     }
   },
