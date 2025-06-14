@@ -30,7 +30,7 @@ const baseNodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
       position,
       data: {
         name: "JSON Output",
-        description: "JSON Output Node",
+        description: "End Node",
         status: "Idle",
       },
     }),
@@ -42,7 +42,7 @@ const baseNodeTypeDefinitions: Record<string, NodeTypeDefinition> = {
       position,
       data: {
         name: "Investment Report",
-        description: "Output Node",
+        description: "End Node",
         status: "Idle",
       },
     }),

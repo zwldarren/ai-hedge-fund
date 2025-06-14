@@ -1,14 +1,14 @@
 import {
-  ArrowDownToLine,
-  ArrowUpFromLine,
   BadgeDollarSign,
-  BarChart,
   Bot,
   Brain,
+  Calculator,
   FileJson,
   FileText,
   LucideIcon,
-  Users
+  Network,
+  Play,
+  StopCircle
 } from 'lucide-react';
 import { Agent, getAgents } from './agents';
 
@@ -33,6 +33,16 @@ export const getComponentGroups = async (): Promise<ComponentGroup[]> => {
   
   return [
     {
+      name: "start nodes",
+      icon: Play,
+      iconColor: "text-blue-400",
+      items: [
+        // { name: "Chat Input", icon: MessageSquare },
+        { name: "Portfolio Manager", icon: Brain },
+        // { name: "File Input", icon: FileText }
+      ]
+    },
+    {
       name: "agents",
       icon: Bot,
       iconColor: "text-red-400",
@@ -42,32 +52,22 @@ export const getComponentGroups = async (): Promise<ComponentGroup[]> => {
       }))
     },
     {
-      name: "inputs",
-      icon: ArrowDownToLine,
-      iconColor: "text-blue-400",
+      name: "swarms",
+      icon: Network,
+      iconColor: "text-yellow-400",
       items: [
-        // { name: "Chat Input", icon: MessageSquare },
-        { name: "Portfolio Manager", icon: Brain },
-        // { name: "File Input", icon: FileText }
+        { name: "Data Wizards", icon: Calculator },
+        { name: "Value Investors", icon: BadgeDollarSign },
       ]
     },
     {
-      name: "outputs",
-      icon: ArrowUpFromLine,
+      name: "end nodes",
+      icon: StopCircle,
       iconColor: "text-green-400",
       items: [
         { name: "JSON Output", icon: FileJson },
         { name: "Investment Report", icon: FileText },
       ]
     },
-    {
-      name: "swarms",
-      icon: Users,
-      iconColor: "text-yellow-400",
-      items: [
-        { name: "Data Wizards", icon: BarChart },
-        { name: "Value Investors", icon: BadgeDollarSign },
-      ]
-    }
   ];
 };
