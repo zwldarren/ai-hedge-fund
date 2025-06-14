@@ -68,17 +68,12 @@ export function getNodeTypeDefinition(componentName: string): NodeTypeDefinition
 
 // Get the node ID that would be generated for a component
 export function getNodeIdForComponent(componentName: string): string | null {
-  if (componentName === "Portfolio Manager") {
-    return "portfolio-manager-node";
-  }
-  if (componentName === "Investment Report") {
-    return "investment-report-node";
-  }
-  if (componentName === "JSON Output") {
-    return "json-output-node";
+  const nodeTypeDefinition = nodeTypeDefinitions[componentName];
+  if (!nodeTypeDefinition) {
+    return null;
   }
   
-  // For agents, find by display name
-  const agent = agents.find(agent => agent.display_name === componentName);
-  return agent ? agent.key : null;
+  // Extract ID by creating a temporary node (position doesn't matter for ID extraction)
+  const tempNode = nodeTypeDefinition.createNode({ x: 0, y: 0 });
+  return tempNode.id;
 } 
