@@ -103,6 +103,3 @@ export const agents: AgentItem[] = [
 export function getAgentByKey(key: string): AgentItem | undefined {
   return agents.find(agent => agent.key === key);
 }
-
-// Get default agent to use
-export const defaultAgent = agents.find(agent => agent.key === "warren_buffett") || null; 
