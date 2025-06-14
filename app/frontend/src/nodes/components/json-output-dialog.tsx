@@ -94,15 +94,13 @@ export function JsonOutputDialog({
             style={vscDarkPlus}
             customStyle={{
               margin: 0,
-              padding: '1rem',
+              padding: '0.75rem',
               fontSize: '0.875rem',
               lineHeight: 1.5,
-              backgroundColor: 'transparent',
               whiteSpace: 'pre-wrap',
               wordWrap: 'break-word',
               overflowWrap: 'break-word',
             }}
-            showLineNumbers={true}
             wrapLines={true}
             wrapLongLines={true}
           >
