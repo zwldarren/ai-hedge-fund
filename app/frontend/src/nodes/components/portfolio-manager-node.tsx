@@ -1,6 +1,6 @@
 import { ModelSelector } from '@/components/ui/llm-selector';
 import { getConnectedEdges, useReactFlow, type NodeProps } from '@xyflow/react';
-import { Brain, Loader2, Play } from 'lucide-react';
+import { Brain, Play, Square } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -80,6 +80,15 @@ export function PortfolioManagerNode({
 
   const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEndDate(e.target.value);
+  };
+
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current();
+      abortControllerRef.current = null;
+    }
+    // Reset all node data states
+    resetAllNodes();
   };
 
   const handlePlay = () => {
@@ -182,11 +191,11 @@ export function PortfolioManagerNode({
                     size="icon" 
                     variant="secondary"
                     className="flex-shrink-0 transition-all duration-200 hover:bg-primary hover:text-primary-foreground active:scale-95"
-                    onClick={handlePlay}
-                    disabled={isProcessing || !tickers.trim()}
+                    onClick={isProcessing ? handleStop : handlePlay}
+                    disabled={!isProcessing && !tickers.trim()}
                   >
                     {isProcessing ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <Square className="h-3.5 w-3.5" />
                     ) : (
                       <Play className="h-3.5 w-3.5" />
                     )}
