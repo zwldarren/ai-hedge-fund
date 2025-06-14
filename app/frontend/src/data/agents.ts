@@ -98,8 +98,3 @@ export const agents: AgentItem[] = [
   },
   
 ];
-
-// Get agent by key
-export function getAgentByKey(key: string): AgentItem | undefined {
-  return agents.find(agent => agent.key === key);
-}
