@@ -27,7 +27,15 @@ export function AgentOutputDialog({
   nodeId 
 }: AgentOutputDialogProps) {
   const { agentNodeData } = useNodeContext();
-  const messages = agentNodeData[nodeId]?.messages || [];
+  const nodeData = agentNodeData[nodeId] || { 
+    status: 'IDLE', 
+    ticker: null, 
+    message: '', 
+    messages: [],
+    lastUpdated: 0
+  };
+  const messages = nodeData.messages || [];
+  const nodeStatus = nodeData.status;
   
   const [copySuccess, setCopySuccess] = useState(false);
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
@@ -128,8 +136,8 @@ export function AgentOutputDialog({
                   ))}
                 </div>
               ) : (
-                <div className="text-center text-muted-foreground py-6">
-                  No activity yet
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  No activity available
                 </div>
               )}
             </div>
@@ -215,17 +223,33 @@ export function AgentOutputDialog({
                         );
                       }
                     })()
-                  ) : (
+                  ) : nodeStatus === 'IN_PROGRESS' ? (
                     <div className="flex items-center justify-center h-full text-muted-foreground">
                       <Loader2 className="h-5 w-5 animate-spin mr-2" />
                       Analysis in progress...
                     </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      No analysis available for {selectedTicker}
+                    </div>
                   )}
                 </div>
-              ) : (
+              ) : nodeStatus === 'IN_PROGRESS' ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                   <Loader2 className="h-5 w-5 animate-spin mr-2" />
                   Analysis in progress...
+                </div>
+              ) : nodeStatus === 'COMPLETE' ? (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  Analysis completed with no results
+                </div>
+              ) : nodeStatus === 'ERROR' ? (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  Analysis failed
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  No analysis available
                 </div>
               )}
             </div>
