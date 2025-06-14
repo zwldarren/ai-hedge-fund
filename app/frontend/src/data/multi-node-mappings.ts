@@ -11,7 +11,7 @@ export interface MultiNodeDefinition {
   }[];
 }
 
-export const multiNodeDefinition: Record<string, MultiNodeDefinition> = {
+const multiNodeDefinition: Record<string, MultiNodeDefinition> = {
   "Value Investors": {
     name: "Value Investors",
     nodes: [
