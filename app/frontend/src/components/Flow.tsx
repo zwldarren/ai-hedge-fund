@@ -2,23 +2,25 @@ import {
   Background,
   ColorMode,
   Connection,
-  Controls,
   Edge,
   MarkerType,
-  Panel,
   ReactFlow,
   addEdge,
   useEdgesState,
-  useNodesState
+  useNodesState,
+  useReactFlow
 } from '@xyflow/react';
 import { useCallback, useState } from 'react';
 
 import '@xyflow/react/dist/style.css';
 
+import { useFlowPersistence } from '@/hooks/use-flow-persistence';
+import { useFlowKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { AppNode } from '@/nodes/types';
 import { edgeTypes } from '../edges';
 import { initialEdges, initialNodes, nodeTypes } from '../nodes';
-import { Button } from './ui/button';
+import { CustomControls } from './custom-controls';
+import { TooltipProvider } from './ui/tooltip';
 
 type FlowProps = {
   className?: string;
@@ -29,12 +31,28 @@ export function Flow({ className = '' }: FlowProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [rfInstance, setRfInstance] = useState<any>(null);
+  const { setViewport } = useReactFlow();
   const proOptions = { hideAttribution: true };
   
+  // Custom hooks for flow persistence and keyboard shortcuts
+  const { saveFlow, clearSavedFlow } = useFlowPersistence({
+    rfInstance,
+    nodes,
+    edges,
+    setNodes,
+    setEdges,
+    setViewport,
+    isInitialized,
+  });
+  
+  useFlowKeyboardShortcuts(saveFlow);
+  
   // Initialize the flow when it first renders
-  const onInit = useCallback(() => {
+  const onInit = useCallback((reactFlowInstance: any) => {
     if (!isInitialized) {
       setIsInitialized(true);
+      setRfInstance(reactFlowInstance);
     }
   }, [isInitialized]);
 
@@ -58,38 +76,29 @@ export function Flow({ className = '' }: FlowProps) {
   const resetFlow = useCallback(() => {
     setNodes(initialNodes);
     setEdges(initialEdges);
-  }, [setNodes, setEdges]);
+    clearSavedFlow();
+  }, [setNodes, setEdges, clearSavedFlow]);
 
   return (
     <div className={`w-full h-full ${className}`}>
-      <ReactFlow
-        nodes={nodes}
-        nodeTypes={nodeTypes}
-        onNodesChange={onNodesChange}
-        edges={edges}
-        edgeTypes={edgeTypes}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onInit={onInit}
-        colorMode={colorMode}
-        proOptions={proOptions}
-        fitView
-      >
-        <Background gap={13}/>
-        <Controls 
-          position="bottom-center" 
-          orientation="horizontal" 
-          style={{ bottom: 20 }}
-        />
-        <Panel position="top-right">
-          <Button
-            onClick={resetFlow}
-            className="mr-2 z-30 bg-ramp-grey-800 text-white p-4 rounded-md hover:bg-ramp-grey-700"
-          >
-            Reset Flow
-          </Button>
-        </Panel>
-      </ReactFlow>
+      <TooltipProvider>
+        <ReactFlow
+          nodes={nodes}
+          nodeTypes={nodeTypes}
+          onNodesChange={onNodesChange}
+          edges={edges}
+          edgeTypes={edgeTypes}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onInit={onInit}
+          colorMode={colorMode}
+          proOptions={proOptions}
+          fitView
+        >
+          <Background gap={13}/>
+          <CustomControls onReset={resetFlow} />
+        </ReactFlow>
+      </TooltipProvider>
     </div>
   );
 } 
