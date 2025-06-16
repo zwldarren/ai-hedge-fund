@@ -38,7 +38,7 @@ class TestRateLimiting:
             call(url, headers=headers)
         ])
         
-        # Verify sleep was called once with 60 seconds
+        # Verify sleep was called once with 60 seconds (first retry)
         mock_sleep.assert_called_once_with(60)
 
     @patch('src.tools.api.time.sleep')
@@ -73,9 +73,9 @@ class TestRateLimiting:
         # Verify requests.get was called 4 times
         assert mock_get.call_count == 4
         
-        # Verify sleep was called 3 times with 60 seconds each
+        # Verify sleep was called 3 times with linear backoff: 60s, 90s, 120s
         assert mock_sleep.call_count == 3
-        expected_calls = [call(60), call(60), call(60)]
+        expected_calls = [call(60), call(90), call(120)]
         mock_sleep.assert_has_calls(expected_calls)
 
     @patch('src.tools.api.time.sleep')
@@ -110,7 +110,7 @@ class TestRateLimiting:
             call(url, headers=headers, json=json_data)
         ])
         
-        # Verify sleep was called once
+        # Verify sleep was called once with 60 seconds (first retry)
         mock_sleep.assert_called_once_with(60)
 
     @patch('src.tools.api.time.sleep')
@@ -214,6 +214,35 @@ class TestRateLimiting:
         # Verify cache operations
         mock_cache.get_prices.assert_called_once()
         mock_cache.set_prices.assert_called_once()
+
+    @patch('src.tools.api.time.sleep')
+    @patch('src.tools.api.requests.get')
+    def test_max_retries_exceeded(self, mock_get, mock_sleep):
+        """Test that function stops retrying after max_retries and returns final 429."""
+        # Setup mock responses: all 429s (exceeds max retries)
+        mock_429_response = Mock()
+        mock_429_response.status_code = 429
+        mock_429_response.text = "Too Many Requests"
+        
+        mock_get.return_value = mock_429_response
+        
+        # Call the function with max_retries=2
+        headers = {"X-API-KEY": "test-key"}
+        url = "https://api.financialdatasets.ai/test"
+        
+        result = _make_api_request(url, headers, max_retries=2)
+        
+        # Verify final 429 is returned
+        assert result.status_code == 429
+        assert result.text == "Too Many Requests"
+        
+        # Verify requests.get was called 3 times (1 initial + 2 retries)
+        assert mock_get.call_count == 3
+        
+        # Verify sleep was called 2 times with linear backoff: 60s, 90s
+        assert mock_sleep.call_count == 2
+        expected_calls = [call(60), call(90)]
+        mock_sleep.assert_has_calls(expected_calls)
 
 
 if __name__ == "__main__":

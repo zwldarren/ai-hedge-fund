@@ -23,15 +23,16 @@ from src.data.models import (
 _cache = get_cache()
 
 
-def _make_api_request(url: str, headers: dict, method: str = "GET", json_data: dict = None) -> requests.Response:
+def _make_api_request(url: str, headers: dict, method: str = "GET", json_data: dict = None, max_retries: int = 3) -> requests.Response:
     """
-    Make an API request with rate limiting handling.
+    Make an API request with rate limiting handling and moderate backoff.
     
     Args:
         url: The URL to request
         headers: Headers to include in the request
         method: HTTP method (GET or POST)
         json_data: JSON data for POST requests
+        max_retries: Maximum number of retries (default: 3)
     
     Returns:
         requests.Response: The response object
@@ -39,18 +40,20 @@ def _make_api_request(url: str, headers: dict, method: str = "GET", json_data: d
     Raises:
         Exception: If the request fails with a non-429 error
     """
-    while True:
+    for attempt in range(max_retries + 1):  # +1 for initial attempt
         if method.upper() == "POST":
             response = requests.post(url, headers=headers, json=json_data)
         else:
             response = requests.get(url, headers=headers)
         
-        if response.status_code == 429:
-            print(f"Rate limited (429). Waiting 60 seconds before retrying...")
-            time.sleep(60)
+        if response.status_code == 429 and attempt < max_retries:
+            # Linear backoff: 60s, 90s, 120s, 150s...
+            delay = 60 + (30 * attempt)
+            print(f"Rate limited (429). Attempt {attempt + 1}/{max_retries + 1}. Waiting {delay}s before retrying...")
+            time.sleep(delay)
             continue
         
-        # Return the response (whether success or other error)
+        # Return the response (whether success, other errors, or final 429)
         return response
 
 
