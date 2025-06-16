@@ -1,18 +1,16 @@
 import os
 import pytest
 from unittest.mock import Mock, patch, call
-import requests
 
 from src.tools.api import _make_api_request, get_prices
-
 
 class TestRateLimiting:
     """Test suite for API rate limiting functionality."""
 
     @patch('src.tools.api.time.sleep')
     @patch('src.tools.api.requests.get')
-    def test_make_api_request_handles_single_429_then_success(self, mock_get, mock_sleep):
-        """Test that _make_api_request retries once after a 429 and succeeds."""
+    def test_handles_single_rate_limit(self, mock_get, mock_sleep):
+        """Test that API retries once after a 429 and succeeds."""
         # Setup mock responses: first 429, then 200
         mock_429_response = Mock()
         mock_429_response.status_code = 429
@@ -45,8 +43,8 @@ class TestRateLimiting:
 
     @patch('src.tools.api.time.sleep')
     @patch('src.tools.api.requests.get')
-    def test_make_api_request_handles_multiple_429s_then_success(self, mock_get, mock_sleep):
-        """Test that _make_api_request retries multiple times after 429s."""
+    def test_handles_multiple_rate_limits(self, mock_get, mock_sleep):
+        """Test that API retries multiple times after 429s."""
         # Setup mock responses: three 429s, then 200
         mock_429_response = Mock()
         mock_429_response.status_code = 429
@@ -82,8 +80,8 @@ class TestRateLimiting:
 
     @patch('src.tools.api.time.sleep')
     @patch('src.tools.api.requests.post')
-    def test_make_api_request_post_method_with_429_then_success(self, mock_post, mock_sleep):
-        """Test that _make_api_request handles POST requests with rate limiting."""
+    def test_handles_post_rate_limiting(self, mock_post, mock_sleep):
+        """Test that POST requests handle rate limiting."""
         # Setup mock responses: first 429, then 200
         mock_429_response = Mock()
         mock_429_response.status_code = 429
@@ -117,7 +115,7 @@ class TestRateLimiting:
 
     @patch('src.tools.api.time.sleep')
     @patch('src.tools.api.requests.get')
-    def test_make_api_request_returns_non_429_errors_immediately(self, mock_get, mock_sleep):
+    def test_ignores_other_errors(self, mock_get, mock_sleep):
         """Test that non-429 errors are returned without retrying."""
         # Setup mock response: 500 error
         mock_500_response = Mock()
@@ -144,7 +142,7 @@ class TestRateLimiting:
 
     @patch('src.tools.api.time.sleep')
     @patch('src.tools.api.requests.get')
-    def test_make_api_request_returns_success_immediately(self, mock_get, mock_sleep):
+    def test_normal_success_requests(self, mock_get, mock_sleep):
         """Test that successful requests return immediately without retry."""
         # Setup mock response: 200 success
         mock_200_response = Mock()
@@ -172,7 +170,7 @@ class TestRateLimiting:
     @patch('src.tools.api._cache')
     @patch('src.tools.api.time.sleep')
     @patch('src.tools.api.requests.get')
-    def test_get_prices_with_rate_limiting(self, mock_get, mock_sleep, mock_cache):
+    def test_full_integration(self, mock_get, mock_sleep, mock_cache):
         """Test that get_prices function properly handles rate limiting."""
         # Mock cache to return None (cache miss)
         mock_cache.get_prices.return_value = None
