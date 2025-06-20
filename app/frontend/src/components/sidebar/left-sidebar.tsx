@@ -6,8 +6,8 @@ import { useResizable } from '@/hooks/use-resizable';
 import { cn } from '@/lib/utils';
 import { PanelLeft } from 'lucide-react';
 import { ReactNode, useEffect, useState } from 'react';
+import { ComponentItemGroup } from './component-item-group';
 import { SearchBox } from './search-box';
-import { SidebarItemGroup } from './sidebar-item-group';
 
 interface LeftSidebarProps {
   children?: ReactNode;
@@ -92,7 +92,7 @@ export function LeftSidebar({
           onValueChange={handleAccordionChange}
         >
           {filteredGroups.map(group => (
-            <SidebarItemGroup
+            <ComponentItemGroup
               key={group.name} 
               group={group}
               activeItem={activeItem}
