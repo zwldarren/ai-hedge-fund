@@ -5,6 +5,7 @@ export interface Flow {
   nodes: any;
   edges: any;
   viewport?: any;
+  data?: any;
   is_template: boolean;
   tags?: string[];
   created_at: string;

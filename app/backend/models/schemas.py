@@ -57,6 +57,7 @@ class FlowCreateRequest(BaseModel):
     nodes: List[Dict[str, Any]]
     edges: List[Dict[str, Any]]
     viewport: Optional[Dict[str, Any]] = None
+    data: Optional[Dict[str, Any]] = None
     is_template: bool = False
     tags: Optional[List[str]] = None
 
@@ -67,6 +68,7 @@ class FlowUpdateRequest(BaseModel):
     nodes: Optional[List[Dict[str, Any]]] = None
     edges: Optional[List[Dict[str, Any]]] = None
     viewport: Optional[Dict[str, Any]] = None
+    data: Optional[Dict[str, Any]] = None
     is_template: Optional[bool] = None
     tags: Optional[List[str]] = None
 
@@ -78,6 +80,7 @@ class FlowResponse(BaseModel):
     nodes: List[Dict[str, Any]]
     edges: List[Dict[str, Any]]
     viewport: Optional[Dict[str, Any]]
+    data: Optional[Dict[str, Any]]
     is_template: bool
     tags: Optional[List[str]]
     created_at: datetime

@@ -19,6 +19,7 @@ class HedgeFundFlow(Base):
     nodes = Column(JSON, nullable=False)  # Store React Flow nodes as JSON
     edges = Column(JSON, nullable=False)  # Store React Flow edges as JSON
     viewport = Column(JSON, nullable=True)  # Store viewport state (zoom, x, y)
+    data = Column(JSON, nullable=True)  # Store node internal states (tickers, models, etc.)
     
     # Additional metadata
     is_template = Column(Boolean, default=False)  # Mark as template for reuse

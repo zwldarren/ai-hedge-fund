@@ -10,7 +10,7 @@ class FlowRepository:
         self.db = db
     
     def create_flow(self, name: str, nodes: dict, edges: dict, description: str = None, 
-                   viewport: dict = None, is_template: bool = False, tags: List[str] = None) -> HedgeFundFlow:
+                   viewport: dict = None, data: dict = None, is_template: bool = False, tags: List[str] = None) -> HedgeFundFlow:
         """Create a new hedge fund flow"""
         flow = HedgeFundFlow(
             name=name,
@@ -18,6 +18,7 @@ class FlowRepository:
             nodes=nodes,
             edges=edges,
             viewport=viewport,
+            data=data,
             is_template=is_template,
             tags=tags or []
         )
@@ -44,7 +45,7 @@ class FlowRepository:
         ).order_by(HedgeFundFlow.updated_at.desc()).all()
     
     def update_flow(self, flow_id: int, name: str = None, description: str = None,
-                   nodes: dict = None, edges: dict = None, viewport: dict = None,
+                   nodes: dict = None, edges: dict = None, viewport: dict = None, data: dict = None,
                    is_template: bool = None, tags: List[str] = None) -> Optional[HedgeFundFlow]:
         """Update an existing flow"""
         flow = self.get_flow_by_id(flow_id)
@@ -61,6 +62,8 @@ class FlowRepository:
             flow.edges = edges
         if viewport is not None:
             flow.viewport = viewport
+        if data is not None:
+            flow.data = data
         if is_template is not None:
             flow.is_template = is_template
         if tags is not None:
@@ -94,6 +97,7 @@ class FlowRepository:
             nodes=original.nodes,
             edges=original.edges,
             viewport=original.viewport,
+            data=original.data,
             is_template=False,  # Copies are not templates by default
             tags=original.tags
         ) 

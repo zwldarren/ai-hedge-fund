@@ -42,6 +42,7 @@ export function RightSidebar({
     handleFlowCreated,
     handleSaveCurrentFlow,
     handleLoadFlow,
+    handleDeleteFlow,
     handleRefresh,
   } = useFlowManagement();
 
@@ -75,6 +76,7 @@ export function RightSidebar({
         onSearchChange={setSearchQuery}
         onAccordionChange={handleAccordionChange}
         onLoadFlow={handleLoadFlow}
+        onDeleteFlow={handleDeleteFlow}
         onRefresh={handleRefresh}
       />
       

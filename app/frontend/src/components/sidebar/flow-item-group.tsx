@@ -7,11 +7,12 @@ interface FlowItemGroupProps {
   title: string;
   flows: Flow[];
   onLoadFlow: (flow: Flow) => void;
+  onDeleteFlow: (flow: Flow) => Promise<void>;
   onRefresh: () => void;
   currentFlowId?: number | null;
 }
 
-export function FlowItemGroup({ title, flows, onLoadFlow, onRefresh, currentFlowId }: FlowItemGroupProps) {
+export function FlowItemGroup({ title, flows, onLoadFlow, onDeleteFlow, onRefresh, currentFlowId }: FlowItemGroupProps) {
   const groupId = title.toLowerCase().replace(/\s+/g, '-');
 
   return (
@@ -29,6 +30,7 @@ export function FlowItemGroup({ title, flows, onLoadFlow, onRefresh, currentFlow
               <FlowItem
                 flow={flow}
                 onLoadFlow={onLoadFlow}
+                onDeleteFlow={onDeleteFlow}
                 onRefresh={onRefresh}
                 isActive={currentFlowId === flow.id}
               />

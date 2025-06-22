@@ -16,11 +16,12 @@ import { FlowEditDialog } from './flow-edit-dialog';
 interface FlowItemProps {
   flow: Flow;
   onLoadFlow: (flow: Flow) => void;
+  onDeleteFlow: (flow: Flow) => Promise<void>;
   onRefresh: () => void;
   isActive?: boolean;
 }
 
-export default function FlowItem({ flow, onLoadFlow, onRefresh, isActive = false }: FlowItemProps) {
+export default function FlowItem({ flow, onLoadFlow, onDeleteFlow, onRefresh, isActive = false }: FlowItemProps) {
   const [contextMenu, setContextMenu] = useState<{ isOpen: boolean; position: { x: number; y: number } }>({
     isOpen: false,
     position: { x: 0, y: 0 }
@@ -72,15 +73,7 @@ export default function FlowItem({ flow, onLoadFlow, onRefresh, isActive = false
   const handleDeleteFlow = async () => {
     if (window.confirm(`Are you sure you want to delete "${flow.name}"?`)) {
       try {
-        await flowService.deleteFlow(flow.id);
-        
-        // Clear localStorage if this was the currently selected flow
-        const lastSelectedFlowId = localStorage.getItem('lastSelectedFlowId');
-        if (lastSelectedFlowId === flow.id.toString()) {
-          localStorage.removeItem('lastSelectedFlowId');
-        }
-        
-        onRefresh();
+        await onDeleteFlow(flow);
       } catch (error) {
         console.error('Failed to delete flow:', error);
       }

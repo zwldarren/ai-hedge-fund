@@ -33,6 +33,7 @@ async def create_flow(request: FlowCreateRequest, db: Session = Depends(get_db))
             nodes=request.nodes,
             edges=request.edges,
             viewport=request.viewport,
+            data=request.data,
             is_template=request.is_template,
             tags=request.tags
         )
@@ -99,6 +100,7 @@ async def update_flow(flow_id: int, request: FlowUpdateRequest, db: Session = De
             nodes=request.nodes,
             edges=request.edges,
             viewport=request.viewport,
+            data=request.data,
             is_template=request.is_template,
             tags=request.tags
         )

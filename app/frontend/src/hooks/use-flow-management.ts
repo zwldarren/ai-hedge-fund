@@ -1,4 +1,11 @@
 import { useFlowContext } from '@/contexts/flow-context';
+import {
+    clearAllNodeStates,
+    clearFlowNodeStates,
+    getNodeInternalState,
+    setNodeInternalState,
+    setCurrentFlowId as setNodeStateFlowId
+} from '@/hooks/use-node-state';
 import { useToastManager } from '@/hooks/use-toast-manager';
 import { flowService } from '@/services/flow-service';
 import { Flow } from '@/types/flow';
@@ -26,6 +33,7 @@ export interface UseFlowManagementReturn {
   handleFlowCreated: (newFlow: Flow) => Promise<void>;
   handleSaveCurrentFlow: () => Promise<void>;
   handleLoadFlow: (flow: Flow) => Promise<void>;
+  handleDeleteFlow: (flow: Flow) => Promise<void>;
   handleRefresh: () => Promise<void>;
   
   // Internal functions (for testing/advanced use)
@@ -45,6 +53,70 @@ export function useFlowManagement(): UseFlowManagementReturn {
   const [openGroups, setOpenGroups] = useState<string[]>(['recent-flows']);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
+  // Enhanced save function that includes internal node states
+  const saveCurrentFlowWithStates = useCallback(async (): Promise<Flow | null> => {
+    try {
+      // Get current nodes from React Flow
+      const currentNodes = reactFlowInstance.getNodes();
+      
+      // Enhance nodes with internal states
+      const nodesWithStates = currentNodes.map((node: any) => {
+        const internalState = getNodeInternalState(node.id);
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            // Only add internal_state if there is actually state to save
+            ...(internalState && Object.keys(internalState).length > 0 ? { internal_state: internalState } : {})
+          }
+        };
+      });
+
+      // Temporarily replace nodes in React Flow with enhanced nodes
+      reactFlowInstance.setNodes(nodesWithStates);
+      
+      try {
+        // Use the context's save function which handles currentFlowId properly
+        const savedFlow = await saveCurrentFlow();
+        return savedFlow;
+      } finally {
+        // Restore original nodes (without internal_state in React Flow)
+        reactFlowInstance.setNodes(currentNodes);
+      }
+    } catch (err) {
+      console.error('Failed to save flow with states:', err);
+      return null;
+    }
+  }, [reactFlowInstance, saveCurrentFlow]);
+
+  // Enhanced load function that restores internal node states
+  const loadFlowWithStates = useCallback(async (flow: Flow) => {
+    try {
+      // First, set the flow ID for node state isolation
+      setNodeStateFlowId(flow.id.toString());
+      
+      // Clear all existing node states
+      clearAllNodeStates();
+
+      // Load the flow using the context (this handles currentFlowId, currentFlowName, etc.)
+      await loadFlow(flow);
+
+      // Then restore internal states for each node
+      if (flow.nodes) {
+        flow.nodes.forEach((node: any) => {
+          if (node.data?.internal_state) {
+            setNodeInternalState(node.id, node.data.internal_state);
+          }
+        });
+      }
+
+      console.log('Flow loaded with internal states:', flow.name);
+    } catch (error) {
+      console.error('Failed to load flow with states:', error);
+      throw error; // Re-throw to handle in calling function
+    }
+  }, [loadFlow]);
+
   // Create default flow for new users
   const createDefaultFlow = useCallback(async () => {
     try {
@@ -57,12 +129,15 @@ export function useFlowManagement(): UseFlowManagementReturn {
       const defaultFlow = await flowService.createDefaultFlow(nodes, edges, viewport);
       console.log('Default flow created:', defaultFlow);
       setFlows([defaultFlow]);
-      await loadFlow(defaultFlow);
+      
+      // Set the flow ID for node state isolation before loading
+      setNodeStateFlowId(defaultFlow.id.toString());
+      await loadFlowWithStates(defaultFlow);
       console.log('Default flow loaded successfully');
     } catch (error) {
       console.error('Failed to create default flow:', error);
     }
-  }, [reactFlowInstance, loadFlow]);
+  }, [reactFlowInstance, loadFlowWithStates]);
 
   // Load flows from API
   const loadFlows = useCallback(async () => {
@@ -102,14 +177,14 @@ export function useFlowManagement(): UseFlowManagementReturn {
 
         // Fetch the full flow data before loading
         const fullFlow = await flowService.getFlow(flowToLoad.id);
-        await loadFlow(fullFlow);
+        await loadFlowWithStates(fullFlow);
       }
     } catch (error) {
       console.error('Error loading flows:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [createDefaultFlow, loadFlow]);
+  }, [createDefaultFlow, loadFlowWithStates]);
 
   // Load flows on mount
   useEffect(() => {
@@ -145,16 +220,16 @@ export function useFlowManagement(): UseFlowManagementReturn {
 
   const handleFlowCreated = useCallback(async (newFlow: Flow) => {
     // Load the new flow and remember it
-    await loadFlow(newFlow);
+    await loadFlowWithStates(newFlow);
     localStorage.setItem('lastSelectedFlowId', newFlow.id.toString());
     
     // Refresh the flows list to show the new flow
     await loadFlows();
-  }, [loadFlow, loadFlows]);
+  }, [loadFlowWithStates, loadFlows]);
 
   const handleSaveCurrentFlow = useCallback(async () => {
     try {
-      const savedFlow = await saveCurrentFlow();
+      const savedFlow = await saveCurrentFlowWithStates();
       if (savedFlow) {
         // Remember the saved flow
         localStorage.setItem('lastSelectedFlowId', savedFlow.id.toString());
@@ -168,23 +243,40 @@ export function useFlowManagement(): UseFlowManagementReturn {
       console.error('Failed to save flow:', err);
       error('Failed to save flow', 'flow-save-error');
     }
-  }, [saveCurrentFlow, loadFlows, success, error]);
+  }, [saveCurrentFlowWithStates, loadFlows, success, error]);
 
   const handleLoadFlow = useCallback(async (flow: Flow) => {
     try {
       // Fetch the full flow data including nodes, edges, and viewport
       const fullFlow = await flowService.getFlow(flow.id);
-      await loadFlow(fullFlow);
+      await loadFlowWithStates(fullFlow);
       // Remember the selected flow
       localStorage.setItem('lastSelectedFlowId', flow.id.toString());
       console.log('Flow loaded:', fullFlow.name);
     } catch (error) {
       console.error('Failed to load flow:', error);
     }
-  }, [loadFlow]);
+  }, [loadFlowWithStates]);
 
   const handleRefresh = useCallback(async () => {
     await loadFlows();
+  }, [loadFlows]);
+
+  const handleDeleteFlow = useCallback(async (flow: Flow) => {
+    try {
+      await flowService.deleteFlow(flow.id);
+      // Clear node states for the deleted flow
+      clearFlowNodeStates(flow.id.toString());
+      // Remove from localStorage if it was the last selected
+      const lastSelectedFlowId = localStorage.getItem('lastSelectedFlowId');
+      if (lastSelectedFlowId === flow.id.toString()) {
+        localStorage.removeItem('lastSelectedFlowId');
+      }
+      // Refresh the flows list
+      await loadFlows();
+    } catch (error) {
+      console.error('Failed to delete flow:', error);
+    }
   }, [loadFlows]);
 
   return {
@@ -209,6 +301,7 @@ export function useFlowManagement(): UseFlowManagementReturn {
     handleFlowCreated,
     handleSaveCurrentFlow,
     handleLoadFlow,
+    handleDeleteFlow,
     handleRefresh,
     
     // Internal functions

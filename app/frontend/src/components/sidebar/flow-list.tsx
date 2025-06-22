@@ -16,6 +16,7 @@ interface FlowListProps {
   onSearchChange: (query: string) => void;
   onAccordionChange: (value: string[]) => void;
   onLoadFlow: (flow: Flow) => Promise<void>;
+  onDeleteFlow: (flow: Flow) => Promise<void>;
   onRefresh: () => Promise<void>;
 }
 
@@ -30,6 +31,7 @@ export function FlowList({
   onSearchChange,
   onAccordionChange,
   onLoadFlow,
+  onDeleteFlow,
   onRefresh,
 }: FlowListProps) {
   const { currentFlowId } = useFlowContext();
@@ -59,6 +61,7 @@ export function FlowList({
               title="Recent Flows"
               flows={recentFlows}
               onLoadFlow={onLoadFlow}
+              onDeleteFlow={onDeleteFlow}
               onRefresh={onRefresh}
               currentFlowId={currentFlowId}
             />
@@ -70,6 +73,7 @@ export function FlowList({
               title="Templates"
               flows={templateFlows}
               onLoadFlow={onLoadFlow}
+              onDeleteFlow={onDeleteFlow}
               onRefresh={onRefresh}
               currentFlowId={currentFlowId}
             />

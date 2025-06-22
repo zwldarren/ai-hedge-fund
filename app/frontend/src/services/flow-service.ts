@@ -8,6 +8,7 @@ export interface CreateFlowRequest {
   nodes: any;
   edges: any;
   viewport?: any;
+  data?: any;
   is_template?: boolean;
   tags?: string[];
 }
@@ -18,6 +19,7 @@ export interface UpdateFlowRequest {
   nodes?: any;
   edges?: any;
   viewport?: any;
+  data?: any;
   is_template?: boolean;
   tags?: string[];
 }

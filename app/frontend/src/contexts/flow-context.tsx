@@ -1,5 +1,6 @@
 import { getMultiNodeDefinition, isMultiNodeComponent } from '@/data/multi-node-mappings';
 import { getNodeIdForComponent, getNodeTypeDefinition } from '@/data/node-mappings';
+import { clearAllNodeStates, getAllNodeStates, setNodeInternalState, setCurrentFlowId as setNodeStateFlowId } from '@/hooks/use-node-state';
 import { flowService } from '@/services/flow-service';
 import { Flow } from '@/types/flow';
 import { ReactFlowInstance, useReactFlow, XYPosition } from '@xyflow/react';
@@ -75,6 +76,10 @@ export function FlowProvider({ children }: FlowProviderProps) {
       const nodes = reactFlowInstance.getNodes();
       const edges = reactFlowInstance.getEdges();
       const viewport = reactFlowInstance.getViewport();
+      
+      // Collect all node internal states
+      const nodeStates = getAllNodeStates();
+      const data = Object.fromEntries(nodeStates);
 
       if (currentFlowId) {
         // Update existing flow
@@ -84,11 +89,14 @@ export function FlowProvider({ children }: FlowProviderProps) {
           nodes,
           edges,
           viewport,
+          data,
         });
         setCurrentFlowName(updatedFlow.name);
         setIsUnsaved(false);
         // Remember this flow as the last selected
         localStorage.setItem('lastSelectedFlowId', updatedFlow.id.toString());
+        // Ensure the flow ID is set for node state isolation
+        setNodeStateFlowId(updatedFlow.id.toString());
         return updatedFlow;
       } else {
         // Create new flow
@@ -98,12 +106,15 @@ export function FlowProvider({ children }: FlowProviderProps) {
           nodes,
           edges,
           viewport,
+          data,
         });
         setCurrentFlowId(newFlow.id);
         setCurrentFlowName(newFlow.name);
         setIsUnsaved(false);
         // Remember this flow as the last selected
         localStorage.setItem('lastSelectedFlowId', newFlow.id.toString());
+        // Set the flow ID for node state isolation
+        setNodeStateFlowId(newFlow.id.toString());
         return newFlow;
       }
     } catch (error) {
@@ -115,6 +126,23 @@ export function FlowProvider({ children }: FlowProviderProps) {
   // Load a flow
   const loadFlow = useCallback(async (flow: Flow) => {
     try {
+      // CRITICAL: Set the current flow ID FIRST, before rendering nodes
+      // This ensures useNodeState hooks initialize with the correct flow ID
+      setNodeStateFlowId(flow.id.toString());
+      setCurrentFlowId(flow.id);
+      setCurrentFlowName(flow.name);
+      
+      // Clear existing node states for this flow
+      clearAllNodeStates();
+      
+      // Restore internal states BEFORE setting nodes so they're available during render
+      if (flow.data) {
+        Object.entries(flow.data).forEach(([nodeId, nodeState]) => {
+          setNodeInternalState(nodeId, nodeState as Record<string, any>);
+        });
+      }
+      
+      // Now render the nodes - useNodeState hooks will initialize with correct flow ID
       reactFlowInstance.setNodes(flow.nodes || []);
       reactFlowInstance.setEdges(flow.edges || []);
       
@@ -127,8 +155,6 @@ export function FlowProvider({ children }: FlowProviderProps) {
         }, 100);
       }
 
-      setCurrentFlowId(flow.id);
-      setCurrentFlowName(flow.name);
       setIsUnsaved(false);
       
       // Remember this flow as the last selected
@@ -141,14 +167,19 @@ export function FlowProvider({ children }: FlowProviderProps) {
   // Create a new flow
   const createNewFlow = useCallback(async () => {
     try {
-      // Clear the current flow
+      // CRITICAL: Reset flow ID FIRST, before clearing nodes
+      setNodeStateFlowId(null);
+      setCurrentFlowId(null);
+      setCurrentFlowName('Untitled Flow');
+      
+      // Clear all node states for the current flow
+      clearAllNodeStates();
+      
+      // Clear the React Flow canvas
       reactFlowInstance.setNodes([]);
       reactFlowInstance.setEdges([]);
       reactFlowInstance.setViewport({ x: 0, y: 0, zoom: 1 });
 
-      // Reset state
-      setCurrentFlowId(null);
-      setCurrentFlowName('Untitled Flow');
       setIsUnsaved(false);
     } catch (error) {
       console.error('Failed to create new flow:', error);
