@@ -54,8 +54,8 @@ class HedgeFundRequest(BaseModel):
 class FlowCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = None
-    nodes: Dict[str, Any]
-    edges: Dict[str, Any]
+    nodes: List[Dict[str, Any]]
+    edges: List[Dict[str, Any]]
     viewport: Optional[Dict[str, Any]] = None
     is_template: bool = False
     tags: Optional[List[str]] = None
@@ -64,8 +64,8 @@ class FlowCreateRequest(BaseModel):
 class FlowUpdateRequest(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = None
-    nodes: Optional[Dict[str, Any]] = None
-    edges: Optional[Dict[str, Any]] = None
+    nodes: Optional[List[Dict[str, Any]]] = None
+    edges: Optional[List[Dict[str, Any]]] = None
     viewport: Optional[Dict[str, Any]] = None
     is_template: Optional[bool] = None
     tags: Optional[List[str]] = None
@@ -75,8 +75,8 @@ class FlowResponse(BaseModel):
     id: int
     name: str
     description: Optional[str]
-    nodes: Dict[str, Any]
-    edges: Dict[str, Any]
+    nodes: List[Dict[str, Any]]
+    edges: List[Dict[str, Any]]
     viewport: Optional[Dict[str, Any]]
     is_template: bool
     tags: Optional[List[str]]

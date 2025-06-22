@@ -1,10 +1,19 @@
 import { getMultiNodeDefinition, isMultiNodeComponent } from '@/data/multi-node-mappings';
 import { getNodeIdForComponent, getNodeTypeDefinition } from '@/data/node-mappings';
-import { useReactFlow, XYPosition } from '@xyflow/react';
-import { createContext, ReactNode, useCallback, useContext } from 'react';
+import { flowService } from '@/services/flow-service';
+import { Flow } from '@/types/flow';
+import { ReactFlowInstance, useReactFlow, XYPosition } from '@xyflow/react';
+import { createContext, ReactNode, useCallback, useContext, useState } from 'react';
 
 interface FlowContextType {
   addComponentToFlow: (componentName: string) => Promise<void>;
+  saveCurrentFlow: (name?: string, description?: string) => Promise<Flow | null>;
+  loadFlow: (flow: Flow) => Promise<void>;
+  createNewFlow: () => Promise<void>;
+  currentFlowId: number | null;
+  currentFlowName: string;
+  isUnsaved: boolean;
+  reactFlowInstance: ReactFlowInstance;
 }
 
 const FlowContext = createContext<FlowContextType | null>(null);
@@ -23,6 +32,9 @@ interface FlowProviderProps {
 
 export function FlowProvider({ children }: FlowProviderProps) {
   const reactFlowInstance = useReactFlow();
+  const [currentFlowId, setCurrentFlowId] = useState<number | null>(null);
+  const [currentFlowName, setCurrentFlowName] = useState('Untitled Flow');
+  const [isUnsaved, setIsUnsaved] = useState(false);
 
   // Calculate viewport center position with optional randomness
   const getViewportPosition = useCallback((addRandomness = false): XYPosition => {
@@ -52,6 +64,97 @@ export function FlowProvider({ children }: FlowProviderProps) {
     return position;
   }, [reactFlowInstance]);
 
+  // Mark flow as unsaved when changes are made
+  const markAsUnsaved = useCallback(() => {
+    setIsUnsaved(true);
+  }, []);
+
+  // Save current flow
+  const saveCurrentFlow = useCallback(async (name?: string, description?: string): Promise<Flow | null> => {
+    try {
+      const nodes = reactFlowInstance.getNodes();
+      const edges = reactFlowInstance.getEdges();
+      const viewport = reactFlowInstance.getViewport();
+
+      if (currentFlowId) {
+        // Update existing flow
+        const updatedFlow = await flowService.updateFlow(currentFlowId, {
+          name: name || currentFlowName,
+          description,
+          nodes,
+          edges,
+          viewport,
+        });
+        setCurrentFlowName(updatedFlow.name);
+        setIsUnsaved(false);
+        // Remember this flow as the last selected
+        localStorage.setItem('lastSelectedFlowId', updatedFlow.id.toString());
+        return updatedFlow;
+      } else {
+        // Create new flow
+        const newFlow = await flowService.createFlow({
+          name: name || currentFlowName,
+          description,
+          nodes,
+          edges,
+          viewport,
+        });
+        setCurrentFlowId(newFlow.id);
+        setCurrentFlowName(newFlow.name);
+        setIsUnsaved(false);
+        // Remember this flow as the last selected
+        localStorage.setItem('lastSelectedFlowId', newFlow.id.toString());
+        return newFlow;
+      }
+    } catch (error) {
+      console.error('Failed to save flow:', error);
+      return null;
+    }
+  }, [reactFlowInstance, currentFlowId, currentFlowName]);
+
+  // Load a flow
+  const loadFlow = useCallback(async (flow: Flow) => {
+    try {
+      reactFlowInstance.setNodes(flow.nodes || []);
+      reactFlowInstance.setEdges(flow.edges || []);
+      
+      if (flow.viewport) {
+        reactFlowInstance.setViewport(flow.viewport);
+      } else {
+        // Fit view if no viewport data
+        setTimeout(() => {
+          reactFlowInstance.fitView();
+        }, 100);
+      }
+
+      setCurrentFlowId(flow.id);
+      setCurrentFlowName(flow.name);
+      setIsUnsaved(false);
+      
+      // Remember this flow as the last selected
+      localStorage.setItem('lastSelectedFlowId', flow.id.toString());
+    } catch (error) {
+      console.error('Failed to load flow:', error);
+    }
+  }, [reactFlowInstance]);
+
+  // Create a new flow
+  const createNewFlow = useCallback(async () => {
+    try {
+      // Clear the current flow
+      reactFlowInstance.setNodes([]);
+      reactFlowInstance.setEdges([]);
+      reactFlowInstance.setViewport({ x: 0, y: 0, zoom: 1 });
+
+      // Reset state
+      setCurrentFlowId(null);
+      setCurrentFlowName('Untitled Flow');
+      setIsUnsaved(false);
+    } catch (error) {
+      console.error('Failed to create new flow:', error);
+    }
+  }, [reactFlowInstance]);
+
   // Add a single node to the flow
   const addSingleNodeToFlow = useCallback(async (componentName: string) => {
     try {
@@ -64,10 +167,11 @@ export function FlowProvider({ children }: FlowProviderProps) {
       const position = getViewportPosition(true);
       const newNode = nodeTypeDefinition.createNode(position);
       reactFlowInstance.setNodes((nodes) => [...nodes, newNode]);
+      markAsUnsaved();
     } catch (error) {
       console.error(`Failed to add component ${componentName} to flow:`, error);
     }
-  }, [reactFlowInstance, getViewportPosition]);
+  }, [reactFlowInstance, getViewportPosition, markAsUnsaved]);
 
   // Add a multi node (group of nodes with edges) to the flow
   const addMultipleNodesToFlow = useCallback(async (name: string) => {
@@ -154,6 +258,7 @@ export function FlowProvider({ children }: FlowProviderProps) {
       // Add nodes and edges to flow
       reactFlowInstance.setNodes((nodes) => [...nodes, ...validNodes]);
       reactFlowInstance.setEdges((edges) => [...edges, ...validEdges]);
+      markAsUnsaved();
       
       // Fit view to show all nodes after a short delay to ensure nodes are rendered
       setTimeout(() => {
@@ -162,7 +267,7 @@ export function FlowProvider({ children }: FlowProviderProps) {
     } catch (error) {
       console.error(`Failed to add multi-node component ${name} to flow:`, error);
     }
-  }, [reactFlowInstance, getViewportPosition]);
+  }, [reactFlowInstance, getViewportPosition, markAsUnsaved]);
 
   // Main entry point - route to single node or multi node
   const addComponentToFlow = useCallback(async (componentName: string) => {
@@ -175,6 +280,13 @@ export function FlowProvider({ children }: FlowProviderProps) {
 
   const value = {
     addComponentToFlow,
+    saveCurrentFlow,
+    loadFlow,
+    createNewFlow,
+    currentFlowId,
+    currentFlowName,
+    isUnsaved,
+    reactFlowInstance,
   };
 
   return (

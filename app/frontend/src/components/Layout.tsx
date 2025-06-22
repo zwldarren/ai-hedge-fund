@@ -1,23 +1,40 @@
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { FlowProvider } from '@/contexts/flow-context';
 import { cn } from '@/lib/utils';
+import { SidebarStorageService } from '@/services/sidebar-storage';
 import { ReactFlowProvider } from '@xyflow/react';
-import { PanelLeft } from 'lucide-react';
-import { ReactNode, useState } from 'react';
+import { PanelLeft, PanelRight } from 'lucide-react';
+import { ReactNode, useEffect, useState } from 'react';
 import { LeftSidebar } from './sidebar/left-sidebar';
+import { RightSidebar } from './sidebar/right-sidebar';
 import { Button } from './ui/button';
 
 type LayoutProps = {
-  leftSidebar?: ReactNode;
-  rightSidebar?: ReactNode;
   children: ReactNode;
 };
 
-export function Layout({ leftSidebar, rightSidebar, children }: LayoutProps) {
-  const [isCollapsed, setIsCollapsed] = useState(true);
+export function Layout({ children }: LayoutProps) {
+  // Initialize sidebar states from storage service
+  const [isLeftCollapsed, setIsLeftCollapsed] = useState(() => 
+    SidebarStorageService.loadLeftSidebarState(true)
+  );
+  
+  const [isRightCollapsed, setIsRightCollapsed] = useState(() => 
+    SidebarStorageService.loadRightSidebarState(true)
+  );
+
+  // Save left sidebar state whenever it changes
+  useEffect(() => {
+    SidebarStorageService.saveLeftSidebarState(isLeftCollapsed);
+  }, [isLeftCollapsed]);
+
+  // Save right sidebar state whenever it changes
+  useEffect(() => {
+    SidebarStorageService.saveRightSidebarState(isRightCollapsed);
+  }, [isRightCollapsed]);
 
   return (
-    <SidebarProvider defaultOpen={!isCollapsed}>
+    <SidebarProvider defaultOpen={!isLeftCollapsed}>
       <div className="flex h-screen w-screen overflow-hidden relative bg-background">
         <ReactFlowProvider>
           <FlowProvider>
@@ -29,34 +46,49 @@ export function Layout({ leftSidebar, rightSidebar, children }: LayoutProps) {
             {/* Floating left sidebar */}
             <div className={cn(
               "absolute top-0 left-0 z-30 h-full transition-transform",
-              isCollapsed && "transform -translate-x-full opacity-0"
+              isLeftCollapsed && "transform -translate-x-full opacity-0"
             )}>
               <LeftSidebar
-                isCollapsed={isCollapsed}
-                onCollapse={() => setIsCollapsed(true)}
-                onExpand={() => setIsCollapsed(false)}
-                onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-              >
-                {leftSidebar}
-              </LeftSidebar>
+                isCollapsed={isLeftCollapsed}
+                onCollapse={() => setIsLeftCollapsed(true)}
+                onExpand={() => setIsLeftCollapsed(false)}
+                onToggleCollapse={() => setIsLeftCollapsed(!isLeftCollapsed)}
+              />
             </div>
 
-            {/* Sidebar toggle button - visible when sidebar is collapsed */}
-            {isCollapsed && (
+            {/* Floating right sidebar */}
+            <div className={cn(
+              "absolute top-0 right-0 z-30 h-full transition-transform",
+              isRightCollapsed && "transform translate-x-full opacity-0"
+            )}>
+              <RightSidebar
+                isCollapsed={isRightCollapsed}
+                onCollapse={() => setIsRightCollapsed(true)}
+                onExpand={() => setIsRightCollapsed(false)}
+                onToggleCollapse={() => setIsRightCollapsed(!isRightCollapsed)}
+              />
+            </div>
+
+            {/* Left sidebar toggle button - visible when sidebar is collapsed */}
+            {isLeftCollapsed && (
               <Button 
                 className="absolute top-4 left-4 z-30 bg-ramp-grey-800 text-white p-4 rounded-[20px] hover:bg-ramp-grey-700"
-                onClick={() => setIsCollapsed(false)}
-                aria-label="Show sidebar"
+                onClick={() => setIsLeftCollapsed(false)}
+                aria-label="Show components sidebar"
               >
                 Components <PanelLeft size={16} />
               </Button>
             )}
 
-            {/* Right sidebar */}
-            {rightSidebar && (
-              <div className="h-full w-64 bg-gray-900 border-l border-gray-800 ml-auto flex-shrink-0">
-                {rightSidebar}
-              </div>
+            {/* Right sidebar toggle button - visible when sidebar is collapsed */}
+            {isRightCollapsed && (
+              <Button 
+                className="absolute top-4 right-4 z-30 bg-ramp-grey-800 text-white p-4 rounded-[20px] hover:bg-ramp-grey-700"
+                onClick={() => setIsRightCollapsed(false)}
+                aria-label="Show flows sidebar"
+              >
+                <PanelRight size={16} /> Flows
+              </Button>
             )}
           </FlowProvider>
         </ReactFlowProvider>

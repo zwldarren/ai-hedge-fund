@@ -14,11 +14,12 @@ import { useCallback, useState } from 'react';
 
 import '@xyflow/react/dist/style.css';
 
-import { useFlowPersistence } from '@/hooks/use-flow-persistence';
+import { useFlowContext } from '@/contexts/flow-context';
 import { useFlowKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
+import { useToastManager } from '@/hooks/use-toast-manager';
 import { AppNode } from '@/nodes/types';
 import { edgeTypes } from '../edges';
-import { initialEdges, initialNodes, nodeTypes } from '../nodes';
+import { nodeTypes } from '../nodes';
 import { CustomControls } from './custom-controls';
 import { TooltipProvider } from './ui/tooltip';
 
@@ -28,25 +29,32 @@ type FlowProps = {
 
 export function Flow({ className = '' }: FlowProps) {
   const [colorMode] = useState<ColorMode>('dark');
-  const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [rfInstance, setRfInstance] = useState<any>(null);
   const { setViewport } = useReactFlow();
   const proOptions = { hideAttribution: true };
   
-  // Custom hooks for flow persistence and keyboard shortcuts
-  const { saveFlow, clearSavedFlow } = useFlowPersistence({
-    rfInstance,
-    nodes,
-    edges,
-    setNodes,
-    setEdges,
-    setViewport,
-    isInitialized,
-  });
+  // Get flow context for saving
+  const { saveCurrentFlow, currentFlowName } = useFlowContext();
   
-  useFlowKeyboardShortcuts(saveFlow);
+  // Get toast manager
+  const { success, error } = useToastManager();
+  
+  // Connect keyboard shortcuts to save flow with toast
+  useFlowKeyboardShortcuts(async () => {
+    try {
+      const savedFlow = await saveCurrentFlow();
+      if (savedFlow) {
+        success(`"${savedFlow.name}" saved!`, 'flow-save');
+      } else {
+        error('Failed to save flow', 'flow-save-error');
+      }
+    } catch (err) {
+      error('Failed to save flow', 'flow-save-error');
+    }
+  });
   
   // Initialize the flow when it first renders
   const onInit = useCallback((reactFlowInstance: any) => {
@@ -74,10 +82,9 @@ export function Flow({ className = '' }: FlowProps) {
 
   // Reset the flow to initial state
   const resetFlow = useCallback(() => {
-    setNodes(initialNodes);
-    setEdges(initialEdges);
-    clearSavedFlow();
-  }, [setNodes, setEdges, clearSavedFlow]);
+    setNodes([]);
+    setEdges([]);
+  }, [setNodes, setEdges]);
 
   return (
     <div className={`w-full h-full ${className}`}>
