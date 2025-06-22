@@ -7,8 +7,7 @@ import {
   ReactFlow,
   addEdge,
   useEdgesState,
-  useNodesState,
-  useReactFlow
+  useNodesState
 } from '@xyflow/react';
 import { useCallback, useState } from 'react';
 
@@ -32,12 +31,10 @@ export function Flow({ className = '' }: FlowProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [rfInstance, setRfInstance] = useState<any>(null);
-  const { setViewport } = useReactFlow();
   const proOptions = { hideAttribution: true };
   
   // Get flow context for saving
-  const { saveCurrentFlow, currentFlowName } = useFlowContext();
+  const { saveCurrentFlow } = useFlowContext();
   
   // Get toast manager
   const { success, error } = useToastManager();
@@ -57,10 +54,9 @@ export function Flow({ className = '' }: FlowProps) {
   });
   
   // Initialize the flow when it first renders
-  const onInit = useCallback((reactFlowInstance: any) => {
+  const onInit = useCallback(() => {
     if (!isInitialized) {
       setIsInitialized(true);
-      setRfInstance(reactFlowInstance);
     }
   }, [isInitialized]);
 
