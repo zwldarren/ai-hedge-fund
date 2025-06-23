@@ -20,7 +20,6 @@ import { useToastManager } from '@/hooks/use-toast-manager';
 import { AppNode } from '@/nodes/types';
 import { edgeTypes } from '../edges';
 import { nodeTypes } from '../nodes';
-import { CustomControls } from './custom-controls';
 import { TooltipProvider } from './ui/tooltip';
 
 type FlowProps = {
@@ -142,7 +141,7 @@ export function Flow({ className = '' }: FlowProps) {
           proOptions={proOptions}
         >
           <Background gap={13}/>
-          <CustomControls onReset={resetFlow} />
+          {/* <CustomControls onReset={resetFlow} /> */}
         </ReactFlow>
       </TooltipProvider>
     </div>

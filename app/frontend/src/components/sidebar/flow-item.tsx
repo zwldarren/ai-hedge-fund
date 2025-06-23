@@ -101,7 +101,7 @@ export default function FlowItem({ flow, onLoadFlow, onDeleteFlow, onRefresh, is
         className={cn(
           "group flex items-center justify-between px-4 py-3 transition-colors cursor-pointer",
           isActive 
-            ? "bg-blue-600/20 border-l-2 border-blue-400" 
+            ? "border-l-2 border-blue-400" 
             : "hover:bg-ramp-grey-700"
         )}
         onClick={handleLoadFlow}
