@@ -1,10 +1,10 @@
-import { useFlowManagement } from '@/hooks/use-flow-management';
+import { ComponentGroup, getComponentGroups } from '@/data/sidebar-components';
+import { useComponentGroups } from '@/hooks/use-component-groups';
 import { useResizable } from '@/hooks/use-resizable';
 import { cn } from '@/lib/utils';
-import { ReactNode } from 'react';
-import { FlowActions } from './flow-actions';
-import { FlowCreateDialog } from './flow-create-dialog';
-import { FlowList } from './flow-list';
+import { ReactNode, useEffect, useState } from 'react';
+import { ComponentActions } from './component-actions';
+import { ComponentList } from './component-list';
 
 interface RightSidebarProps {
   children?: ReactNode;
@@ -26,26 +26,35 @@ export function RightSidebar({
     side: 'right',
   });
   
-  // Use flow management hook
-  const {
-    flows,
-    searchQuery,
-    isLoading,
-    openGroups,
-    createDialogOpen,
-    filteredFlows,
-    recentFlows,
-    templateFlows,
-    setSearchQuery,
-    setCreateDialogOpen,
-    handleAccordionChange,
-    handleCreateNewFlow,
-    handleFlowCreated,
-    handleSaveCurrentFlow,
-    handleLoadFlow,
-    handleDeleteFlow,
-    handleRefresh,
-  } = useFlowManagement();
+  // State for loading component groups
+  const [componentGroups, setComponentGroups] = useState<ComponentGroup[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Load component groups on mount
+  useEffect(() => {
+    const loadComponentGroups = async () => {
+      try {
+        setIsLoading(true);
+        const groups = await getComponentGroups();
+        setComponentGroups(groups);
+      } catch (error) {
+        console.error('Failed to load component groups:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadComponentGroups();
+  }, []);
+  
+  const { 
+    searchQuery, 
+    setSearchQuery, 
+    activeItem, 
+    openGroups, 
+    filteredGroups,
+    handleAccordionChange 
+  } = useComponentGroups(componentGroups);
 
   return (
     <div 
@@ -60,25 +69,17 @@ export function RightSidebar({
         borderLeft: isDragging ? 'none' : '1px solid var(--ramp-grey-900)' 
       }}
     >
-      <FlowActions
-        onSave={handleSaveCurrentFlow}
-        onCreate={handleCreateNewFlow}
-        onToggleCollapse={onToggleCollapse}
-      />
+      <ComponentActions onToggleCollapse={onToggleCollapse} />
       
-      <FlowList
-        flows={flows}
+      <ComponentList
+        componentGroups={componentGroups}
         searchQuery={searchQuery}
         isLoading={isLoading}
         openGroups={openGroups}
-        filteredFlows={filteredFlows}
-        recentFlows={recentFlows}
-        templateFlows={templateFlows}
+        filteredGroups={filteredGroups}
+        activeItem={activeItem}
         onSearchChange={setSearchQuery}
         onAccordionChange={handleAccordionChange}
-        onLoadFlow={handleLoadFlow}
-        onDeleteFlow={handleDeleteFlow}
-        onRefresh={handleRefresh}
       />
       
       {/* Resize handle - on the left side for right sidebar */}
@@ -88,12 +89,6 @@ export function RightSidebar({
           onMouseDown={startResize}
         />
       )}
-
-      <FlowCreateDialog
-        isOpen={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
-        onFlowCreated={handleFlowCreated}
-      />
     </div>
   );
 } 

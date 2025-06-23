@@ -84,7 +84,7 @@ function LayoutContent({ children }: { children: ReactNode }) {
           onClick={() => setIsLeftCollapsed(false)}
           aria-label="Show components sidebar"
         >
-          Components <PanelLeft size={16} />
+          Flows <PanelLeft size={16} />
         </Button>
       )}
 
@@ -95,7 +95,7 @@ function LayoutContent({ children }: { children: ReactNode }) {
           onClick={() => setIsRightCollapsed(false)}
           aria-label="Show flows sidebar"
         >
-          <PanelRight size={16} /> Flows
+          <PanelRight size={16} /> Components
         </Button>
       )}
     </div>

@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { useFlowContext } from '@/contexts/flow-context';
 import { cn, formatKeyboardShortcut } from '@/lib/utils';
-import { PanelRight, Plus, Save } from 'lucide-react';
+import { PanelLeft, Plus, Save } from 'lucide-react';
 
 interface FlowActionsProps {
   onSave: () => Promise<void>;
@@ -48,7 +48,7 @@ export function FlowActions({ onSave, onCreate, onToggleCollapse }: FlowActionsP
           aria-label="Toggle flows sidebar"
           title={`Toggle Flows Panel (${formatKeyboardShortcut('I')})`}
         >
-          <PanelRight size={16} />
+          <PanelLeft size={16} />
         </Button>
       </div>
     </div>
