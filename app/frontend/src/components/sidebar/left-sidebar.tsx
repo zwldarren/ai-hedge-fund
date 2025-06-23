@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ComponentGroup, getComponentGroups } from '@/data/sidebar-components';
 import { useComponentGroups } from '@/hooks/use-component-groups';
 import { useResizable } from '@/hooks/use-resizable';
-import { cn } from '@/lib/utils';
+import { cn, formatKeyboardShortcut } from '@/lib/utils';
 import { PanelLeft } from 'lucide-react';
 import { ReactNode, useEffect, useState } from 'react';
 import { ComponentItemGroup } from './component-item-group';
@@ -55,7 +55,7 @@ export function LeftSidebar({
     <div 
       ref={elementRef}
       className={cn(
-        "h-full bg-ramp-grey-800 flex flex-col relative",
+        "h-full bg-panel flex flex-col relative",
         isCollapsed ? "shadow-lg" : "",
         isDragging ? "select-none" : ""
       )}
@@ -73,6 +73,7 @@ export function LeftSidebar({
             onClick={onToggleCollapse}
             className="h-6 w-6 text-white hover:bg-ramp-grey-700"
             aria-label="Toggle sidebar"
+            title={`Toggle Components Panel (${formatKeyboardShortcut('B')})`}
           >
             <PanelLeft size={16} />
           </Button>

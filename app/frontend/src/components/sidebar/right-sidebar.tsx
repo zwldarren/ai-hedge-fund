@@ -23,6 +23,7 @@ export function RightSidebar({
     defaultWidth: 280,
     minWidth: 200,
     maxWidth: 500,
+    side: 'right',
   });
   
   // Use flow management hook
@@ -50,7 +51,7 @@ export function RightSidebar({
     <div 
       ref={elementRef}
       className={cn(
-        "h-full bg-ramp-grey-800 flex flex-col relative",
+        "h-full bg-panel flex flex-col relative",
         isCollapsed ? "shadow-lg" : "",
         isDragging ? "select-none" : ""
       )}

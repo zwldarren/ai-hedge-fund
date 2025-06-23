@@ -90,6 +90,30 @@ export function useNodeState<T>(
     };
   }, [getInitialValue]);
 
+  // Listen for state changes and update local state if this specific node+stateKey changed
+  useEffect(() => {
+    const handleStateChange = () => {
+      const compositeKey = createCompositeKey(nodeId);
+      const nodeState = nodeStatesMap.get(compositeKey);
+      if (nodeState && stateKey in nodeState) {
+        const newValue = nodeState[stateKey];
+        // Only update if the value actually changed to avoid unnecessary re-renders
+        setValue(prevValue => {
+          if (prevValue !== newValue) {
+            console.debug(`[useNodeState] Updated ${nodeId}.${stateKey}:`, newValue);
+            return newValue;
+          }
+          return prevValue;
+        });
+      }
+    };
+
+    stateChangeListeners.add(handleStateChange);
+    return () => {
+      stateChangeListeners.delete(handleStateChange);
+    };
+  }, [nodeId, stateKey]);
+
   // Update the global state map when value changes
   const setValueAndPersist = useCallback((newValue: T | ((prev: T) => T)) => {
     setValue(prevValue => {

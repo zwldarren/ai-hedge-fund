@@ -9,12 +9,13 @@ import {
   useEdgesState,
   useNodesState
 } from '@xyflow/react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import '@xyflow/react/dist/style.css';
 
 import { useFlowContext } from '@/contexts/flow-context';
-import { useFlowKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
+import { useFlowHistory } from '@/hooks/use-flow-history';
+import { useFlowKeyboardShortcuts, useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useToastManager } from '@/hooks/use-toast-manager';
 import { AppNode } from '@/nodes/types';
 import { edgeTypes } from '../edges';
@@ -38,7 +39,28 @@ export function Flow({ className = '' }: FlowProps) {
   
   // Get toast manager
   const { success, error } = useToastManager();
-  
+
+  // Initialize flow history
+  const { takeSnapshot, undo, redo, canUndo, canRedo, clearHistory } = useFlowHistory();
+
+  // Take initial snapshot when flow is initialized
+  useEffect(() => {
+    if (isInitialized && nodes.length === 0 && edges.length === 0) {
+      takeSnapshot();
+    }
+  }, [isInitialized, takeSnapshot, nodes.length, edges.length]);
+
+  // Take snapshot when nodes or edges change (debounced)
+  useEffect(() => {
+    if (!isInitialized) return;
+    
+    const timeoutId = setTimeout(() => {
+      takeSnapshot();
+    }, 500); // Debounce snapshots by 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [nodes, edges, takeSnapshot, isInitialized]);
+
   // Connect keyboard shortcuts to save flow with toast
   useFlowKeyboardShortcuts(async () => {
     try {
@@ -51,6 +73,27 @@ export function Flow({ className = '' }: FlowProps) {
     } catch (err) {
       error('Failed to save flow', 'flow-save-error');
     }
+  });
+
+  // Add undo/redo keyboard shortcuts
+  useKeyboardShortcuts({
+    shortcuts: [
+      {
+        key: 'z',
+        ctrlKey: true,
+        metaKey: true,
+        callback: undo,
+        preventDefault: true,
+      },
+      {
+        key: 'z',
+        ctrlKey: true,
+        metaKey: true,
+        shiftKey: true,
+        callback: redo,
+        preventDefault: true,
+      },
+    ],
   });
   
   // Initialize the flow when it first renders
@@ -80,7 +123,8 @@ export function Flow({ className = '' }: FlowProps) {
   const resetFlow = useCallback(() => {
     setNodes([]);
     setEdges([]);
-  }, [setNodes, setEdges]);
+    clearHistory();
+  }, [setNodes, setEdges, clearHistory]);
 
   return (
     <div className={`w-full h-full ${className}`}>
@@ -96,7 +140,6 @@ export function Flow({ className = '' }: FlowProps) {
           onInit={onInit}
           colorMode={colorMode}
           proOptions={proOptions}
-          fitView
         >
           <Background gap={13}/>
           <CustomControls onReset={resetFlow} />
