@@ -1,7 +1,7 @@
 import { useFlowManagement } from '@/hooks/use-flow-management';
 import { useResizable } from '@/hooks/use-resizable';
 import { cn } from '@/lib/utils';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { FlowActions } from './flow-actions';
 import { FlowCreateDialog } from './flow-create-dialog';
 import { FlowList } from './flow-list';
@@ -12,11 +12,13 @@ interface LeftSidebarProps {
   onCollapse: () => void;
   onExpand: () => void;
   onToggleCollapse: () => void;
+  onWidthChange?: (width: number) => void;
 }
 
 export function LeftSidebar({
   isCollapsed,
   onToggleCollapse,
+  onWidthChange,
 }: LeftSidebarProps) {
   // Use our custom hooks
   const { width, isDragging, elementRef, startResize } = useResizable({
@@ -25,6 +27,11 @@ export function LeftSidebar({
     maxWidth: 500,
     side: 'left',
   });
+
+  // Notify parent component of width changes
+  useEffect(() => {
+    onWidthChange?.(width);
+  }, [width, onWidthChange]);
   
   // Use flow management hook
   const {

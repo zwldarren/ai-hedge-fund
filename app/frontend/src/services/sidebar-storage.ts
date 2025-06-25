@@ -1,11 +1,13 @@
 export interface SidebarStates {
   leftCollapsed: boolean;
   rightCollapsed: boolean;
+  bottomCollapsed: boolean;
 }
 
 export class SidebarStorageService {
   private static readonly LEFT_SIDEBAR_KEY = 'ai-hedge-fund-left-sidebar-collapsed';
   private static readonly RIGHT_SIDEBAR_KEY = 'ai-hedge-fund-right-sidebar-collapsed';
+  private static readonly BOTTOM_PANEL_KEY = 'ai-hedge-fund-bottom-panel-collapsed';
 
   /**
    * Save left sidebar collapsed state to localStorage
@@ -34,13 +36,27 @@ export class SidebarStorageService {
   }
 
   /**
+   * Save bottom panel collapsed state to localStorage
+   */
+  static saveBottomPanelState(isCollapsed: boolean): boolean {
+    try {
+      localStorage.setItem(this.BOTTOM_PANEL_KEY, JSON.stringify(isCollapsed));
+      return true;
+    } catch (error) {
+      console.error('Failed to save bottom panel state to localStorage:', error);
+      return false;
+    }
+  }
+
+  /**
    * Save both sidebar states to localStorage
    */
   static saveSidebarStates(states: SidebarStates): boolean {
     try {
       const leftSuccess = this.saveLeftSidebarState(states.leftCollapsed);
       const rightSuccess = this.saveRightSidebarState(states.rightCollapsed);
-      return leftSuccess && rightSuccess;
+      const bottomSuccess = this.saveBottomPanelState(states.bottomCollapsed);
+      return leftSuccess && rightSuccess && bottomSuccess;
     } catch (error) {
       console.error('Failed to save sidebar states to localStorage:', error);
       return false;
@@ -84,12 +100,31 @@ export class SidebarStorageService {
   }
 
   /**
+   * Load bottom panel collapsed state from localStorage
+   */
+  static loadBottomPanelState(defaultValue: boolean = true): boolean {
+    try {
+      const saved = localStorage.getItem(this.BOTTOM_PANEL_KEY);
+      if (saved === null) {
+        return defaultValue;
+      }
+      
+      const parsed = JSON.parse(saved);
+      return typeof parsed === 'boolean' ? parsed : defaultValue;
+    } catch (error) {
+      console.error('Failed to load bottom panel state from localStorage:', error);
+      return defaultValue;
+    }
+  }
+
+  /**
    * Load both sidebar states from localStorage
    */
-  static loadSidebarStates(defaultStates: SidebarStates = { leftCollapsed: true, rightCollapsed: true }): SidebarStates {
+  static loadSidebarStates(defaultStates: SidebarStates = { leftCollapsed: true, rightCollapsed: true, bottomCollapsed: true }): SidebarStates {
     return {
       leftCollapsed: this.loadLeftSidebarState(defaultStates.leftCollapsed),
       rightCollapsed: this.loadRightSidebarState(defaultStates.rightCollapsed),
+      bottomCollapsed: this.loadBottomPanelState(defaultStates.bottomCollapsed),
     };
   }
 

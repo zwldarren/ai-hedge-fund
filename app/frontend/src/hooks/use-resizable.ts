@@ -4,16 +4,23 @@ interface UseResizableOptions {
   minWidth?: number;
   maxWidth?: number;
   defaultWidth?: number;
-  side?: 'left' | 'right';
+  minHeight?: number;
+  maxHeight?: number;
+  defaultHeight?: number;
+  side?: 'left' | 'right' | 'bottom';
 }
 
 export function useResizable({
   minWidth = 200,
   maxWidth = 500,
   defaultWidth = 250,
+  minHeight = 200,
+  maxHeight = 600,
+  defaultHeight = 300,
   side = 'left'
 }: UseResizableOptions = {}) {
   const [width, setWidth] = useState(defaultWidth);
+  const [height, setHeight] = useState(defaultHeight);
   const [isDragging, setIsDragging] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
   // Add a ref for tracking dragging state - updates synchronously unlike state
@@ -37,19 +44,27 @@ export function useResizable({
     const elementRect = elementRef.current?.getBoundingClientRect();
     if (!elementRect) return;
     
-    let newWidth;
-    if (side === 'left') {
-      // For left sidebar: dragging right increases width
-      newWidth = e.clientX - elementRect.left;
+    if (side === 'bottom') {
+      // For bottom panel: dragging up decreases height
+      const newHeight = elementRect.bottom - e.clientY;
+      const clampedHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+      setHeight(clampedHeight);
     } else {
-      // For right sidebar: dragging left decreases width
-      newWidth = elementRect.right - e.clientX;
+      // For horizontal resizing (left/right sidebars)
+      let newWidth;
+      if (side === 'left') {
+        // For left sidebar: dragging right increases width
+        newWidth = e.clientX - elementRect.left;
+      } else {
+        // For right sidebar: dragging left decreases width
+        newWidth = elementRect.right - e.clientX;
+      }
+      
+      // Calculate new width (limit between minWidth and maxWidth)
+      newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+      
+      setWidth(newWidth);
     }
-    
-    // Calculate new width (limit between minWidth and maxWidth)
-    newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
-    
-    setWidth(newWidth);
   };
 
   const stopResize = () => {
@@ -66,10 +81,11 @@ export function useResizable({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', stopResize);
     };
-  }, []); // Empty dependency array as we're using refs now
+  }, []);
 
   return {
     width,
+    height,
     isDragging,
     elementRef,
     startResize

@@ -4,8 +4,9 @@ import { useLayoutKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { cn } from '@/lib/utils';
 import { SidebarStorageService } from '@/services/sidebar-storage';
 import { ReactFlowProvider } from '@xyflow/react';
-import { PanelLeft, PanelRight } from 'lucide-react';
+import { PanelBottom, PanelLeft, PanelRight } from 'lucide-react';
 import { ReactNode, useEffect, useState } from 'react';
+import { BottomPanel } from './sidebar/bottom-panel';
 import { LeftSidebar } from './sidebar/left-sidebar';
 import { RightSidebar } from './sidebar/right-sidebar';
 import { Button } from './ui/button';
@@ -23,8 +24,14 @@ function LayoutContent({ children }: { children: ReactNode }) {
     SidebarStorageService.loadRightSidebarState(true)
   );
 
-  // Access the Flow component's undo/redo functions through a ref or context
-  // For now, we'll add them via props or context when Flow component is integrated
+  const [isBottomCollapsed, setIsBottomCollapsed] = useState(() => 
+    SidebarStorageService.loadBottomPanelState(true)
+  );
+
+  // Track actual sidebar widths for dynamic bottom panel positioning
+  const [leftSidebarWidth, setLeftSidebarWidth] = useState(280);
+  const [rightSidebarWidth, setRightSidebarWidth] = useState(280);
+  const [bottomPanelHeight, setBottomPanelHeight] = useState(300);
 
   // Add keyboard shortcuts for toggling sidebars and fit view
   useLayoutKeyboardShortcuts(
@@ -32,22 +39,55 @@ function LayoutContent({ children }: { children: ReactNode }) {
     () => setIsLeftCollapsed(!isLeftCollapsed),   // Cmd+B for left sidebar
     () => reactFlowInstance.fitView({ padding: 0.1, duration: 500 }), // Cmd+O for fit view
     // Note: undo/redo will be handled directly in the Flow component for now
+    undefined, // undo
+    undefined, // redo
+    () => setIsBottomCollapsed(!isBottomCollapsed), // Cmd+J for bottom panel
   );
 
-  // Save left sidebar state whenever it changes
+  // Save sidebar states whenever they change
   useEffect(() => {
     SidebarStorageService.saveLeftSidebarState(isLeftCollapsed);
   }, [isLeftCollapsed]);
 
-  // Save right sidebar state whenever it changes
   useEffect(() => {
     SidebarStorageService.saveRightSidebarState(isRightCollapsed);
   }, [isRightCollapsed]);
 
+  useEffect(() => {
+    SidebarStorageService.saveBottomPanelState(isBottomCollapsed);
+  }, [isBottomCollapsed]);
+
+  // Calculate bottom panel positioning based on actual sidebar widths
+  const getBottomPanelStyle = () => {
+    let left = 0;
+    let right = 0;
+    
+    if (!isLeftCollapsed) {
+      left = leftSidebarWidth;
+    }
+    
+    if (!isRightCollapsed) {
+      right = rightSidebarWidth;
+    }
+    
+    return {
+      left: `${left}px`,
+      right: `${right}px`,
+    };
+  };
+
+  // Calculate main content height when bottom panel is visible
+  const getMainContentStyle = () => {
+    if (!isBottomCollapsed) {
+      return { height: `calc(100vh - ${bottomPanelHeight}px)` };
+    }
+    return { height: '100%' };
+  };
+
   return (
     <div className="flex h-screen w-screen overflow-hidden relative bg-background">
-      {/* Main content area takes full width */}
-      <main className="flex-1 h-full overflow-hidden w-full">
+      {/* Main content area takes full width but adjusts height for bottom panel */}
+      <main className="flex-1 h-full overflow-hidden w-full" style={getMainContentStyle()}>
         {children}
       </main>
 
@@ -61,6 +101,7 @@ function LayoutContent({ children }: { children: ReactNode }) {
           onCollapse={() => setIsLeftCollapsed(true)}
           onExpand={() => setIsLeftCollapsed(false)}
           onToggleCollapse={() => setIsLeftCollapsed(!isLeftCollapsed)}
+          onWidthChange={setLeftSidebarWidth}
         />
       </div>
 
@@ -74,6 +115,24 @@ function LayoutContent({ children }: { children: ReactNode }) {
           onCollapse={() => setIsRightCollapsed(true)}
           onExpand={() => setIsRightCollapsed(false)}
           onToggleCollapse={() => setIsRightCollapsed(!isRightCollapsed)}
+          onWidthChange={setRightSidebarWidth}
+        />
+      </div>
+
+      {/* Bottom panel */}
+      <div 
+        className={cn(
+          "absolute bottom-0 z-20 transition-transform",
+          isBottomCollapsed && "transform translate-y-full opacity-0"
+        )}
+        style={getBottomPanelStyle()}
+      >
+        <BottomPanel
+          isCollapsed={isBottomCollapsed}
+          onCollapse={() => setIsBottomCollapsed(true)}
+          onExpand={() => setIsBottomCollapsed(false)}
+          onToggleCollapse={() => setIsBottomCollapsed(!isBottomCollapsed)}
+          onHeightChange={setBottomPanelHeight}
         />
       </div>
 
@@ -96,6 +155,17 @@ function LayoutContent({ children }: { children: ReactNode }) {
           aria-label="Show flows sidebar"
         >
           <PanelRight size={16} /> Components
+        </Button>
+      )}
+
+      {/* Bottom panel toggle button - visible when panel is collapsed */}
+      {isBottomCollapsed && (
+        <Button 
+          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 bg-ramp-grey-800 text-white p-4 rounded-[20px] hover:bg-ramp-grey-700"
+          onClick={() => setIsBottomCollapsed(false)}
+          aria-label="Show bottom panel"
+        >
+          <PanelBottom size={16} /> Terminal
         </Button>
       )}
     </div>

@@ -70,7 +70,8 @@ export function useLayoutKeyboardShortcuts(
   toggleLeftSidebar?: () => void,
   fitView?: () => void,
   undo?: () => void,
-  redo?: () => void
+  redo?: () => void,
+  toggleBottomPanel?: () => void
 ) {
   const shortcuts: KeyboardShortcut[] = [
     {
@@ -123,6 +124,17 @@ export function useLayoutKeyboardShortcuts(
       metaKey: true,
       shiftKey: true,
       callback: redo,
+      preventDefault: true,
+    });
+  }
+
+  // Add bottom panel toggle shortcut if provided
+  if (toggleBottomPanel) {
+    shortcuts.push({
+      key: 'j',
+      ctrlKey: true, // This will match either Ctrl+J or Cmd+J (like VSCode)
+      metaKey: true,
+      callback: toggleBottomPanel,
       preventDefault: true,
     });
   }
