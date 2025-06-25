@@ -1,9 +1,9 @@
+import { FlowItemGroup } from '@/components/panels/left/flow-item-group';
+import { SearchBox } from '@/components/panels/search-box';
 import { Accordion } from '@/components/ui/accordion';
 import { useFlowContext } from '@/contexts/flow-context';
 import { Flow } from '@/types/flow';
 import { FolderOpen } from 'lucide-react';
-import { FlowItemGroup } from './flow-item-group';
-import { SearchBox } from './search-box';
 
 interface FlowListProps {
   flows: Flow[];

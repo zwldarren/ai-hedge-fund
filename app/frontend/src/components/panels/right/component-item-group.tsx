@@ -1,4 +1,4 @@
-import ComponentItem from '@/components/sidebar/component-item';
+import ComponentItem from '@/components/panels/right/component-item';
 import { AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useFlowContext } from '@/contexts/flow-context';
 import { ComponentGroup } from '@/data/sidebar-components';

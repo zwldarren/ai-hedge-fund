@@ -1,3 +1,6 @@
+import { BottomPanel } from '@/components/panels/bottom/bottom-panel';
+import { LeftSidebar } from '@/components/panels/left/left-sidebar';
+import { RightSidebar } from '@/components/panels/right/right-sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { FlowProvider, useFlowContext } from '@/contexts/flow-context';
 import { useLayoutKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
@@ -6,9 +9,6 @@ import { SidebarStorageService } from '@/services/sidebar-storage';
 import { ReactFlowProvider } from '@xyflow/react';
 import { PanelBottom, PanelLeft, PanelRight } from 'lucide-react';
 import { ReactNode, useEffect, useState } from 'react';
-import { BottomPanel } from './sidebar/bottom-panel';
-import { LeftSidebar } from './sidebar/left-sidebar';
-import { RightSidebar } from './sidebar/right-sidebar';
 import { Button } from './ui/button';
 
 // Create a LayoutContent component to access the FlowContext

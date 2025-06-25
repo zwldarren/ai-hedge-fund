@@ -2,8 +2,9 @@ import { useResizable } from '@/hooks/use-resizable';
 import { cn } from '@/lib/utils';
 import { AlertCircle, Bug, FileText, Terminal, X } from 'lucide-react';
 import { ReactNode, useEffect, useState } from 'react';
-import { Button } from '../ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Button } from '../../ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
+import { DebugConsoleTab, OutputTab, ProblemsTab, TerminalTab } from './tabs';
 
 interface BottomPanelProps {
   children?: ReactNode;
@@ -109,41 +110,19 @@ export function BottomPanel({
       <div className="flex-1 min-h-0 overflow-hidden">
         <Tabs value={activeTab} className="h-full">
           <TabsContent value="terminal" className="h-full m-0 p-4">
-            <div className="h-full bg-black/20 rounded-md p-3 font-mono text-sm text-green-400 overflow-auto">
-              <div className="whitespace-pre-wrap">
-                <span className="text-blue-400">$ </span>
-                <span className="text-white">Welcome to AI Hedge Fund Terminal</span>
-                {'\n'}
-                <span className="text-muted-foreground">Type commands here...</span>
-                {'\n'}
-                <span className="text-blue-400">$ </span>
-                <span className="animate-pulse">_</span>
-              </div>
-            </div>
+            <TerminalTab className="h-full" />
           </TabsContent>
           
           <TabsContent value="output" className="h-full m-0 p-4">
-            <div className="h-full bg-background/50 rounded-md p-3 text-sm overflow-auto">
-              <div className="text-muted-foreground">
-                No output to display
-              </div>
-            </div>
+            <OutputTab className="h-full" />
           </TabsContent>
           
           <TabsContent value="debug" className="h-full m-0 p-4">
-            <div className="h-full bg-background/50 rounded-md p-3 text-sm overflow-auto">
-              <div className="text-muted-foreground">
-                Debug console is ready...
-              </div>
-            </div>
+            <DebugConsoleTab className="h-full" />
           </TabsContent>
           
           <TabsContent value="problems" className="h-full m-0 p-4">
-            <div className="h-full bg-background/50 rounded-md p-3 text-sm overflow-auto">
-              <div className="text-muted-foreground">
-                No problems detected
-              </div>
-            </div>
+            <ProblemsTab className="h-full" />
           </TabsContent>
         </Tabs>
       </div>

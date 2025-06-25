@@ -1,6 +1,6 @@
 import { Accordion } from '@/components/ui/accordion';
 import { ComponentGroup } from '@/data/sidebar-components';
-import { ComponentItemGroup } from './component-item-group';
+import { ComponentItemGroup } from './right/component-item-group';
 import { SearchBox } from './search-box';
 
 interface ComponentListProps {
