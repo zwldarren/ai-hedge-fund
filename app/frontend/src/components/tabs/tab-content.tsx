@@ -50,12 +50,12 @@ export function TabContent({ className }: TabContentProps) {
           <div>
             <div className="text-xl font-medium mb-2">Welcome to AI Hedge Fund</div>
             <div className="text-sm max-w-md">
-              Click on a flow from the left sidebar to open it in a tab, or click the settings icon to configure your preferences.
+              Create a flow from the left sidebar (⌘B) to open it in a tab, or open settings (⌘,) to configure your preferences.
             </div>
           </div>
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground/70">
             <FileText size={14} />
-            <span>Flows open in tabs</span>
+            <span>Flows now open in tabs</span>
           </div>
         </div>
       </div>
