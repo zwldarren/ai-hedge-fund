@@ -11,31 +11,19 @@ interface FlowTabContentProps {
 }
 
 export function FlowTabContent({ flow, className }: FlowTabContentProps) {
-  const { loadFlow, currentFlowId } = useFlowContext();
-  const { activeTabId, openTab } = useTabsContext();
+  const { loadFlow } = useFlowContext();
+  const { activeTabId } = useTabsContext();
 
-  // Load the flow when this tab becomes active (only if it's not already loaded)
+  // Load the flow when this tab becomes active (always load to ensure consistency)
   useEffect(() => {
     const isThisTabActive = activeTabId === `flow-${flow.id}`;
-    const isFlowNotLoaded = currentFlowId !== flow.id;
     
-    if (isThisTabActive && isFlowNotLoaded) {
+    if (isThisTabActive) {
+      // Always load the flow when this tab is active to ensure proper state
+      // This handles cases where we switch from non-flow tabs (like Settings)
       loadFlow(flow);
     }
-  }, [activeTabId, flow, currentFlowId, loadFlow]);
-
-  // Update the tab title if the flow name changes
-  useEffect(() => {
-    const isThisTabActive = activeTabId === `flow-${flow.id}`;
-    if (isThisTabActive && currentFlowId === flow.id) {
-      openTab({
-        type: 'flow',
-        title: flow.name,
-        flow: flow,
-        content: <FlowTabContent flow={flow} />,
-      });
-    }
-  }, [flow.name, activeTabId, currentFlowId, flow, openTab]);
+  }, [activeTabId, flow, loadFlow]);
 
   return (
     <div className={cn("h-full w-full", className)}>
