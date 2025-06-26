@@ -92,21 +92,17 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
   // Create default flow for new users
   const createDefaultFlow = useCallback(async () => {
     try {
-      console.log('Creating default flow for new user...');
       // Get current React Flow state, fallback to empty arrays if nothing exists
       const nodes = reactFlowInstance?.getNodes() || [];
       const edges = reactFlowInstance?.getEdges() || [];
       const viewport = reactFlowInstance?.getViewport() || { x: 0, y: 0, zoom: 1 };
       
       const defaultFlow = await flowService.createDefaultFlow(nodes, edges, viewport);
-      console.log('Default flow created:', defaultFlow);
       setFlows([defaultFlow]);
       
       // Open the default flow in a tab
       const tabData = TabService.createFlowTab(defaultFlow);
       openTab(tabData);
-      
-      console.log('Default flow opened in tab');
     } catch (error) {
       console.error('Failed to create default flow:', error);
     }
@@ -116,9 +112,7 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
   const loadFlows = useCallback(async () => {
     setIsLoading(true);
     try {
-      console.log('Loading flows from API...');
       const flowsData = await flowService.getFlows();
-      console.log('Loaded flows:', flowsData);
       setFlows(flowsData);
       
       // Don't automatically create or open tabs on startup
@@ -195,33 +189,38 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
   }, [saveCurrentFlowWithStates, loadFlows, success, error]);
 
   const handleOpenFlowInTab = useCallback(async (flow: Flow) => {
-    try {
+    try {      
+      // Always fetch the full flow data including nodes, edges, and viewport
+      // This ensures we have the latest data from the backend
+      const fullFlow = await flowService.getFlow(flow.id);      
       // Check if tab is already open
       if (isTabOpen(flow.id.toString(), 'flow')) {
-        // Tab exists, just focus it
+        // Tab exists - update it with fresh data and focus it
         const tabId = `flow-${flow.id}`;
-        setActiveTab(tabId);
-        console.log('Flow tab already open, focusing:', flow.name);
+        const tabData = TabService.createFlowTab(fullFlow);
         
-        // Remember the selected flow
-        localStorage.setItem('lastSelectedFlowId', flow.id.toString());
-        return;
+        // Update the existing tab with fresh data
+        openTab({
+          id: tabId,
+          type: tabData.type,
+          title: tabData.title,
+          content: tabData.content,
+          flow: tabData.flow,
+          metadata: tabData.metadata,
+        });
+      } else {
+        // Create new tab with fresh data
+        const tabData = TabService.createFlowTab(fullFlow);
+        openTab(tabData);
       }
-
-      // Fetch the full flow data including nodes, edges, and viewport
-      const fullFlow = await flowService.getFlow(flow.id);
-      
-      // Open in a new tab
-      const tabData = TabService.createFlowTab(fullFlow);
-      openTab(tabData);
       
       // Remember the selected flow
-      localStorage.setItem('lastSelectedFlowId', flow.id.toString());
-      console.log('Flow opened in tab:', fullFlow.name);
-    } catch (error) {
-      console.error('Failed to open flow in tab:', error);
+      localStorage.setItem('lastSelectedFlowId', fullFlow.id.toString());
+    } catch (err) {
+      console.error('Failed to open flow in tab:', err);
+      error('Failed to load flow data');
     }
-  }, [isTabOpen, openTab, setActiveTab]);
+  }, [isTabOpen, openTab, error]);
 
   const handleRefresh = useCallback(async () => {
     await loadFlows();

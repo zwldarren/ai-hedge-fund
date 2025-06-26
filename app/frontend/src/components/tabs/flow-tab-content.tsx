@@ -14,13 +14,12 @@ export function FlowTabContent({ flow, className }: FlowTabContentProps) {
   const { loadFlow } = useFlowContext();
   const { activeTabId } = useTabsContext();
 
-  // Load the flow when this tab becomes active (always load to ensure consistency)
+  // Load the flow when this tab becomes active (using the flow data already in the tab)
   useEffect(() => {
     const isThisTabActive = activeTabId === `flow-${flow.id}`;
     
     if (isThisTabActive) {
-      // Always load the flow when this tab is active to ensure proper state
-      // This handles cases where we switch from non-flow tabs (like Settings)
+      // Load the flow data that's already in the tab (fresh data comes from handleOpenFlowInTab)
       loadFlow(flow);
     }
   }, [activeTabId, flow, loadFlow]);

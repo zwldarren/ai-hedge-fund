@@ -34,6 +34,8 @@ interface TabsContextType {
   isTabOpen: (identifier: string, type: TabType) => boolean;
   getTabByIdentifier: (identifier: string, type: TabType) => Tab | undefined;
   reorderTabs: (fromIndex: number, toIndex: number) => void;
+  updateTabTitle: (tabId: string, newTitle: string) => void;
+  updateFlowTabTitle: (flowId: number, newTitle: string) => void;
 }
 
 const TabsContext = createContext<TabsContextType | null>(null);
@@ -219,6 +221,34 @@ export function TabsProvider({ children }: TabsProviderProps) {
     });
   }, []);
 
+  // Update tab title
+  const updateTabTitle = useCallback((tabId: string, newTitle: string) => {
+    setTabs(prevTabs => {
+      const updatedTabs = prevTabs.map(tab =>
+        tab.id === tabId ? { ...tab, title: newTitle } : tab
+      );
+      return updatedTabs;
+    });
+  }, []);
+
+  // Update flow tab title
+  const updateFlowTabTitle = useCallback((flowId: number, newTitle: string) => {
+    setTabs(prevTabs => {
+      const updatedTabs = prevTabs.map(tab => {
+        if (tab.type === 'flow' && tab.flow?.id === flowId) {
+          return { 
+            ...tab, 
+            title: newTitle,
+            // Also update the flow object's name to keep it in sync
+            flow: tab.flow ? { ...tab.flow, name: newTitle } : tab.flow
+          };
+        }
+        return tab;
+      });
+      return updatedTabs;
+    });
+  }, []);
+
   const value = {
     tabs,
     activeTabId,
@@ -229,6 +259,8 @@ export function TabsProvider({ children }: TabsProviderProps) {
     isTabOpen,
     getTabByIdentifier,
     reorderTabs,
+    updateTabTitle,
+    updateFlowTabTitle,
   };
 
   return (

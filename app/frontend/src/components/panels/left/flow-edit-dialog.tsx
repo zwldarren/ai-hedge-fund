@@ -1,13 +1,14 @@
 import { Button } from '@/components/ui/button';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { useTabsContext } from '@/contexts/tabs-context';
 import { useToastManager } from '@/hooks/use-toast-manager';
 import { flowService } from '@/services/flow-service';
 import { Flow } from '@/types/flow';
@@ -25,6 +26,7 @@ export function FlowEditDialog({ flow, isOpen, onClose, onFlowUpdated }: FlowEdi
   const [description, setDescription] = useState(flow?.description || '');
   const [isLoading, setIsLoading] = useState(false);
   const { success, error } = useToastManager();
+  const { updateFlowTabTitle } = useTabsContext();
 
   // Update form when flow changes
   useEffect(() => {
@@ -46,6 +48,9 @@ export function FlowEditDialog({ flow, isOpen, onClose, onFlowUpdated }: FlowEdi
         name: name.trim(),
         description: description.trim() || undefined,
       });
+      
+      // Update the tab title if it's currently open
+      updateFlowTabTitle(flow.id, name.trim());
       
       success(`"${name}" updated!`);
       onFlowUpdated();
