@@ -66,7 +66,7 @@ export function TabBar({ className }: TabBarProps) {
 
   return (
     <div className={cn(
-      "flex items-center bg-panel border-b border-ramp-grey-900 overflow-x-auto",
+      "flex items-center bg-panel border-b border-ramp-grey-900 overflow-x-aut py-1",
       className
     )}>
       <div className="flex items-center min-w-0">

@@ -22,7 +22,7 @@ export function TopBar({
   onSettingsClick,
 }: TopBarProps) {
   return (
-    <div className="absolute top-0 right-0 z-40 flex items-center gap-0 p-2 bg-panel/80 backdrop-blur-sm border-l border-b border-ramp-grey-900 rounded-bl-lg">
+    <div className="absolute top-0 right-0 z-40 flex items-center gap-0 py-1 px-2 bg-panel/80">
       {/* Left Sidebar Toggle */}
       <Button
         variant="ghost"
