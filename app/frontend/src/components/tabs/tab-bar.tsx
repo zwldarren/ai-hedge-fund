@@ -12,11 +12,11 @@ interface TabBarProps {
 const getTabIcon = (type: string): ReactNode => {
   switch (type) {
     case 'flow':
-      return <FileText size={14} />;
+      return <FileText size={13} />;
     case 'settings':
-      return <Settings size={14} />;
+      return <Settings size={13} />;
     default:
-      return <Layout size={14} />;
+      return <Layout size={13} />;
   }
 };
 
@@ -66,7 +66,7 @@ export function TabBar({ className }: TabBarProps) {
 
   return (
     <div className={cn(
-      "flex items-center bg-panel border-b border-ramp-grey-900 overflow-x-aut py-1",
+      "flex items-center bg-[#1f1f1f] border-b border-[#333] overflow-x-auto",
       className
     )}>
       <div className="flex items-center min-w-0">
@@ -80,26 +80,31 @@ export function TabBar({ className }: TabBarProps) {
             onDrop={(e) => handleDrop(e, index)}
             onDragEnd={handleDragEnd}
             className={cn(
-              "group flex items-center gap-2 px-3 py-2 border-r border-ramp-grey-900 cursor-pointer transition-all min-w-0 max-w-48 select-none",
+              "group relative flex items-center gap-2 px-4 py-2.5 cursor-pointer transition-all duration-150 min-w-0 max-w-52 select-none border-r border-[#333] last:border-r-0",
+              // Active tab styling - VSCode style
               activeTabId === tab.id 
-                ? "bg-background text-foreground border-b-2 border-blue-400" 
-                : "bg-panel text-muted-foreground hover:bg-ramp-grey-700",
-              draggedIndex === index && "opacity-50 scale-95",
-              dragOverIndex === index && "bg-ramp-grey-600 transform scale-105",
+                ? "bg-[#1e1e1e] text-[#cccccc] before:absolute before:top-0 before:left-0 before:right-0 before:h-0.5 before:bg-[#007acc] before:content-['']" 
+                : "bg-[#2d2d30] text-[#969696] hover:bg-[#1e1e1e] hover:text-[#cccccc]",
+              // Drag states
+              draggedIndex === index && "opacity-60 scale-[0.98]",
+              dragOverIndex === index && "bg-[#1e1e1e] ring-1 ring-[#007acc]/30",
               "hover:cursor-grab active:cursor-grabbing"
             )}
             onClick={() => setActiveTab(tab.id)}
           >
             {/* Tab Icon */}
             <div className={cn(
-              "flex-shrink-0",
-              activeTabId === tab.id ? "text-blue-400" : "text-muted-foreground"
+              "flex-shrink-0 transition-colors duration-150",
+              activeTabId === tab.id ? "text-[#cccccc]" : "text-[#858585] group-hover:text-[#cccccc]"
             )}>
               {getTabIcon(tab.type)}
             </div>
 
             {/* Tab Title */}
-            <span className="text-sm font-medium truncate min-w-0">
+            <span className={cn(
+              "text-[13px] font-normal truncate min-w-0 transition-colors duration-150",
+              activeTabId === tab.id ? "text-[#cccccc]" : "text-[#969696] group-hover:text-[#cccccc]"
+            )}>
               {tab.title}
             </span>
 
@@ -108,8 +113,10 @@ export function TabBar({ className }: TabBarProps) {
               variant="ghost"
               size="sm"
               className={cn(
-                "h-4 w-4 p-0 flex-shrink-0 opacity-0 group-hover:opacity-100 hover:bg-ramp-grey-600 transition-opacity",
-                activeTabId === tab.id && "opacity-100"
+                "h-5 w-5 p-0 flex-shrink-0 ml-1 rounded-sm transition-all duration-150",
+                "opacity-0 group-hover:opacity-100 hover:bg-[#464647] hover:text-[#cccccc]",
+                activeTabId === tab.id && "opacity-70 hover:opacity-100",
+                "focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-[#007acc]/50"
               )}
               onClick={(e) => {
                 e.stopPropagation();
@@ -118,8 +125,12 @@ export function TabBar({ className }: TabBarProps) {
               onMouseDown={(e) => e.stopPropagation()} // Prevent drag when clicking close button
               title="Close tab"
             >
-              <X size={12} />
+              <X size={11} className="transition-transform duration-150 hover:scale-110" />
             </Button>
+
+            {/* Modified indicator dot for unsaved changes - VSCode style */}
+            {/* You can add this when you implement unsaved changes tracking */}
+            {/* <div className="absolute top-1/2 left-1 w-1.5 h-1.5 bg-[#cccccc] rounded-full transform -translate-y-1/2" /> */}
           </div>
         ))}
       </div>
