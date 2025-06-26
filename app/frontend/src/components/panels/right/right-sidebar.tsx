@@ -67,7 +67,7 @@ export function RightSidebar({
     <div 
       ref={elementRef}
       className={cn(
-        "h-full bg-panel flex flex-col relative",
+        "h-full bg-panel flex flex-col relative p-5",
         isCollapsed ? "shadow-lg" : "",
         isDragging ? "select-none" : ""
       )}

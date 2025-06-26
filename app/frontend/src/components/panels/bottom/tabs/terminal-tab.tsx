@@ -13,7 +13,7 @@ export function TerminalTab({ className }: TerminalTabProps) {
           <span className="text-muted-foreground">Type commands here...</span>
           {'\n'}
           <span className="text-blue-400">$ </span>
-          <span className="animate-pulse">_(coming soon)</span>
+          <span className="animate-pulse">_</span>
         </div>
       </div>
     </div>

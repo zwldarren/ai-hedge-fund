@@ -30,7 +30,7 @@ export function TopBar({
         onClick={onToggleLeft}
         className={cn(
           "h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-ramp-grey-700 transition-colors",
-          !isLeftCollapsed && "bg-ramp-grey-700 text-foreground"
+          !isLeftCollapsed && "text-foreground"
         )}
         aria-label="Toggle left sidebar"
         title="Toggle Left Side Bar (⌘B)"
@@ -45,7 +45,7 @@ export function TopBar({
         onClick={onToggleBottom}
         className={cn(
           "h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-ramp-grey-700 transition-colors",
-          !isBottomCollapsed && "bg-ramp-grey-700 text-foreground"
+          !isBottomCollapsed && "text-foreground"
         )}
         aria-label="Toggle bottom panel"
         title="Toggle Bottom Panel (⌘J)"
@@ -60,7 +60,7 @@ export function TopBar({
         onClick={onToggleRight}
         className={cn(
           "h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-ramp-grey-700 transition-colors",
-          !isRightCollapsed && "bg-ramp-grey-700 text-foreground"
+          !isRightCollapsed && "text-foreground"
         )}
         aria-label="Toggle right sidebar"
         title="Toggle Right Side Bar (⌘I)"

@@ -1,11 +1,8 @@
 import { useFlowContext } from '@/contexts/flow-context';
 import { useTabsContext } from '@/contexts/tabs-context';
 import {
-    clearAllNodeStates,
-    clearFlowNodeStates,
-    getNodeInternalState,
-    setNodeInternalState,
-    setCurrentFlowId as setNodeStateFlowId
+  clearFlowNodeStates,
+  getNodeInternalState
 } from '@/hooks/use-node-state';
 import { useToastManager } from '@/hooks/use-toast-manager';
 import { flowService } from '@/services/flow-service';
@@ -91,34 +88,6 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
       return null;
     }
   }, [reactFlowInstance, saveCurrentFlow]);
-
-  // Enhanced load function that restores internal node states
-  const loadFlowWithStates = useCallback(async (flow: Flow) => {
-    try {
-      // First, set the flow ID for node state isolation
-      setNodeStateFlowId(flow.id.toString());
-      
-      // Clear all existing node states
-      clearAllNodeStates();
-
-      // Load the flow using the context (this handles currentFlowId, currentFlowName, etc.)
-      await loadFlow(flow);
-
-      // Then restore internal states for each node
-      if (flow.nodes) {
-        flow.nodes.forEach((node: any) => {
-          if (node.data?.internal_state) {
-            setNodeInternalState(node.id, node.data.internal_state);
-          }
-        });
-      }
-
-      console.log('Flow loaded with internal states:', flow.name);
-    } catch (error) {
-      console.error('Failed to load flow with states:', error);
-      throw error; // Re-throw to handle in calling function
-    }
-  }, [loadFlow]);
 
   // Create default flow for new users
   const createDefaultFlow = useCallback(async () => {
