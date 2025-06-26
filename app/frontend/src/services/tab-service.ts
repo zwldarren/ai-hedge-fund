@@ -43,4 +43,26 @@ export class TabService {
       content: TabService.createTabContent({ type: 'settings', title: 'Settings' }),
     };
   }
+
+  // Restore tab content for persisted tabs (used when loading from localStorage)
+  static restoreTabContent(tabData: TabData): ReactNode {
+    return TabService.createTabContent(tabData);
+  }
+
+  // Helper method to restore a complete tab from saved data
+  static restoreTab(savedTab: TabData): TabData & { content: ReactNode } {
+    switch (savedTab.type) {
+      case 'flow':
+        if (!savedTab.flow) {
+          throw new Error('Flow tab requires flow data for restoration');
+        }
+        return TabService.createFlowTab(savedTab.flow);
+      
+      case 'settings':
+        return TabService.createSettingsTab();
+      
+      default:
+        throw new Error(`Cannot restore unsupported tab type: ${savedTab.type}`);
+    }
+  }
 } 

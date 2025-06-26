@@ -32,7 +32,7 @@ function LayoutContent({ children }: { children: ReactNode }) {
     SidebarStorageService.loadBottomPanelState(true)
   );
 
-  // Track actual sidebar widths for dynamic bottom panel positioning
+  // Track actual sidebar widths for dynamic positioning
   const [leftSidebarWidth, setLeftSidebarWidth] = useState(280);
   const [rightSidebarWidth, setRightSidebarWidth] = useState(280);
   const [bottomPanelHeight, setBottomPanelHeight] = useState(300);
@@ -48,6 +48,19 @@ function LayoutContent({ children }: { children: ReactNode }) {
     () => setIsBottomCollapsed(!isBottomCollapsed), // Cmd+J for bottom panel
   );
 
+  // Add settings keyboard shortcut (Cmd+,)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === ',') {
+        event.preventDefault();
+        handleSettingsClick();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Save sidebar states whenever they change
   useEffect(() => {
     SidebarStorageService.saveLeftSidebarState(isLeftCollapsed);
@@ -61,8 +74,8 @@ function LayoutContent({ children }: { children: ReactNode }) {
     SidebarStorageService.saveBottomPanelState(isBottomCollapsed);
   }, [isBottomCollapsed]);
 
-  // Calculate bottom panel positioning based on actual sidebar widths
-  const getBottomPanelStyle = () => {
+  // Calculate tab bar and bottom panel positioning based on actual sidebar widths
+  const getSidebarBasedStyle = () => {
     let left = 0;
     let right = 0;
     
@@ -80,12 +93,24 @@ function LayoutContent({ children }: { children: ReactNode }) {
     };
   };
 
-  // Calculate main content height when bottom panel is visible
+  // Calculate main content positioning accounting for tab bar height
   const getMainContentStyle = () => {
+    const tabBarHeight = 40; // Approximate tab bar height
+    let top = tabBarHeight;
+    let bottom = 0;
+    
     if (!isBottomCollapsed) {
-      return { height: `calc(100vh - ${bottomPanelHeight}px)` };
+      bottom = bottomPanelHeight;
     }
-    return { height: '100%' };
+    
+    return {
+      top: `${top}px`,
+      bottom: `${bottom}px`,
+      left: '0',
+      right: '0',
+      width: 'auto',
+      height: 'auto',
+    };
   };
 
   const handleSettingsClick = () => {
@@ -106,10 +131,25 @@ function LayoutContent({ children }: { children: ReactNode }) {
         onSettingsClick={handleSettingsClick}
       />
 
-      {/* Main content area with tabs */}
-      <main className="flex-1 h-full overflow-hidden w-full flex flex-col" style={getMainContentStyle()}>
+      {/* Tab Bar - positioned absolutely like bottom panel */}
+      <div 
+        className="absolute top-0 z-10 transition-all duration-200"
+        style={getSidebarBasedStyle()}
+      >
         <TabBar />
-        <TabContent />
+      </div>
+
+      {/* Main content area */}
+      <main 
+        className="absolute inset-0 overflow-hidden" 
+        style={{
+          left: !isLeftCollapsed ? `${leftSidebarWidth}px` : '0px',
+          right: !isRightCollapsed ? `${rightSidebarWidth}px` : '0px',
+          top: '40px', // Tab bar height
+          bottom: !isBottomCollapsed ? `${bottomPanelHeight}px` : '0px',
+        }}
+      >
+        <TabContent className="h-full w-full" />
       </main>
 
       {/* Floating left sidebar */}
@@ -146,7 +186,7 @@ function LayoutContent({ children }: { children: ReactNode }) {
           "absolute bottom-0 z-20 transition-transform",
           isBottomCollapsed && "transform translate-y-full opacity-0"
         )}
-        style={getBottomPanelStyle()}
+        style={getSidebarBasedStyle()}
       >
         <BottomPanel
           isCollapsed={isBottomCollapsed}

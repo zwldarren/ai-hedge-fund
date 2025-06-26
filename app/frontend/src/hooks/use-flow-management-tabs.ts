@@ -154,6 +154,7 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
       
       // Don't automatically create or open tabs on startup
       // Let users explicitly open tabs by clicking on flows
+      // Tabs will be restored from localStorage if they exist
       
     } catch (error) {
       console.error('Error loading flows:', error);

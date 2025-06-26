@@ -1,5 +1,5 @@
 import { Flow } from '@/types/flow';
-import { createContext, ReactNode, useCallback, useContext, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 
 // Define tab types
 export type TabType = 'flow' | 'settings';
@@ -15,6 +15,15 @@ export interface Tab {
   metadata?: Record<string, any>;
 }
 
+// Serializable version of Tab for localStorage (without content)
+interface SerializableTab {
+  id: string;
+  type: TabType;
+  title: string;
+  flow?: Flow;
+  metadata?: Record<string, any>;
+}
+
 interface TabsContextType {
   tabs: Tab[];
   activeTabId: string | null;
@@ -24,6 +33,7 @@ interface TabsContextType {
   closeAllTabs: () => void;
   isTabOpen: (identifier: string, type: TabType) => boolean;
   getTabByIdentifier: (identifier: string, type: TabType) => Tab | undefined;
+  reorderTabs: (fromIndex: number, toIndex: number) => void;
 }
 
 const TabsContext = createContext<TabsContextType | null>(null);
@@ -40,9 +50,14 @@ interface TabsProviderProps {
   children: ReactNode;
 }
 
+// localStorage keys
+const TABS_STORAGE_KEY = 'ai-hedge-fund-tabs';
+const ACTIVE_TAB_STORAGE_KEY = 'ai-hedge-fund-active-tab';
+
 export function TabsProvider({ children }: TabsProviderProps) {
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Generate unique tab ID
   const generateTabId = useCallback((type: TabType, identifier?: string): string => {
@@ -54,6 +69,73 @@ export function TabsProvider({ children }: TabsProviderProps) {
     }
     return `${type}-${Date.now()}`;
   }, []);
+
+  // Save tabs to localStorage
+  const saveTabsToStorage = useCallback((tabsToSave: Tab[], activeId: string | null) => {
+    try {
+      // Convert tabs to serializable format (without content)
+      const serializableTabs: SerializableTab[] = tabsToSave.map(tab => ({
+        id: tab.id,
+        type: tab.type,
+        title: tab.title,
+        flow: tab.flow,
+        metadata: tab.metadata,
+      }));
+      
+      localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(serializableTabs));
+      localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeId || '');
+    } catch (error) {
+      console.error('Failed to save tabs to localStorage:', error);
+    }
+  }, []);
+
+  // Load tabs from localStorage
+  const loadTabsFromStorage = useCallback((): { tabs: SerializableTab[], activeTabId: string | null } => {
+    try {
+      const savedTabs = localStorage.getItem(TABS_STORAGE_KEY);
+      const savedActiveTabId = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY);
+      
+      if (savedTabs) {
+        const parsedTabs: SerializableTab[] = JSON.parse(savedTabs);
+        return {
+          tabs: parsedTabs,
+          activeTabId: savedActiveTabId || null,
+        };
+      }
+    } catch (error) {
+      console.error('Failed to load tabs from localStorage:', error);
+    }
+    
+    return { tabs: [], activeTabId: null };
+  }, []);
+
+  // Initialize tabs from localStorage on mount
+  useEffect(() => {
+    if (!isInitialized) {
+      const { tabs: savedTabs, activeTabId: savedActiveTabId } = loadTabsFromStorage();
+      
+      if (savedTabs.length > 0) {
+        // We'll restore the content later when the tab service is available
+        // For now, just set up the tab structure
+        const restoredTabs: Tab[] = savedTabs.map(savedTab => ({
+          ...savedTab,
+          content: null, // Will be filled in by TabService when tabs are accessed
+        }));
+        
+        setTabs(restoredTabs);
+        setActiveTabId(savedActiveTabId);
+      }
+      
+      setIsInitialized(true);
+    }
+  }, [isInitialized, loadTabsFromStorage]);
+
+  // Save tabs to localStorage whenever they change
+  useEffect(() => {
+    if (isInitialized) {
+      saveTabsToStorage(tabs, activeTabId);
+    }
+  }, [tabs, activeTabId, isInitialized, saveTabsToStorage]);
 
   // Check if a tab is already open
   const isTabOpen = useCallback((identifier: string, type: TabType): boolean => {
@@ -127,6 +209,16 @@ export function TabsProvider({ children }: TabsProviderProps) {
     setActiveTabId(null);
   }, []);
 
+  // Reorder tabs
+  const reorderTabs = useCallback((fromIndex: number, toIndex: number) => {
+    setTabs(prevTabs => {
+      const newTabs = [...prevTabs];
+      const [movedTab] = newTabs.splice(fromIndex, 1);
+      newTabs.splice(toIndex, 0, movedTab);
+      return newTabs;
+    });
+  }, []);
+
   const value = {
     tabs,
     activeTabId,
@@ -136,6 +228,7 @@ export function TabsProvider({ children }: TabsProviderProps) {
     closeAllTabs,
     isTabOpen,
     getTabByIdentifier,
+    reorderTabs,
   };
 
   return (
