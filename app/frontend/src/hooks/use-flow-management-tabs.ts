@@ -42,8 +42,8 @@ export interface UseFlowManagementTabsReturn {
 
 export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
   // Get flow context, tabs context, and toast manager
-  const { saveCurrentFlow, loadFlow, reactFlowInstance } = useFlowContext();
-  const { openTab, isTabOpen, closeTab, setActiveTab } = useTabsContext();
+  const { saveCurrentFlow, reactFlowInstance } = useFlowContext();
+  const { openTab, isTabOpen, closeTab } = useTabsContext();
   const { success, error } = useToastManager();
   
   // State for flows
