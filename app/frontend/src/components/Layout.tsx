@@ -1,18 +1,23 @@
 import { BottomPanel } from '@/components/panels/bottom/bottom-panel';
 import { LeftSidebar } from '@/components/panels/left/left-sidebar';
 import { RightSidebar } from '@/components/panels/right/right-sidebar';
+import { TabBar } from '@/components/tabs/tab-bar';
+import { TabContent } from '@/components/tabs/tab-content';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { FlowProvider, useFlowContext } from '@/contexts/flow-context';
+import { TabsProvider, useTabsContext } from '@/contexts/tabs-context';
 import { useLayoutKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { cn } from '@/lib/utils';
 import { SidebarStorageService } from '@/services/sidebar-storage';
+import { TabService } from '@/services/tab-service';
 import { ReactFlowProvider } from '@xyflow/react';
 import { ReactNode, useEffect, useState } from 'react';
 import { TopBar } from './layout/top-bar';
 
-// Create a LayoutContent component to access the FlowContext
+// Create a LayoutContent component to access the FlowContext and TabsContext
 function LayoutContent({ children }: { children: ReactNode }) {
   const { reactFlowInstance } = useFlowContext();
+  const { openTab } = useTabsContext();
   
   // Initialize sidebar states from storage service
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(() => 
@@ -84,8 +89,8 @@ function LayoutContent({ children }: { children: ReactNode }) {
   };
 
   const handleSettingsClick = () => {
-    // TODO: Open settings dialog/modal
-    console.log('Settings clicked');
+    const tabData = TabService.createSettingsTab();
+    openTab(tabData);
   };
 
   return (
@@ -101,9 +106,10 @@ function LayoutContent({ children }: { children: ReactNode }) {
         onSettingsClick={handleSettingsClick}
       />
 
-      {/* Main content area takes full width but adjusts height for bottom panel */}
-      <main className="flex-1 h-full overflow-hidden w-full" style={getMainContentStyle()}>
-        {children}
+      {/* Main content area with tabs */}
+      <main className="flex-1 h-full overflow-hidden w-full flex flex-col" style={getMainContentStyle()}>
+        <TabBar />
+        <TabContent />
       </main>
 
       {/* Floating left sidebar */}
@@ -155,7 +161,7 @@ function LayoutContent({ children }: { children: ReactNode }) {
 }
 
 type LayoutProps = {
-  children: ReactNode;
+  children?: ReactNode;
 };
 
 export function Layout({ children }: LayoutProps) {
@@ -163,7 +169,9 @@ export function Layout({ children }: LayoutProps) {
     <SidebarProvider defaultOpen={true}>
       <ReactFlowProvider>
         <FlowProvider>
-          <LayoutContent>{children}</LayoutContent>
+          <TabsProvider>
+            <LayoutContent>{children}</LayoutContent>
+          </TabsProvider>
         </FlowProvider>
       </ReactFlowProvider>
     </SidebarProvider>

@@ -1,4 +1,4 @@
-import { useFlowManagement } from '@/hooks/use-flow-management';
+import { useFlowManagementTabs } from '@/hooks/use-flow-management-tabs';
 import { useResizable } from '@/hooks/use-resizable';
 import { cn } from '@/lib/utils';
 import { ReactNode, useEffect } from 'react';
@@ -33,7 +33,7 @@ export function LeftSidebar({
     onWidthChange?.(width);
   }, [width, onWidthChange]);
   
-  // Use flow management hook
+  // Use flow management hook with tabs
   const {
     flows,
     searchQuery,
@@ -49,10 +49,10 @@ export function LeftSidebar({
     handleCreateNewFlow,
     handleFlowCreated,
     handleSaveCurrentFlow,
-    handleLoadFlow,
+    handleOpenFlowInTab,
     handleDeleteFlow,
     handleRefresh,
-  } = useFlowManagement();
+  } = useFlowManagementTabs();
 
   return (
     <div 
@@ -83,7 +83,7 @@ export function LeftSidebar({
         templateFlows={templateFlows}
         onSearchChange={setSearchQuery}
         onAccordionChange={handleAccordionChange}
-        onLoadFlow={handleLoadFlow}
+        onLoadFlow={handleOpenFlowInTab}
         onDeleteFlow={handleDeleteFlow}
         onRefresh={handleRefresh}
       />
