@@ -2,6 +2,7 @@ import { FlowItemGroup } from '@/components/panels/left/flow-item-group';
 import { SearchBox } from '@/components/panels/search-box';
 import { Accordion } from '@/components/ui/accordion';
 import { useFlowContext } from '@/contexts/flow-context';
+import { useTabsContext } from '@/contexts/tabs-context';
 import { Flow } from '@/types/flow';
 import { FolderOpen } from 'lucide-react';
 
@@ -35,6 +36,22 @@ export function FlowList({
   onRefresh,
 }: FlowListProps) {
   const { currentFlowId } = useFlowContext();
+  const { tabs, activeTabId } = useTabsContext();
+
+  // Only consider a flow active if the current active tab is a flow tab with that flow's ID
+  const getActiveFlowId = (): number | null => {
+    const activeTab = tabs.find(tab => tab.id === activeTabId);
+    
+    // If no active tab or active tab is not a flow tab, no flow should be active
+    if (!activeTab || activeTab.type !== 'flow') {
+      return null;
+    }
+    
+    // Return the flow ID from the active flow tab
+    return activeTab.flow?.id || null;
+  };
+
+  const activeFlowId = getActiveFlowId();
 
   return (
     <div className="flex-grow overflow-auto text-white scrollbar-thin scrollbar-thumb-ramp-grey-700">
@@ -63,7 +80,7 @@ export function FlowList({
               onLoadFlow={onLoadFlow}
               onDeleteFlow={onDeleteFlow}
               onRefresh={onRefresh}
-              currentFlowId={currentFlowId}
+              currentFlowId={activeFlowId}
             />
           )}
           
@@ -75,7 +92,7 @@ export function FlowList({
               onLoadFlow={onLoadFlow}
               onDeleteFlow={onDeleteFlow}
               onRefresh={onRefresh}
-              currentFlowId={currentFlowId}
+              currentFlowId={activeFlowId}
             />
           )}
         </Accordion>
