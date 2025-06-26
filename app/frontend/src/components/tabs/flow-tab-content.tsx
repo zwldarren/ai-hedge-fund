@@ -2,6 +2,7 @@ import { Flow } from '@/components/flow';
 import { useFlowContext } from '@/contexts/flow-context';
 import { useTabsContext } from '@/contexts/tabs-context';
 import { cn } from '@/lib/utils';
+import { flowService } from '@/services/flow-service';
 import { Flow as FlowType } from '@/types/flow';
 import { useEffect } from 'react';
 
@@ -14,15 +15,27 @@ export function FlowTabContent({ flow, className }: FlowTabContentProps) {
   const { loadFlow } = useFlowContext();
   const { activeTabId } = useTabsContext();
 
-  // Load the flow when this tab becomes active (using the flow data already in the tab)
+  // Fetch the latest flow state when this tab becomes active
   useEffect(() => {
     const isThisTabActive = activeTabId === `flow-${flow.id}`;
     
     if (isThisTabActive) {
-      // Load the flow data that's already in the tab (fresh data comes from handleOpenFlowInTab)
-      loadFlow(flow);
+      const fetchAndLoadFlow = async () => {
+        try {
+          // Fetch the latest flow data from the backend
+          const latestFlow = await flowService.getFlow(flow.id);
+          // Load the fresh flow data
+          await loadFlow(latestFlow);
+        } catch (error) {
+          console.error('Failed to fetch latest flow state:', error);
+          // Fallback to loading the cached flow data
+          await loadFlow(flow);
+        }
+      };
+
+      fetchAndLoadFlow();
     }
-  }, [activeTabId, flow, loadFlow]);
+  }, [activeTabId, flow.id, flow, loadFlow]);
 
   return (
     <div className={cn("h-full w-full", className)}>
