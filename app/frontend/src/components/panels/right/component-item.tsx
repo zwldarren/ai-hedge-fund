@@ -28,7 +28,7 @@ export default function ComponentItem({
   return (
     <div 
       className={cn(
-        "group flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-sm transition-colors duration-150",
+        "group flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-subtitle transition-colors duration-150",
         isActive ? "bg-ramp-grey-700 text-white" : "text-gray-300",
         isHovered ? "bg-ramp-grey-700" : "",
         className

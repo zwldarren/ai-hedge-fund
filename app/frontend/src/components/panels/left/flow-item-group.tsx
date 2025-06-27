@@ -19,7 +19,7 @@ export function FlowItemGroup({ title, flows, onLoadFlow, onDeleteFlow, onRefres
     <AccordionItem value={groupId} className="border-ramp-grey-700">
       <AccordionTrigger className="px-4 py-2 text-white hover:bg-ramp-grey-700 hover:no-underline">
         <div className="flex items-center justify-between w-full">
-          <span className="text-sm font-medium">{title}</span>
+          <span className="text-xs font-medium">{title}</span>
           <span className="text-xs text-gray-400">({flows.length})</span>
         </div>
       </AccordionTrigger>

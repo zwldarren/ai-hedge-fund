@@ -120,7 +120,7 @@ export default function FlowItem({ flow, onLoadFlow, onDeleteFlow, onRefresh, is
               )}
               <span
                 className={cn(
-                  "text-sm font-medium text-left truncate",
+                  "text-subtitle font-medium text-left truncate",
                   isActive 
                     ? "text-blue-300" 
                     : "text-white"
