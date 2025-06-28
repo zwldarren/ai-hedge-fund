@@ -73,7 +73,7 @@ Create a `.env` file for your API keys:
 cp .env.example .env
 ```
 
-Edit the `.env` file to add your API keys:
+Open and edit the `.env` file to add your API keys:
 ```bash
 # For running LLMs hosted by openai (gpt-4o, gpt-4o-mini, etc.)
 OPENAI_API_KEY=your-openai-api-key
