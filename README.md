@@ -26,8 +26,8 @@ This system employs several agents working together:
 
 As of June 2025, there are **two ways** to run the AI Hedge Fund:
 
-1. **🖥️ Full-Stack Web Application** - User-friendly web interface (recommended for most users)
-2. **⌨️ Command Line Interface** - Terminal-based approach for developers and advanced users
+1. **⌨️ Command Line Interface** - Terminal-based approach
+2. **🖥️ Web Application (NEW)** - User-friendly web interface
 
 **Note**: the system simulates trading decisions, it does not actually trade.
 
@@ -46,15 +46,15 @@ This project is for **educational and research purposes only**.
 By using this software, you agree to use it solely for learning purposes.
 
 ## Table of Contents
-- [How to Install the AI Hedge Fund](#how-to-install-the-ai-hedge-fund)
-- [How to Run the AI Hedge Fund](#how-to-run-the-ai-hedge-fund)
-  - [🖥️ Web Application (Recommended)](#️-web-application-recommended)
-  - [⌨️ Command Line Interface (Advanced)](#️-command-line-interface-advanced)
+- [How to Install](#how-to-install)
+- [How to Run](#how-to-run)
+  - [⌨️ Command Line Interface](#️-command-line-interface)
+  - [🖥️ Web Application (NEW!)](#️-web-application)
 - [Contributing](#contributing)
 - [Feature Requests](#feature-requests)
 - [License](#license)
 
-## How to Install the AI Hedge Fund
+## How to Install
 
 Before you can run the AI Hedge Fund, you'll need to install it and set up your API keys. These steps are common to both the full-stack web application and command line interface.
 
@@ -89,59 +89,11 @@ FINANCIAL_DATASETS_API_KEY=your-financial-datasets-api-key
 
 **Financial Data**: Data for AAPL, GOOGL, MSFT, NVDA, and TSLA is free and does not require an API key. For any other ticker, you will need to set the `FINANCIAL_DATASETS_API_KEY` in the .env file.
 
-## How to Run the AI Hedge Fund
+## How to Run
 
-### 🖥️ Web Application (Recommended)
+### ⌨️ Command Line Interface
 
-The easiest way to run the AI Hedge Fund is through our web application that provides a user-friendly interface. **This is recommended for most users, especially those who prefer visual interfaces over command line tools.**
-
-<img width="1721" alt="Screenshot 2025-06-28 at 6 41 03 PM" src="https://github.com/user-attachments/assets/b95ab696-c9f4-416c-9ad1-51feb1f5374b" />
-
-#### 🚀 Quick Start
-
-**One-line setup and run command:**
-
-#### For Mac/Linux:
-```bash
-cd app && ./run.sh
-```
-
-If you get a "permission denied" error, run this first:
-```bash
-cd app && chmod +x run.sh && ./run.sh
-```
-
-#### For Windows:
-```cmd
-cd app && run.bat
-```
-
-**That's it!** These scripts will:
-1. Check for required dependencies (Node.js, Python, Poetry)
-2. Install all dependencies automatically  
-3. Start both frontend and backend services
-4. **Automatically open your web browser** to the application
-
-**Requirements:**
-- [Node.js](https://nodejs.org/) (includes npm)
-- [Python 3](https://python.org/)
-- [Poetry](https://python-poetry.org/)
-
-**After running, you can access:**
-- Frontend (Web Interface): http://localhost:5173
-- Backend API: http://localhost:8000
-- API Documentation: http://localhost:8000/docs
-
-#### Detailed Setup Instructions
-
-For detailed setup instructions, troubleshooting, and advanced configuration options, see:
-- [Full-Stack App Documentation](./app/README.md)
-- [Frontend Documentation](./app/frontend/README.md)  
-- [Backend Documentation](./app/backend/README.md)
-
-### ⌨️ Command Line Interface (Advanced)
-
-For developers and advanced users who prefer working with command line tools, you can run the AI Hedge Fund directly via terminal. This approach offers more granular control and is useful for automation, scripting, and integration purposes.
+For users who prefer working with command line tools, you can run the AI Hedge Fund directly via terminal. This approach offers more granular control and is useful for automation, scripting, and integration purposes.
 
 <img width="992" alt="Screenshot 2025-01-06 at 5 50 17 PM" src="https://github.com/user-attachments/assets/e8ca04bf-9989-4a7d-a8b4-34e04666663b" />
 
@@ -283,6 +235,46 @@ poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA --ollama
 # On Windows:
 run.bat --ticker AAPL,MSFT,NVDA --ollama backtest
 ```
+
+### 🖥️ Web Application
+
+The new way to run the AI Hedge Fund is through our web application that provides a user-friendly interface. **This is recommended for most users, especially those who prefer visual interfaces over command line tools.**
+
+<img width="1721" alt="Screenshot 2025-06-28 at 6 41 03 PM" src="https://github.com/user-attachments/assets/b95ab696-c9f4-416c-9ad1-51feb1f5374b" />
+
+#### For Mac/Linux:
+```bash
+cd app && ./run.sh
+```
+
+If you get a "permission denied" error, run this first:
+```bash
+cd app && chmod +x run.sh && ./run.sh
+```
+
+#### For Windows:
+```bash
+# Go to /app directory
+cd app
+
+# Run the app
+\.run.bat
+```
+
+**That's it!** These scripts will:
+1. Check for required dependencies (Node.js, Python, Poetry)
+2. Install all dependencies automatically  
+3. Start both frontend and backend services
+4. **Automatically open your web browser** to the application
+
+
+#### Detailed Setup Instructions
+
+For detailed setup instructions, troubleshooting, and advanced configuration options, see:
+- [Full-Stack App Documentation](./app/README.md)
+- [Frontend Documentation](./app/frontend/README.md)  
+- [Backend Documentation](./app/backend/README.md)
+
 
 ## Contributing
 
