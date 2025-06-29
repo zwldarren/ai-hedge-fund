@@ -27,7 +27,7 @@ This system employs several agents working together:
 As of June 2025, there are **two ways** to run the AI Hedge Fund:
 
 1. **⌨️ Command Line Interface** - Terminal-based approach
-2. **🖥️ Web Application (NEW)** - User-friendly web interface
+2. **🖥️ Web Application (NEW!)** - User-friendly web interface
 
 **Note**: the system simulates trading decisions, it does not actually trade.
 
