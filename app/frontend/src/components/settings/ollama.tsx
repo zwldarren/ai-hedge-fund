@@ -605,7 +605,7 @@ export function OllamaSettings() {
           <Button
             onClick={startOllamaServer}
             disabled={actionLoading === 'start-server'}
-            className="flex items-center gap-2 bg-green-600/20 border-green-600/40 text-white hover:bg-green-600/30 hover:border-green-600/60 hover:text-white"
+            className="flex items-center gap-2 bg-green-600/20 border-green-600/40 text-primary hover:bg-green-600/30 hover:border-green-600/60 hover:text-primary"
           >
             <Play className="h-4 w-4" />
             {actionLoading === 'start-server' ? 'Starting...' : 'Start Server'}
@@ -630,7 +630,7 @@ export function OllamaSettings() {
             variant="outline"
             onClick={stopOllamaServer}
             disabled={actionLoading === 'stop-server'}
-            className="flex items-center gap-2 border-red-600/40 bg-red-600/10 text-white hover:bg-red-600/20 hover:border-red-600/60 hover:text-white"
+            className="flex items-center gap-2 border-red-600/40 bg-red-600/10 text-primary hover:bg-red-600/20 hover:border-red-600/60 hover:text-primary"
           >
             <Square className="h-4 w-4" />
             {actionLoading === 'stop-server' ? 'Stopping...' : 'Disconnect'}
@@ -755,7 +755,7 @@ export function OllamaSettings() {
                         variant="outline"
                         size="sm"
                         onClick={() => downloadModelWithProgress(model.model_name)}
-                        className="flex items-center gap-2 h-7 bg-blue-600/20 border-blue-600/40 text-white hover:bg-blue-600/30 hover:border-blue-600/60 hover:text-white"
+                        className="flex items-center gap-2 h-7 bg-blue-600/20 border-blue-600/40 text-primary hover:bg-blue-600/30 hover:border-blue-600/60 hover:text-primary"
                       >
                         <Download className="h-3 w-3" />
                         Download
