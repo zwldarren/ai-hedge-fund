@@ -657,7 +657,7 @@ export function OllamaSettings() {
                   </span>
                   <Badge className={cn(
                     "text-xs border",
-                    progress.status === 'downloading' && "bg-blue-600/30 text-blue-300 border-blue-600/40",
+                    progress.status === 'downloading' && "bg-blue-600/30 text-primary border-blue-600/40",
                     progress.status === 'completed' && "bg-green-600/30 text-green-300 border-green-600/40",
                     progress.status === 'error' && "bg-red-600/30 text-red-300 border-red-600/40",
                     progress.status === 'cancelled' && "bg-gray-600/30 text-gray-300 border-gray-600/40"
