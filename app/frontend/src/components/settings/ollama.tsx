@@ -630,7 +630,7 @@ export function OllamaSettings() {
             variant="outline"
             onClick={stopOllamaServer}
             disabled={actionLoading === 'stop-server'}
-            className="flex items-center gap-2 border-red-600/40 bg-red-600/10 text-primary hover:bg-red-600/20 hover:border-red-600/60 hover:text-primary"
+            className="flex items-center gap-2 border-gray-600/40 bg-gray-600/10 text-gray-300 hover:bg-gray-600/20 hover:border-gray-600/60 hover:text-gray-200"
           >
             <Square className="h-4 w-4" />
             {actionLoading === 'stop-server' ? 'Stopping...' : 'Disconnect'}
