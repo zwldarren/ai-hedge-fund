@@ -26,7 +26,7 @@ class HedgeFundRequest(BaseModel):
     agent_models: Optional[List[AgentModelConfig]] = None
     end_date: Optional[str] = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
     start_date: Optional[str] = None
-    model_name: str = "gpt-4o"
+    model_name: str = "gpt-4.1"
     model_provider: ModelProvider = ModelProvider.OPENAI
     initial_cash: float = 100000.0
     margin_requirement: float = 0.0
