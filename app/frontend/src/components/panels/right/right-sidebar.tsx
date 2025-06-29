@@ -67,13 +67,12 @@ export function RightSidebar({
     <div 
       ref={elementRef}
       className={cn(
-        "h-full bg-panel flex flex-col relative p-5",
+        "h-full bg-panel flex flex-col relative p-5 border-l border-gray-700 dark:border-gray-800",
         isCollapsed ? "shadow-lg" : "",
-        isDragging ? "select-none" : ""
+        isDragging ? "select-none border-l-0" : ""
       )}
       style={{ 
-        width: `${width}px`,
-        borderLeft: isDragging ? 'none' : '1px solid var(--ramp-grey-900)' 
+        width: `${width}px`
       }}
     >
       <ComponentActions onToggleCollapse={onToggleCollapse} />
