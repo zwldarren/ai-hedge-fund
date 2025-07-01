@@ -3,7 +3,6 @@ import os
 import sys
 import platform
 import subprocess
-import requests
 import time
 import re
 import json
@@ -13,13 +12,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, AsyncGenerator
 import logging
 import signal
+import ollama
 
 logger = logging.getLogger(__name__)
-
-# Ollama server configuration
-OLLAMA_SERVER_URL = "http://localhost:11434"
-OLLAMA_API_MODELS_ENDPOINT = f"{OLLAMA_SERVER_URL}/api/tags"
-OLLAMA_API_VERSION_ENDPOINT = f"{OLLAMA_SERVER_URL}/api/version"
 
 class OllamaService:
     """Service for managing Ollama integration in the backend."""
@@ -27,370 +22,436 @@ class OllamaService:
     def __init__(self):
         self._status_cache = {}
         self._last_check = 0
-        self._cache_duration = 10  # Reduce cache duration to 10 seconds for better responsiveness
-        self._download_progress = {}  # Track download progress for models
-        self._download_processes = {}  # Track active download processes for cancellation
+        self._cache_duration = 10
+        self._download_progress = {}
+        self._download_processes = {}
+        
+        # Initialize async client
+        self._async_client = ollama.AsyncClient()
+        self._sync_client = ollama.Client()
+    
+    # =============================================================================
+    # PUBLIC API METHODS
+    # =============================================================================
+    
+    async def check_ollama_status(self) -> Dict[str, any]:
+        """Check Ollama installation and server status."""
+        if self._should_use_cached_status():
+            return self._status_cache
+        
+        try:
+            is_installed = await self._check_installation()
+            is_running = await self._check_server_running()
+            models, server_url = await self._get_server_info(is_running)
+            
+            status = {
+                "installed": is_installed,
+                "running": is_running,
+                "server_running": is_running,  # Backward compatibility
+                "available_models": models,
+                "server_url": server_url,
+                "error": None
+            }
+            
+            self._update_status_cache(status)
+            logger.debug(f"Ollama status: installed={is_installed}, running={is_running}, models={len(models)}")
+            return status
+            
+        except Exception as e:
+            logger.error(f"Error checking Ollama status: {e}")
+            error_status = self._create_error_status(str(e))
+            self._update_status_cache(error_status)
+            return error_status
+    
+    async def start_server(self) -> Dict[str, any]:
+        """Start the Ollama server."""
+        try:
+            success = await self._execute_server_start()
+            self._clear_status_cache()
+            
+            message = "Ollama server started successfully" if success else "Failed to start Ollama server"
+            return {"success": success, "message": message}
+                
+        except Exception as e:
+            logger.error(f"Error starting Ollama server: {e}")
+            return {"success": False, "message": f"Error starting server: {str(e)}"}
+    
+    async def stop_server(self) -> Dict[str, any]:
+        """Stop the Ollama server."""
+        try:
+            success = await self._execute_server_stop()
+            self._clear_status_cache()
+            
+            message = "Ollama server stopped successfully" if success else "Failed to stop Ollama server"
+            return {"success": success, "message": message}
+                
+        except Exception as e:
+            logger.error(f"Error stopping Ollama server: {e}")
+            return {"success": False, "message": f"Error stopping server: {str(e)}"}
+    
+    async def download_model(self, model_name: str) -> Dict[str, any]:
+        """Download an Ollama model."""
+        try:
+            self._clear_status_cache()
+            success = await self._execute_model_download(model_name)
+            self._clear_status_cache()
+            
+            message = f"Model {model_name} downloaded successfully" if success else f"Failed to download model {model_name}"
+            return {"success": success, "message": message}
+                
+        except Exception as e:
+            logger.error(f"Error downloading model {model_name}: {e}")
+            return {"success": False, "message": f"Error downloading model: {str(e)}"}
+    
+    async def download_model_with_progress(self, model_name: str) -> AsyncGenerator[str, None]:
+        """Download an Ollama model with progress streaming."""
+        async for progress_data in self._stream_model_download(model_name):
+            yield progress_data
+    
+    async def delete_model(self, model_name: str) -> Dict[str, any]:
+        """Delete an Ollama model."""
+        try:
+            self._clear_status_cache()
+            success = await self._execute_model_deletion(model_name)
+            self._clear_status_cache()
+            
+            message = f"Model {model_name} deleted successfully" if success else f"Failed to delete model {model_name}"
+            return {"success": success, "message": message}
+                
+        except Exception as e:
+            logger.error(f"Error deleting model {model_name}: {e}")
+            return {"success": False, "message": f"Error deleting model: {str(e)}"}
+    
+    async def get_recommended_models(self) -> List[Dict[str, str]]:
+        """Get list of recommended Ollama models."""
+        try:
+            models_path = self._get_ollama_models_path()
+            
+            if models_path.exists():
+                return self._load_models_from_file(models_path)
+            else:
+                return self._get_fallback_models()
+                
+        except Exception as e:
+            logger.error(f"Error loading recommended models: {e}")
+            return []
+    
+    async def get_available_models(self) -> List[Dict[str, str]]:
+        """Get available Ollama models formatted for the language models API.
+        
+        Returns only models that are:
+        1. Server is running
+        2. Model is downloaded locally  
+        3. Model is in our recommended list (OLLAMA_MODELS)
+        """
+        try:
+            status = await self.check_ollama_status()
+            
+            if not status.get("server_running", False):
+                logger.debug("Ollama server not running, returning no models for API")
+                return []
+            
+            downloaded_models = status.get("available_models", [])
+            if not downloaded_models:
+                logger.debug("No Ollama models downloaded, returning empty list for API")
+                return []
+            
+            api_models = self._format_models_for_api(downloaded_models)
+            logger.debug(f"Returning {len(api_models)} Ollama models for language models API")
+            return api_models
+            
+        except Exception as e:
+            logger.error(f"Error getting available models for API: {e}")
+            return []  # Return empty list on error to not break the API
+    
+    def get_download_progress(self, model_name: str) -> Optional[Dict[str, any]]:
+        """Get current download progress for a model."""
+        return self._download_progress.get(model_name)
+    
+    def get_all_download_progress(self) -> Dict[str, Dict[str, any]]:
+        """Get current download progress for all models."""
+        return self._download_progress.copy()
+    
+    def cancel_download(self, model_name: str) -> bool:
+        """Cancel an active download."""
+        logger.warning(f"Download cancellation not directly supported by ollama client for model: {model_name}")
+        
+        if model_name in self._download_progress:
+            self._download_progress[model_name] = {
+                "status": "cancelled",
+                "message": f"Download of {model_name} was cancelled",
+                "error": "Download cancelled by user"
+            }
+            return True
+        
+        return False
+    
+    # =============================================================================
+    # PRIVATE HELPER METHODS
+    # =============================================================================
+    
+    def _should_use_cached_status(self) -> bool:
+        """Check if we should use cached status."""
+        current_time = time.time()
+        return (current_time - self._last_check) < self._cache_duration and self._status_cache
+    
+    def _update_status_cache(self, status: Dict[str, any]) -> None:
+        """Update the status cache."""
+        self._status_cache = status
+        self._last_check = time.time()
+    
+    def _clear_status_cache(self) -> None:
+        """Clear the status cache to force fresh check."""
+        self._status_cache = {}
+        self._last_check = 0
+    
+    def _create_error_status(self, error: str) -> Dict[str, any]:
+        """Create error status response."""
+        return {
+            "installed": False,
+            "running": False,
+            "server_running": False,
+            "available_models": [],
+            "server_url": "",
+            "error": error
+        }
+    
+    async def _check_installation(self) -> bool:
+        """Check if Ollama CLI is installed."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self._is_ollama_installed)
     
     def _is_ollama_installed(self) -> bool:
         """Check if Ollama is installed on the system."""
         system = platform.system().lower()
-        
-        if system == "darwin" or system == "linux":  # macOS or Linux
-            try:
-                result = subprocess.run(["which", "ollama"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                return result.returncode == 0
-            except Exception:
-                return False
-        elif system == "windows":  # Windows
-            try:
-                result = subprocess.run(["where", "ollama"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True)
-                return result.returncode == 0
-            except Exception:
-                return False
-        else:
-            return False  # Unsupported OS
-    
-    def _is_ollama_server_running(self) -> bool:
-        """Check if the Ollama server is running using multiple endpoints."""
-        # Try multiple endpoints to ensure server is actually ready
-        endpoints_to_try = [
-            OLLAMA_API_VERSION_ENDPOINT,  # Try version endpoint first
-            OLLAMA_SERVER_URL,            # Try root endpoint
-            OLLAMA_API_MODELS_ENDPOINT    # Try models endpoint as fallback
-        ]
-        
-        for endpoint in endpoints_to_try:
-            try:
-                response = requests.get(endpoint, timeout=3)
-                if response.status_code == 200:
-                    logger.debug(f"Ollama server confirmed running via {endpoint}")
-                    return True
-            except requests.RequestException as e:
-                logger.debug(f"Failed to connect to {endpoint}: {e}")
-                continue
-        
-        logger.debug("Ollama server not reachable on any endpoint")
-        return False
-    
-    def _get_locally_available_models(self) -> List[str]:
-        """Get a list of models that are already downloaded locally."""
-        if not self._is_ollama_server_running():
-            return []
+        command = ["which", "ollama"] if system in ["darwin", "linux"] else ["where", "ollama"]
+        shell = system == "windows"
         
         try:
-            response = requests.get(OLLAMA_API_MODELS_ENDPOINT, timeout=10)
-            if response.status_code == 200:
-                data = response.json()
-                return [model["name"] for model in data["models"]] if "models" in data else []
-            return []
-        except requests.RequestException as e:
-            logger.debug(f"Failed to get models: {e}")
-            return []
+            result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=shell)
+            return result.returncode == 0
+        except Exception:
+            return False
     
-    def _start_ollama_server(self) -> bool:
-        """Start the Ollama server if it's not already running."""
-        if self._is_ollama_server_running():
+    async def _check_server_running(self) -> bool:
+        """Check if the Ollama server is running using the ollama client."""
+        try:
+            await self._async_client.list()
+            logger.debug("Ollama server confirmed running via client")
             return True
+        except Exception as e:
+            logger.debug(f"Ollama server not reachable: {e}")
+            return False
+    
+    async def _get_server_info(self, is_running: bool) -> tuple[List[str], str]:
+        """Get server information (models and URL) if server is running."""
+        if not is_running:
+            return [], ""
         
+        try:
+            response = await self._async_client.list()
+            models = [model.model for model in response.models]
+            server_url = getattr(self._async_client, 'host', 'http://localhost:11434')
+            logger.debug(f"Found {len(models)} locally available models")
+            return models, server_url
+        except Exception as e:
+            logger.debug(f"Failed to get server info: {e}")
+            return [], ""
+    
+    async def _execute_server_start(self) -> bool:
+        """Execute server start operation."""
+        # Check if already running
+        try:
+            self._sync_client.list()
+            logger.info("Ollama server is already running")
+            return True
+        except Exception:
+            pass  # Server not running, continue to start it
+        
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self._start_ollama_process)
+    
+    def _start_ollama_process(self) -> bool:
+        """Start the Ollama server process."""
         system = platform.system().lower()
         
         try:
-            if system == "darwin" or system == "linux":  # macOS or Linux
-                subprocess.Popen(["ollama", "serve"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            elif system == "windows":  # Windows
-                subprocess.Popen(["ollama", "serve"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            else:
-                return False
+            command = ["ollama", "serve"]
+            shell = system == "windows"
+            subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell)
             
-            # Wait for server to start with increased timeout and better checking
-            logger.info("Starting Ollama server, waiting for it to become ready...")
-            for i in range(20):  # Try for 20 seconds
-                time.sleep(1)  # Wait a bit before each check
-                if self._is_ollama_server_running():
-                    logger.info(f"Ollama server started successfully after {i+1} seconds")
-                    return True
-                logger.debug(f"Waiting for Ollama server... ({i+1}/20)")
+            return self._wait_for_server_start()
             
-            logger.error("Ollama server failed to start within 20 seconds")
-            return False
         except Exception as e:
             logger.error(f"Error starting Ollama server: {e}")
             return False
     
-    def _stop_ollama_server(self) -> bool:
-        """Stop the Ollama server by terminating the ollama serve process."""
-        if not self._is_ollama_server_running():
-            return True  # Already stopped
+    def _wait_for_server_start(self) -> bool:
+        """Wait for server to start and become ready."""
+        logger.info("Starting Ollama server, waiting for it to become ready...")
         
+        for i in range(20):  # Try for 20 seconds
+            time.sleep(1)
+            try:
+                self._sync_client.list()
+                logger.info(f"Ollama server started successfully after {i+1} seconds")
+                return True
+            except Exception:
+                logger.debug(f"Waiting for Ollama server... ({i+1}/20)")
+                continue
+        
+        logger.error("Ollama server failed to start within 20 seconds")
+        return False
+    
+    async def _execute_server_stop(self) -> bool:
+        """Execute server stop operation."""
+        # Check if already stopped
+        try:
+            self._sync_client.list()
+        except Exception:
+            logger.info("Ollama server is already stopped")
+            return True
+        
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self._stop_ollama_process)
+    
+    def _stop_ollama_process(self) -> bool:
+        """Stop the Ollama server process."""
         system = platform.system().lower()
         
         try:
-            if system == "darwin" or system == "linux":  # macOS or Linux
-                # Find and kill ollama serve processes
-                result = subprocess.run(
-                    ["pgrep", "-f", "ollama serve"], 
-                    stdout=subprocess.PIPE, 
-                    stderr=subprocess.PIPE, 
-                    text=True
-                )
+            if system in ["darwin", "linux"]:
+                return self._stop_unix_process()
+            elif system == "windows":
+                return self._stop_windows_process()
+            else:
+                return False
                 
-                if result.returncode == 0:
-                    pids = result.stdout.strip().split('\n')
-                    for pid in pids:
-                        if pid:
-                            try:
-                                os.kill(int(pid), signal.SIGTERM)
-                            except (ValueError, ProcessLookupError, PermissionError):
-                                continue
-                    
-                    # Wait for processes to terminate
-                    for _ in range(5):  # Try for 5 seconds
-                        if not self._is_ollama_server_running():
-                            return True
-                        time.sleep(1)
-                    
-                    # If still running, try SIGKILL
-                    for pid in pids:
-                        if pid:
-                            try:
-                                os.kill(int(pid), signal.SIGKILL)
-                            except (ValueError, ProcessLookupError, PermissionError):
-                                continue
-                
-            elif system == "windows":  # Windows
-                # Use taskkill to stop ollama processes
-                subprocess.run(
-                    ["taskkill", "/F", "/IM", "ollama.exe"], 
-                    stdout=subprocess.PIPE, 
-                    stderr=subprocess.PIPE
-                )
-            
-            # Final check
-            for _ in range(3):  # Try for 3 seconds
-                if not self._is_ollama_server_running():
-                    return True
-                time.sleep(1)
-            
-            return False
-            
         except Exception as e:
             logger.error(f"Error stopping Ollama server: {e}")
             return False
     
-    def _parse_progress(self, output: str) -> Optional[Dict[str, any]]:
-        """Parse progress information from Ollama output."""
-        if not output:
-            return None
+    def _stop_unix_process(self) -> bool:
+        """Stop Ollama on Unix-like systems."""
+        try:
+            result = subprocess.run(
+                ["pgrep", "-f", "ollama serve"], 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE, 
+                text=True
+            )
             
-        # Initialize progress data
-        progress_data = {
-            "percentage": None,
-            "phase": None,
-            "bytes_downloaded": None,
-            "total_bytes": None,
-            "speed": None
-        }
-        
-        # Look for percentage
-        percentage_match = re.search(r"(\d+(?:\.\d+)?)%", output)
-        if percentage_match:
-            try:
-                progress_data["percentage"] = float(percentage_match.group(1))
-            except ValueError:
-                pass
-        
-        # Look for phase (downloading, extracting, etc.)
-        phase_match = re.search(r"^([a-zA-Z\s]+):", output)
-        if phase_match:
-            progress_data["phase"] = phase_match.group(1).strip()
-        
-        # Look for bytes information: "23.45 MB / 42.19 MB"
-        bytes_match = re.search(r"(\d+(?:\.\d+)?)\s*([KMGT]?B)\s*/\s*(\d+(?:\.\d+)?)\s*([KMGT]?B)", output)
-        if bytes_match:
-            try:
-                downloaded = float(bytes_match.group(1))
-                downloaded_unit = bytes_match.group(2)
-                total = float(bytes_match.group(3))
-                total_unit = bytes_match.group(4)
-                
-                # Convert to bytes
-                units = {"B": 1, "KB": 1024, "MB": 1024**2, "GB": 1024**3, "TB": 1024**4}
-                progress_data["bytes_downloaded"] = int(downloaded * units.get(downloaded_unit, 1))
-                progress_data["total_bytes"] = int(total * units.get(total_unit, 1))
-            except (ValueError, KeyError):
-                pass
-        
-        return progress_data if any(v is not None for v in progress_data.values()) else None
+            if result.returncode == 0:
+                pids = [pid for pid in result.stdout.strip().split('\n') if pid]
+                self._terminate_processes(pids)
+            
+            return self._verify_server_stopped()
+            
+        except Exception as e:
+            logger.error(f"Error stopping Unix process: {e}")
+            return False
     
-    async def _download_model_with_progress(self, model_name: str) -> AsyncGenerator[str, None]:
-        """Download an Ollama model with progress streaming."""
-        if not self._is_ollama_server_running():
-            yield f"data: {json.dumps({'error': 'Ollama server is not running'})}\n\n"
-            return
+    def _stop_windows_process(self) -> bool:
+        """Stop Ollama on Windows."""
+        try:
+            subprocess.run(
+                ["taskkill", "/F", "/IM", "ollama.exe"], 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE
+            )
+            return self._verify_server_stopped()
+            
+        except Exception as e:
+            logger.error(f"Error stopping Windows process: {e}")
+            return False
+    
+    def _terminate_processes(self, pids: List[str]) -> None:
+        """Terminate processes gracefully, then forcefully if needed."""
+        # Try SIGTERM first
+        for pid in pids:
+            if pid:
+                try:
+                    os.kill(int(pid), signal.SIGTERM)
+                except (ValueError, ProcessLookupError, PermissionError):
+                    continue
+        
+        # Wait for graceful termination
+        for _ in range(5):
+            try:
+                self._sync_client.list()
+                time.sleep(1)
+            except Exception:
+                return  # Server stopped
+        
+        # Force kill if still running
+        for pid in pids:
+            if pid:
+                try:
+                    os.kill(int(pid), signal.SIGKILL)
+                except (ValueError, ProcessLookupError, PermissionError):
+                    continue
+    
+    def _verify_server_stopped(self) -> bool:
+        """Verify that the server has stopped."""
+        for _ in range(3):
+            try:
+                self._sync_client.list()
+                time.sleep(1)
+            except Exception:
+                return True
+        return False
+    
+    async def _execute_model_download(self, model_name: str) -> bool:
+        """Execute model download operation."""
+        if not await self._check_server_running():
+            logger.error(f"Cannot download model {model_name}: Ollama server is not running")
+            return False
         
         try:
             logger.info(f"Starting download of model: {model_name}")
+            await self._async_client.pull(model_name)
+            logger.info(f"Successfully downloaded model: {model_name}")
+            return True
+        except Exception as e:
+            logger.error(f"Error downloading model {model_name}: {e}")
+            return False
+    
+    async def _execute_model_deletion(self, model_name: str) -> bool:
+        """Execute model deletion operation."""
+        if not await self._check_server_running():
+            logger.error(f"Cannot delete model {model_name}: Ollama server is not running")
+            return False
+        
+        try:
+            logger.info(f"Deleting model: {model_name}")
+            await self._async_client.delete(model_name)
+            logger.info(f"Successfully deleted model: {model_name}")
+            return True
+        except Exception as e:
+            logger.error(f"Error deleting model {model_name}: {e}")
+            return False
+    
+    async def _stream_model_download(self, model_name: str) -> AsyncGenerator[str, None]:
+        """Stream model download with progress updates."""
+        try:
+            if not await self._check_server_running():
+                yield f"data: {json.dumps({'status': 'error', 'error': 'Ollama server is not running'})}\n\n"
+                return
+            
+            logger.info(f"Starting download of model: {model_name}")
             self._download_progress[model_name] = {"status": "starting", "percentage": 0}
             
-            # Initialize progress
             yield f"data: {json.dumps({'status': 'starting', 'percentage': 0, 'message': f'Starting download of {model_name}...'})}\n\n"
             
-            # Create a queue for communication between the thread and async generator
-            progress_queue = queue.Queue()
-            download_complete = threading.Event()
-            
-            def download_in_thread():
-                """Run the download process in a separate thread."""
-                process = None
-                try:
-                    # Start the download process
-                    process = subprocess.Popen(
-                        ["ollama", "pull", model_name],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT,
-                        text=True,
-                        bufsize=1,
-                        encoding='utf-8',
-                        errors='replace'
-                    )
+            async for progress in self._async_client.pull(model_name, stream=True):
+                progress_data = self._process_download_progress(progress, model_name)
+                if progress_data:
+                    yield f"data: {json.dumps(progress_data)}\n\n"
                     
-                    # Store the process for potential cancellation
-                    self._download_processes[model_name] = process
-                    
-                    last_percentage = 0
-                    last_phase = ""
-                    
-                    while True:
-                        output = process.stdout.readline()
-                        if output == "" and process.poll() is not None:
-                            break
-                            
-                        if output:
-                            output = output.strip()
-                            if output:  # Only process non-empty lines
-                                progress = self._parse_progress(output)
-                                
-                                if progress:
-                                    # Update progress data
-                                    update_data = {
-                                        "status": "downloading",
-                                        "message": output,
-                                        "raw_output": output
-                                    }
-                                    
-                                    if progress["percentage"] is not None:
-                                        update_data["percentage"] = progress["percentage"]
-                                        last_percentage = progress["percentage"]
-                                    
-                                    if progress["phase"]:
-                                        update_data["phase"] = progress["phase"]
-                                        last_phase = progress["phase"]
-                                    
-                                    if progress["bytes_downloaded"] and progress["total_bytes"]:
-                                        update_data["bytes_downloaded"] = progress["bytes_downloaded"]
-                                        update_data["total_bytes"] = progress["total_bytes"]
-                                    
-                                    # Store in cache
-                                    self._download_progress[model_name] = update_data
-                                    
-                                    # Send update to queue
-                                    progress_queue.put(update_data)
-                                else:
-                                    # Send raw output even if we can't parse progress
-                                    update_data = {
-                                        "status": "downloading",
-                                        "message": output,
-                                        "raw_output": output
-                                    }
-                                    if last_percentage > 0:
-                                        update_data["percentage"] = last_percentage
-                                    if last_phase:
-                                        update_data["phase"] = last_phase
-                                    
-                                    progress_queue.put(update_data)
-                    
-                    # Check final result
-                    return_code = process.wait()
-                    
-                    if return_code == 0:
-                        final_data = {
-                            "status": "completed",
-                            "percentage": 100,
-                            "message": f"Model {model_name} downloaded successfully!"
-                        }
-                        self._download_progress[model_name] = final_data
-                        progress_queue.put(final_data)
+                    if progress_data.get("status") == "completed":
                         logger.info(f"Successfully downloaded model: {model_name}")
-                    else:
-                        # Check if it was cancelled (return code -15 or -9 typically means terminated)
-                        if return_code in [-15, -9]:  # SIGTERM or SIGKILL
-                            error_data = {
-                                "status": "cancelled",
-                                "message": f"Download of {model_name} was cancelled",
-                                "error": "Download cancelled by user"
-                            }
-                        else:
-                            error_data = {
-                                "status": "error",
-                                "message": f"Failed to download model {model_name}",
-                                "error": f"Process exited with code {return_code}"
-                            }
-                        self._download_progress[model_name] = error_data
-                        progress_queue.put(error_data)
-                        logger.error(f"Failed to download model {model_name}: exit code {return_code}")
+                        break
                         
-                except Exception as e:
-                    error_data = {
-                        "status": "error",
-                        "message": f"Error downloading model {model_name}",
-                        "error": str(e)
-                    }
-                    self._download_progress[model_name] = error_data
-                    progress_queue.put(error_data)
-                    logger.error(f"Error downloading model {model_name}: {e}")
-                finally:
-                    # Clean up process reference
-                    if model_name in self._download_processes:
-                        del self._download_processes[model_name]
-                    download_complete.set()
-            
-            # Start the download in a separate thread
-            download_thread = threading.Thread(target=download_in_thread, daemon=True)
-            download_thread.start()
-            
-            # Yield progress updates as they come in
-            while True:
-                try:
-                    # Check for new progress with a timeout to keep the connection alive
-                    try:
-                        # Use run_in_executor to make the queue.get non-blocking for the event loop
-                        loop = asyncio.get_event_loop()
-                        progress_data = await loop.run_in_executor(
-                            None, 
-                            lambda: progress_queue.get(timeout=0.5)
-                        )
-                        yield f"data: {json.dumps(progress_data)}\n\n"
-                        
-                        # Check if download is complete or failed
-                        if progress_data.get("status") in ["completed", "error"]:
-                            break
-                            
-                    except queue.Empty:
-                        # Send a heartbeat to keep connection alive and yield control
-                        if download_complete.is_set():
-                            break
-                        # Yield control back to the event loop
-                        await asyncio.sleep(0.1)
-                        continue
-                        
-                except Exception as e:
-                    logger.error(f"Error in progress streaming: {e}")
-                    break
-            
-            # Wait for the download thread to finish (non-blocking)
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, lambda: download_thread.join(timeout=5))
-                
         except Exception as e:
             error_data = {
                 "status": "error",
@@ -401,253 +462,83 @@ class OllamaService:
             yield f"data: {json.dumps(error_data)}\n\n"
             logger.error(f"Error downloading model {model_name}: {e}")
         finally:
-            # Clean up progress tracking after a short delay
-            await asyncio.sleep(1)  # Reduced from 5 seconds to 1 second
+            await asyncio.sleep(1)
             if model_name in self._download_progress:
                 del self._download_progress[model_name]
     
-    def _download_model(self, model_name: str) -> bool:
-        """Download an Ollama model (legacy synchronous version)."""
-        if not self._is_ollama_server_running():
-            logger.error(f"Cannot download model {model_name}: Ollama server is not running")
-            return False
+    def _process_download_progress(self, progress, model_name: str) -> Optional[Dict[str, any]]:
+        """Process download progress from ollama client."""
+        if not hasattr(progress, 'status'):
+            return None
         
-        try:
-            logger.info(f"Starting download of model: {model_name}")
-            # Use the Ollama CLI to download the model
-            process = subprocess.run(["ollama", "pull", model_name], capture_output=True, text=True, timeout=600)
-            if process.returncode == 0:
-                logger.info(f"Successfully downloaded model: {model_name}")
-                return True
-            else:
-                logger.error(f"Failed to download model {model_name}: {process.stderr}")
-                return False
-        except Exception as e:
-            logger.error(f"Error downloading model {model_name}: {e}")
-            return False
-    
-    def _delete_model(self, model_name: str) -> bool:
-        """Delete an Ollama model."""
-        if not self._is_ollama_server_running():
-            logger.error(f"Cannot delete model {model_name}: Ollama server is not running")
-            return False
+        progress_data = {
+            "status": "downloading",
+            "message": progress.status,
+            "raw_output": progress.status
+        }
         
-        try:
-            logger.info(f"Deleting model: {model_name}")
-            # Use the Ollama CLI to delete the model
-            process = subprocess.run(["ollama", "rm", model_name], capture_output=True, text=True)
-            if process.returncode == 0:
-                logger.info(f"Successfully deleted model: {model_name}")
-                return True
-            else:
-                logger.error(f"Failed to delete model {model_name}: {process.stderr}")
-                return False
-        except Exception as e:
-            logger.error(f"Error deleting model {model_name}: {e}")
-            return False
-    
-    def get_download_progress(self, model_name: str) -> Optional[Dict[str, any]]:
-        """Get current download progress for a model."""
-        return self._download_progress.get(model_name)
-    
-    def get_all_download_progress(self) -> Dict[str, Dict[str, any]]:
-        """Get current download progress for all models."""
-        return self._download_progress.copy()
-    
-    async def check_ollama_status(self) -> Dict[str, any]:
-        """Check Ollama installation and server status."""
-        current_time = time.time()
+        # Add completed/total info if available
+        if hasattr(progress, 'completed') and hasattr(progress, 'total') and progress.total > 0:
+            percentage = (progress.completed / progress.total) * 100
+            progress_data.update({
+                "percentage": percentage,
+                "bytes_downloaded": progress.completed,
+                "total_bytes": progress.total
+            })
         
-        # Use cached result if recent
-        if (current_time - self._last_check) < self._cache_duration and self._status_cache:
-            return self._status_cache
+        # Add digest info if available
+        if hasattr(progress, 'digest'):
+            progress_data["digest"] = progress.digest
         
-        # Run blocking operations in thread pool
-        loop = asyncio.get_event_loop()
+        # Store in cache
+        self._download_progress[model_name] = progress_data
         
-        try:
-            is_installed = await loop.run_in_executor(None, self._is_ollama_installed)
-            is_running = await loop.run_in_executor(None, self._is_ollama_server_running)
-            
-            models = []
-            if is_running:
-                models = await loop.run_in_executor(None, self._get_locally_available_models)
-            
-            status = {
-                "installed": is_installed,
-                "running": is_running,
-                "available_models": models,
-                "server_url": OLLAMA_SERVER_URL,
-                "error": None
+        # Check if download is complete
+        if (progress.status == "success" or 
+            (hasattr(progress, 'completed') and hasattr(progress, 'total') and 
+             progress.completed == progress.total)):
+            final_data = {
+                "status": "completed",
+                "percentage": 100,
+                "message": f"Model {model_name} downloaded successfully!"
             }
-            
-            # Update cache
-            self._status_cache = status
-            self._last_check = current_time
-            
-            logger.debug(f"Ollama status: installed={is_installed}, running={is_running}, models={len(models)}")
-            return status
-            
-        except Exception as e:
-            logger.error(f"Error checking Ollama status: {e}")
-            error_status = {
-                "installed": False,
-                "running": False,
-                "available_models": [],
-                "server_url": OLLAMA_SERVER_URL,
-                "error": str(e)
-            }
-            self._status_cache = error_status
-            self._last_check = current_time
-            return error_status
-    
-    async def start_server(self) -> Dict[str, any]:
-        """Start the Ollama server."""
-        try:
-            loop = asyncio.get_event_loop()
-            success = await loop.run_in_executor(None, self._start_ollama_server)
-            
-            # Clear cache to force fresh status check
-            self._status_cache = {}
-            self._last_check = 0
-            
-            if success:
-                return {"success": True, "message": "Ollama server started successfully"}
-            else:
-                return {"success": False, "message": "Failed to start Ollama server"}
-                
-        except Exception as e:
-            logger.error(f"Error starting Ollama server: {e}")
-            return {"success": False, "message": f"Error starting server: {str(e)}"}
-    
-    async def stop_server(self) -> Dict[str, any]:
-        """Stop the Ollama server."""
-        try:
-            loop = asyncio.get_event_loop()
-            success = await loop.run_in_executor(None, self._stop_ollama_server)
-            
-            # Clear cache to force fresh status check
-            self._status_cache = {}
-            self._last_check = 0
-            
-            if success:
-                return {"success": True, "message": "Ollama server stopped successfully"}
-            else:
-                return {"success": False, "message": "Failed to stop Ollama server"}
-                
-        except Exception as e:
-            logger.error(f"Error stopping Ollama server: {e}")
-            return {"success": False, "message": f"Error stopping server: {str(e)}"}
-    
-    async def download_model(self, model_name: str) -> Dict[str, any]:
-        """Download an Ollama model (legacy synchronous version)."""
-        try:
-            # Force fresh status check before download
-            self._status_cache = {}
-            self._last_check = 0
-            
-            loop = asyncio.get_event_loop()
-            success = await loop.run_in_executor(None, self._download_model, model_name)
-            
-            # Clear cache to force fresh status check
-            self._status_cache = {}
-            self._last_check = 0
-            
-            if success:
-                return {"success": True, "message": f"Model {model_name} downloaded successfully"}
-            else:
-                return {"success": False, "message": f"Failed to download model {model_name}"}
-                
-        except Exception as e:
-            logger.error(f"Error downloading model {model_name}: {e}")
-            return {"success": False, "message": f"Error downloading model: {str(e)}"}
-    
-    async def download_model_with_progress(self, model_name: str) -> AsyncGenerator[str, None]:
-        """Download an Ollama model with progress streaming."""
-        async for progress_data in self._download_model_with_progress(model_name):
-            yield progress_data
-    
-    async def delete_model(self, model_name: str) -> Dict[str, any]:
-        """Delete an Ollama model."""
-        try:
-            # Force fresh status check before delete
-            self._status_cache = {}
-            self._last_check = 0
-            
-            loop = asyncio.get_event_loop()
-            success = await loop.run_in_executor(None, self._delete_model, model_name)
-            
-            # Clear cache to force fresh status check
-            self._status_cache = {}
-            self._last_check = 0
-            
-            if success:
-                return {"success": True, "message": f"Model {model_name} deleted successfully"}
-            else:
-                return {"success": False, "message": f"Failed to delete model {model_name}"}
-                
-        except Exception as e:
-            logger.error(f"Error deleting model {model_name}: {e}")
-            return {"success": False, "message": f"Error deleting model: {str(e)}"}
-    
-    async def get_recommended_models(self) -> List[Dict[str, str]]:
-        """Get list of recommended Ollama models."""
-        # Load from the existing ollama_models.json
-        try:
-            import json
-            ollama_models_path = Path(__file__).parent.parent.parent.parent / "src" / "llm" / "ollama_models.json"
-            
-            if ollama_models_path.exists():
-                with open(ollama_models_path, 'r') as f:
-                    models_data = json.load(f)
-                return models_data
-            else:
-                # Fallback to basic recommendations
-                return [
-                    {"display_name": "[meta] llama3.1 (8B)", "model_name": "llama3.1:latest", "provider": "Ollama"},
-                    {"display_name": "[google] gemma3 (4B)", "model_name": "gemma3:4b", "provider": "Ollama"},
-                    {"display_name": "[alibaba] qwen3 (4B)", "model_name": "qwen3:4b", "provider": "Ollama"},
-                ]
-                
-        except Exception as e:
-            logger.error(f"Error loading recommended models: {e}")
-            return []
-    
-    def cancel_download(self, model_name: str) -> bool:
-        """Cancel an active download."""
-        if model_name not in self._download_processes:
-            logger.warning(f"No active download found for model: {model_name}")
-            return False
+            self._download_progress[model_name] = final_data
+            return final_data
         
-        try:
-            process = self._download_processes[model_name]
-            if process and process.poll() is None:  # Process is still running
-                logger.info(f"Cancelling download for model: {model_name}")
-                process.terminate()
-                
-                # Give it a moment to terminate gracefully
-                time.sleep(1)
-                
-                # If still running, force kill
-                if process.poll() is None:
-                    process.kill()
-                
-                # Update progress to show cancellation
-                self._download_progress[model_name] = {
-                    "status": "cancelled",
-                    "message": f"Download of {model_name} was cancelled",
-                    "error": "Download cancelled by user"
-                }
-                
-                logger.info(f"Successfully cancelled download for model: {model_name}")
-                return True
-            else:
-                logger.warning(f"Process for {model_name} is not running or already finished")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Error cancelling download for {model_name}: {e}")
-            return False
+        return progress_data
+    
+    def _get_ollama_models_path(self) -> Path:
+        """Get path to ollama_models.json file."""
+        return Path(__file__).parent.parent.parent.parent / "src" / "llm" / "ollama_models.json"
+    
+    def _load_models_from_file(self, models_path: Path) -> List[Dict[str, str]]:
+        """Load models from JSON file."""
+        with open(models_path, 'r') as f:
+            return json.load(f)
+    
+    def _get_fallback_models(self) -> List[Dict[str, str]]:
+        """Get fallback models when file is not available."""
+        return [
+            {"display_name": "[meta] llama3.1 (8B)", "model_name": "llama3.1:latest", "provider": "Ollama"},
+            {"display_name": "[google] gemma3 (4B)", "model_name": "gemma3:4b", "provider": "Ollama"},
+            {"display_name": "[alibaba] qwen3 (4B)", "model_name": "qwen3:4b", "provider": "Ollama"},
+        ]
+    
+    def _format_models_for_api(self, downloaded_models: List[str]) -> List[Dict[str, str]]:
+        """Format downloaded models for API response."""
+        # Import OLLAMA_MODELS here to avoid circular imports
+        from src.llm.models import OLLAMA_MODELS
+        
+        api_models = []
+        for ollama_model in OLLAMA_MODELS:
+            if ollama_model.model_name in downloaded_models:
+                api_models.append({
+                    "display_name": ollama_model.display_name,
+                    "model_name": ollama_model.model_name,
+                    "provider": "Ollama"
+                })
+        
+        return api_models
 
 # Global service instance
 ollama_service = OllamaService() 
