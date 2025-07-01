@@ -29,8 +29,8 @@ export function getProviderColor(provider: string): string {
       return 'bg-blue-600/20 text-blue-300 border-blue-600/40';
     case 'openai':
       return 'bg-gray-900/60 text-gray-200 border-gray-700/60';
-    case 'openai':
-      return 'bg-purple-600/20 text-purple-300 border-purple-600/40';
+    case 'ollama':
+      return 'bg-white/90 text-gray-800 border-gray-300';
     default:
       return 'bg-gray-600/20 text-gray-300 border-gray-600/40';
   }
