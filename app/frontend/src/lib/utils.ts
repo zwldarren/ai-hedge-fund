@@ -15,3 +15,23 @@ export function formatKeyboardShortcut(key: string): string {
   const modifierKey = isMac() ? '⌘' : 'Ctrl';
   return `${modifierKey}${key.toUpperCase()}`;
 }
+
+// Provider color utility for consistent styling across components
+export function getProviderColor(provider: string): string {
+  switch (provider.toLowerCase()) {
+    case 'anthropic':
+      return 'bg-orange-600/20 text-orange-300 border-orange-600/40';
+    case 'google':
+      return 'bg-green-600/20 text-green-300 border-green-600/40';
+    case 'groq':
+      return 'bg-red-600/20 text-red-300 border-red-600/40';
+    case 'deepseek':
+      return 'bg-blue-600/20 text-blue-300 border-blue-600/40';
+    case 'openai':
+      return 'bg-gray-900/60 text-gray-200 border-gray-700/60';
+    case 'openai':
+      return 'bg-purple-600/20 text-purple-300 border-purple-600/40';
+    default:
+      return 'bg-gray-600/20 text-gray-300 border-gray-600/40';
+  }
+}

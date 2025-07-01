@@ -1,6 +1,7 @@
-import { Check, ChevronsUpDown } from "lucide-react"
+import { ChevronsUpDown } from "lucide-react"
 import * as React from "react"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Command,
@@ -16,7 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { type LanguageModel } from "@/data/models"
-import { cn } from "@/lib/utils"
+import { cn, getProviderColor } from "@/lib/utils"
 
 interface ModelSelectorProps {
   models: LanguageModel[];
@@ -50,7 +51,7 @@ export function ModelSelector({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full min-w-[300px] p-0">
+      <PopoverContent className="w-full min-w-[350px] p-0">
         <Command>
           <CommandInput placeholder="Search model..." className="h-9" />
           <CommandList>
@@ -60,6 +61,10 @@ export function ModelSelector({
                 <CommandItem
                   key={model.model_name}
                   value={model.model_name}
+                  className={cn(
+                    "cursor-pointer",
+                    value === model.model_name && "bg-blue-600/10 border-l-2 border-blue-500/50"
+                  )}
                   onSelect={(currentValue) => {
                     if (currentValue === value) {
                       onChange(null);
@@ -72,16 +77,15 @@ export function ModelSelector({
                     setOpen(false);
                   }}
                 >
-                  <div className="flex flex-col items-start">
-                    <span className="text-title">{model.display_name}</span>
-                    <span className="text-subtitle text-muted-foreground">{model.provider}</span>
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex flex-col items-start min-w-0 flex-1">
+                      <span className="text-title">{model.display_name}</span>
+                      <span className="text-xs text-muted-foreground font-mono">{model.model_name}</span>
+                    </div>
+                    <Badge className={cn("text-xs", getProviderColor(model.provider))}>
+                      {model.provider}
+                    </Badge>
                   </div>
-                  <Check
-                    className={cn(
-                      "ml-auto",
-                      value === model.model_name ? "opacity-100" : "opacity-0"
-                    )}
-                  />
                 </CommandItem>
               ))}
             </CommandGroup>
