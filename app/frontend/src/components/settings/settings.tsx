@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 import { CubeIcon } from '@radix-ui/react-icons';
 import { Key, Palette, Settings2, Workflow } from 'lucide-react';
 import { useState } from 'react';
-import { ApiKeysSettings, AppearanceSettings, FlowsSettings, GeneralSettings, OllamaSettings } from './';
+import { ApiKeysSettings, AppearanceSettings, FlowsSettings, GeneralSettings, Models } from './';
 
 interface SettingsProps {
   className?: string;
@@ -35,7 +35,7 @@ export function Settings({ className }: SettingsProps) {
       id: 'models',
       label: 'Models',
       icon: CubeIcon,
-      description: 'Local AI models with Ollama',
+      description: 'Local and cloud AI models',
     },
     {
       id: 'flows',
@@ -56,7 +56,7 @@ export function Settings({ className }: SettingsProps) {
       case 'general':
         return <GeneralSettings />;
       case 'models':
-        return <OllamaSettings />;
+        return <Models />;
       case 'flows':
         return <FlowsSettings />;
       case 'appearance':
@@ -64,7 +64,7 @@ export function Settings({ className }: SettingsProps) {
       case 'api':
         return <ApiKeysSettings />;
       default:
-        return <OllamaSettings />;
+        return <Models />;
     }
   };
 

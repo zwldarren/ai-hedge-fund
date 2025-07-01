@@ -52,6 +52,15 @@ export function OllamaSettings() {
     displayName: ''
   });
   const [cancellingDownloads, setCancellingDownloads] = useState<Set<string>>(new Set());
+  const [cancelConfirmation, setCancelConfirmation] = useState<{
+    isOpen: boolean;
+    modelName: string;
+    displayName: string;
+  }>({
+    isOpen: false,
+    modelName: '',
+    displayName: ''
+  });
 
   const fetchOllamaStatus = async () => {
     try {
@@ -235,7 +244,7 @@ export function OllamaSettings() {
     }
   };
 
-  const cancelDownload = async (modelName: string) => {
+  const performCancelDownload = async (modelName: string) => {
     setError(null);
     setCancellingDownloads(prev => new Set(prev).add(modelName));
     
@@ -277,6 +286,15 @@ export function OllamaSettings() {
     console.log(`Cancelled download tracking for ${modelName}`);
   };
 
+  const cancelDownload = (modelName: string) => {
+    const displayName = recommendedModels.find(m => m.model_name === modelName)?.display_name || modelName;
+    setCancelConfirmation({
+      isOpen: true,
+      modelName,
+      displayName
+    });
+  };
+
   const deleteModel = async (modelName: string) => {
     setActionLoading(`delete-${modelName}`);
     setError(null);
@@ -305,6 +323,16 @@ export function OllamaSettings() {
 
   const cancelDeleteModel = () => {
     setDeleteConfirmation({ isOpen: false, modelName: '', displayName: '' });
+  };
+
+  const confirmCancelDownload = async () => {
+    const { modelName } = cancelConfirmation;
+    setCancelConfirmation({ isOpen: false, modelName: '', displayName: '' });
+    await performCancelDownload(modelName);
+  };
+
+  const cancelCancelDownload = () => {
+    setCancelConfirmation({ isOpen: false, modelName: '', displayName: '' });
   };
 
   const refreshStatus = async () => {
@@ -537,7 +565,7 @@ export function OllamaSettings() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-100 dark:text-gray-100 mb-2">Ollama</h2>
+          <h3 className="text-lg font-semibold text-gray-100 dark:text-gray-100 mb-2">Ollama</h3>
           <p className="text-sm text-gray-400 dark:text-gray-400">
             Manage local AI models with Ollama for enhanced privacy and performance.
           </p>
@@ -597,7 +625,7 @@ export function OllamaSettings() {
       {ollamaStatus?.installed && !ollamaStatus.running && (
         <div className="flex items-center justify-between bg-gray-700/20 border border-gray-600/30 rounded-lg p-4">
           <div>
-            <h4 className="font-medium text-gray-300">Start Ollama Server</h4>
+            <h4 className="font-medium text-gray-300">Ollama Server</h4>
             <p className="text-sm text-gray-400">
               Ollama is installed but not currently running.
             </p>
@@ -605,7 +633,7 @@ export function OllamaSettings() {
           <Button
             onClick={startOllamaServer}
             disabled={actionLoading === 'start-server'}
-            className="flex items-center gap-2 bg-green-600/20 border-green-600/40 text-primary hover:bg-green-600/30 hover:border-green-600/60 hover:text-primary"
+            className="flex items-center gap-2 border-gray-600/40 bg-gray-600/10 text-gray-300 hover:bg-gray-600/20 hover:border-gray-600/60 hover:text-gray-200"
           >
             <Play className="h-4 w-4" />
             {actionLoading === 'start-server' ? 'Starting...' : 'Start Server'}
@@ -744,22 +772,20 @@ export function OllamaSettings() {
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
-                        <Badge className="text-xs bg-gray-600/30 text-gray-300 border-gray-600/40">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Downloaded
-                        </Badge>
                       </>
                     )}
                     {!model.isDownloaded && !activeDownloads.has(model.model_name) && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => downloadModelWithProgress(model.model_name)}
-                        className="flex items-center gap-2 h-7 bg-blue-600/20 border-blue-600/40 text-primary hover:bg-blue-600/30 hover:border-blue-600/60 hover:text-primary"
-                      >
-                        <Download className="h-3 w-3" />
-                        Download
-                      </Button>
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => downloadModelWithProgress(model.model_name)}
+                          className="flex items-center gap-2 h-7 border-gray-600/40 bg-gray-600/10 text-gray-300 hover:bg-gray-600/20 hover:border-gray-600/60 hover:text-gray-200"
+                        >
+                          <Download className="h-3 w-3" />
+                          Download
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -810,6 +836,47 @@ export function OllamaSettings() {
             >
               <Trash2 className="h-4 w-4" />
               {actionLoading === `delete-${deleteConfirmation.modelName}` ? 'Deleting...' : 'Delete Model'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Cancel Download Confirmation Dialog */}
+      <Dialog open={cancelConfirmation.isOpen} onOpenChange={(open) => {
+        if (!open) cancelCancelDownload();
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-400" />
+              Cancel Download
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel the download of <strong>{cancelConfirmation.displayName}</strong>?
+              <br />
+              <span className="text-sm text-gray-400 mt-1 block">
+                Model: {cancelConfirmation.modelName}
+              </span>
+              <br />
+              Any progress will be lost and you'll need to start the download again.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={cancelCancelDownload}
+              disabled={cancellingDownloads.has(cancelConfirmation.modelName)}
+            >
+              Continue Download
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmCancelDownload}
+              disabled={cancellingDownloads.has(cancelConfirmation.modelName)}
+              className="flex items-center gap-2"
+            >
+              <X className="h-4 w-4" />
+              {cancellingDownloads.has(cancelConfirmation.modelName) ? 'Cancelling...' : 'Cancel Download'}
             </Button>
           </DialogFooter>
         </DialogContent>
