@@ -31,8 +31,6 @@ const getProviderColor = (provider: string) => {
       return 'bg-red-600/20 text-red-300 border-red-600/40';
     case 'deepseek':
       return 'bg-blue-600/20 text-blue-300 border-blue-600/40';
-    case 'gemini':
-      return 'bg-red-600/20 text-red-300 border-red-600/40';
     default:
       return 'bg-gray-600/20 text-gray-300 border-gray-600/40';
   }
