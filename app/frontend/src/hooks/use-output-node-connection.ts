@@ -24,15 +24,16 @@ interface UseOutputNodeConnectionResult {
  * // In any output node component:
  * export function MyOutputNode({ id, ...props }: NodeProps<MyOutputNode>) {
  *   const { outputNodeData } = useNodeContext();
- *   const { isProcessing, isOutputAvailable } = useOutputNodeConnection(id);
+ *   const { isProcessing, isOutputAvailable, isConnected } = useOutputNodeConnection(id);
  *   
  *   return (
  *     <NodeShell {...props}>
- *       {isProcessing ? (
- *         <Button disabled>Processing...</Button>
- *       ) : (
- *         <Button disabled={!isOutputAvailable}>View Output</Button>
- *       )}
+ *       <OutputNodeStatus
+ *         isProcessing={isProcessing}
+ *         isOutputAvailable={isOutputAvailable}
+ *         isConnected={isConnected}
+ *         onViewOutput={() => setShowOutput(true)}
+ *       />
  *     </NodeShell>
  *   );
  * }

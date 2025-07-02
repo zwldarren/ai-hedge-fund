@@ -1,14 +1,14 @@
 import { type NodeProps } from '@xyflow/react';
-import { FileText, Loader2 } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { useState } from 'react';
 
-import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { useNodeContext } from '@/contexts/node-context';
 import { useOutputNodeConnection } from '@/hooks/use-output-node-connection';
 import { type InvestmentReportNode } from '../types';
 import { InvestmentReportDialog } from './investment-report-dialog';
 import { NodeShell } from './node-shell';
+import { OutputNodeStatus } from './output-node-status';
 
 export function InvestmentReportNode({
   data,
@@ -20,7 +20,8 @@ export function InvestmentReportNode({
   const [showOutput, setShowOutput] = useState(false);
   
   // Use the custom hook for connection logic
-  const { isProcessing, isOutputAvailable } = useOutputNodeConnection(id);
+  const { isProcessing, isOutputAvailable, isConnected, connectedAgentIds } = useOutputNodeConnection(id);
+  const status = isProcessing ? 'IN_PROGRESS' : 'IDLE';
 
   const handleViewOutput = () => {
     setShowOutput(true);
@@ -36,6 +37,7 @@ export function InvestmentReportNode({
         name={data.name || "Investment Report"}
         description={data.description}
         hasRightHandle={false}
+        status={status}
       >
         <CardContent className="p-0">
           <div className="border-t border-border p-3">
@@ -43,27 +45,13 @@ export function InvestmentReportNode({
               <div className="text-subtitle text-muted-foreground flex items-center gap-1">
                 Results
               </div>
-              <div className="flex gap-2">
-                {isProcessing ? (
-                  <Button 
-                    variant="secondary"
-                    className="w-full flex-shrink-0 transition-all duration-200 hover:bg-primary hover:text-primary-foreground active:scale-95 text-subtitle border-border"
-                    disabled
-                  >
-                    <Loader2 className="h-2 w-2 animate-spin" />
-                    Processing...
-                  </Button>
-                ) : (
-                  <Button 
-                    variant="secondary"
-                    className="w-full flex-shrink-0 transition-all duration-200 hover:bg-primary hover:text-primary-foreground active:scale-95 text-subtitle border-border"
-                    onClick={handleViewOutput}
-                    disabled={!isOutputAvailable}
-                  >
-                   View Output
-                  </Button>
-                )}
-              </div>
+              
+              <OutputNodeStatus
+                isProcessing={isProcessing}
+                isOutputAvailable={isOutputAvailable}
+                isConnected={isConnected}
+                onViewOutput={handleViewOutput}
+              />
             </div>
           </div>
         </CardContent>
@@ -72,6 +60,7 @@ export function InvestmentReportNode({
         isOpen={showOutput} 
         onOpenChange={setShowOutput} 
         outputNodeData={outputNodeData} 
+        connectedAgentIds={connectedAgentIds}
       />
     </>
   );
