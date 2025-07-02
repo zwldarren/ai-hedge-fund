@@ -34,13 +34,13 @@ export function Flow({ className = '' }: FlowProps) {
   const proOptions = { hideAttribution: true };
   
   // Get flow context for saving
-  const { saveCurrentFlow } = useFlowContext();
+  const { saveCurrentFlow, currentFlowId } = useFlowContext();
   
   // Get toast manager
   const { success, error } = useToastManager();
 
-  // Initialize flow history
-  const { takeSnapshot, undo, redo, canUndo, canRedo, clearHistory } = useFlowHistory();
+  // Initialize flow history (each flow maintains its own separate history)
+  const { takeSnapshot, undo, redo, canUndo, canRedo, clearHistory } = useFlowHistory({ flowId: currentFlowId });
 
   // Take initial snapshot when flow is initialized
   useEffect(() => {
@@ -134,13 +134,6 @@ export function Flow({ className = '' }: FlowProps) {
     },
     [setEdges]
   );
-
-  // Reset the flow to initial state
-  const resetFlow = useCallback(() => {
-    setNodes([]);
-    setEdges([]);
-    clearHistory();
-  }, [setNodes, setEdges, clearHistory]);
 
   return (
     <div className={`w-full h-full ${className}`}>
