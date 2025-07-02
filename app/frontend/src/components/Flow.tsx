@@ -157,7 +157,11 @@ export function Flow({ className = '' }: FlowProps) {
           colorMode={colorMode}
           proOptions={proOptions}
         >
-          <Background gap={13}/>
+          <Background 
+            gap={13}
+            color="#666666"
+            style={{ backgroundColor: '#0a0a0a' }}
+          />
           {/* <CustomControls onReset={resetFlow} /> */}
         </ReactFlow>
       </TooltipProvider>
