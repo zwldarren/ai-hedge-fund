@@ -4,7 +4,6 @@ import {
   Connection,
   Edge,
   MarkerType,
-  NodeChange,
   ReactFlow,
   addEdge,
   useEdgesState,
@@ -189,76 +188,16 @@ export function Flow({ className = '' }: FlowProps) {
     [setEdges, currentFlowId, saveCurrentFlowWithCompleteState]
   );
 
-  // Enhanced edges change handler with auto-save
-  const handleEdgesChange = useCallback(async (changes: any[]) => {
-    onEdgesChange(changes);
-    console.log('[Auto-save] Edge changes detected:', changes);
-
-    // Auto-save on edge structural changes
-    const shouldAutoSave = changes.some(change => 
-      change.type === 'add' || 
-      change.type === 'remove'
-      // Skip 'select' and 'replace' types
-    );
-
-    if (shouldAutoSave && currentFlowId) {
-      // Edge changes are typically structural, so save immediately
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-      
-      try {
-        await saveCurrentFlowWithCompleteState();
-      } catch (error) {
-        console.error('[Auto-save] Failed to save edge changes:', error);
-      }
-    }
-  }, [onEdgesChange, currentFlowId, saveCurrentFlowWithCompleteState]);
-
-  const handleNodesChange = useCallback(async (changes: NodeChange<AppNode>[]) => {
-    onNodesChange(changes);
-
-    // Only auto-save for specific change types to avoid excessive saves
-    const shouldAutoSave = changes.some(change => 
-      change.type === 'add' || 
-      change.type === 'position' || 
-      change.type === 'remove'
-    );
-
-    if (shouldAutoSave && currentFlowId) {
-      // For structural changes (add/remove), save immediately
-      // For position changes, use debounced save
-      const hasStructuralChanges = changes.some(change => 
-        change.type === 'add' || change.type === 'remove'
-      );
-      
-      if (hasStructuralChanges) {
-        // Clear debounced save and save immediately for structural changes
-        if (autoSaveTimeoutRef.current) {
-          clearTimeout(autoSaveTimeoutRef.current);
-        }
-        try {
-          await saveCurrentFlowWithCompleteState();
-        } catch (error) {
-          console.error('[Auto-save] Failed to save structural changes:', error);
-        }
-      } else {
-        // Use debounced save for position changes
-        autoSave();
-      }
-    }
-  }, [onNodesChange, currentFlowId, autoSave]);
-
   return (
     <div className={`w-full h-full ${className}`}>
       <TooltipProvider>
         <ReactFlow
           nodes={nodes}
           nodeTypes={nodeTypes}
-          onNodesChange={handleNodesChange}
+          onNodesChange={onNodesChange}
           edges={edges}
           edgeTypes={edgeTypes}
-          onEdgesChange={handleEdgesChange}
+          onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onInit={onInit}
           colorMode={colorMode}
