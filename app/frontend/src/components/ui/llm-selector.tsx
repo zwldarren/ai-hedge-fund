@@ -41,7 +41,7 @@ export function ModelSelector({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className="w-full justify-between bg-panel border-border"
         >
           <span className="text-subtitle">
             {value
@@ -51,10 +51,10 @@ export function ModelSelector({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full min-w-[350px] p-0">
-        <Command>
-          <CommandInput placeholder="Search model..." className="h-9" />
-          <CommandList>
+      <PopoverContent className="w-full min-w-[350px] p-0 bg-panel">
+        <Command className="bg-panel">
+          <CommandInput placeholder="Search model..." className="h-9 bg-panel" />
+          <CommandList className="bg-panel">
             <CommandEmpty>No model found.</CommandEmpty>
             <CommandGroup>
               {models.map((model) => (
@@ -62,7 +62,7 @@ export function ModelSelector({
                   key={model.model_name}
                   value={model.model_name}
                   className={cn(
-                    "cursor-pointer",
+                    "cursor-pointer bg-panel hover:bg-accent",
                     value === model.model_name && "bg-blue-600/10 border-l-2 border-blue-500/50"
                   )}
                   onSelect={(currentValue) => {

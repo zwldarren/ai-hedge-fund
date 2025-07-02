@@ -81,12 +81,12 @@ export function AgentNode({
       <CardContent className="p-0">
         <div className="border-t border-border p-3">
           <div className="flex flex-col gap-2">
-            <div className="text-subtitle text-muted-foreground flex items-center gap-1">
+            <div className="text-subtitle text-primary flex items-center gap-1">
               Status
             </div>
 
             <div className={cn(
-              "text-foreground text-xs rounded p-2",
+              "text-foreground text-xs rounded p-2 border border-border",
               isInProgress ? "gradient-animation" : getStatusColor(status)
             )}>
               <span className="capitalize">{status.toLowerCase().replace(/_/g, ' ')}</span>
@@ -94,18 +94,18 @@ export function AgentNode({
             
             {nodeData.message && (
               <div className="text-foreground text-subtitle">
-                {nodeData.message}
+                {nodeData.message !== "Done" && nodeData.message}
                 {nodeData.ticker && <span className="ml-1">({nodeData.ticker})</span>}
               </div>
             )}
             <Accordion type="single" collapsible>
               <AccordionItem value="advanced" className="border-none">
-                <AccordionTrigger className="!text-subtitle text-muted-foreground">
+                <AccordionTrigger className="!text-subtitle text-primary">
                   Advanced
                 </AccordionTrigger>
                 <AccordionContent className="pt-2">
                   <div className="flex flex-col gap-2">
-                    <div className="text-subtitle text-muted-foreground flex items-center gap-1">
+                    <div className="text-subtitle text-primary flex items-center gap-1">
                       Model
                     </div>
                     <ModelSelector
@@ -117,7 +117,7 @@ export function AgentNode({
                     {selectedModel && (
                       <button
                         onClick={handleUseGlobalModel}
-                        className="text-subtitle text-muted-foreground hover:text-foreground transition-colors text-left"
+                        className="text-subtitle text-primary hover:text-foreground transition-colors text-left"
                       >
                         Reset to Auto
                       </button>

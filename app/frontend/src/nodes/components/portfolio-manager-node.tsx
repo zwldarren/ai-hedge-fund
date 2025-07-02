@@ -198,7 +198,7 @@ export function PortfolioManagerNode({
           <div className="border-t border-border p-3">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <div className="text-subtitle text-muted-foreground flex items-center gap-1">
+                <div className="text-subtitle text-primary flex items-center gap-1">
                   <Tooltip delayDuration={200}>
                     <TooltipTrigger asChild>
                       <span>Tickers</span>
@@ -231,7 +231,7 @@ export function PortfolioManagerNode({
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <div className="text-subtitle text-muted-foreground flex items-center gap-1">
+                <div className="text-subtitle text-primary flex items-center gap-1">
                   Model
                 </div>
                 <ModelSelector
@@ -243,13 +243,13 @@ export function PortfolioManagerNode({
               </div>
               <Accordion type="single" collapsible>
                 <AccordionItem value="advanced" className="border-none">
-                  <AccordionTrigger className="!text-subtitle text-muted-foreground">
+                  <AccordionTrigger className="!text-subtitle text-primary">
                     Advanced
                   </AccordionTrigger>
                   <AccordionContent className="pt-2">
                     <div className="flex flex-col gap-4">
                     <div className="flex flex-col gap-2">
-                        <div className="text-subtitle text-muted-foreground flex items-center gap-1">
+                        <div className="text-subtitle text-primary flex items-center gap-1">
                           End Date
                         </div>
                         <Input
@@ -259,7 +259,7 @@ export function PortfolioManagerNode({
                         />
                       </div>
                       <div className="flex flex-col gap-2">
-                        <div className="text-subtitle text-muted-foreground flex items-center gap-1">
+                        <div className="text-subtitle text-primary flex items-center gap-1">
                           Start Date
                         </div>
                         <Input

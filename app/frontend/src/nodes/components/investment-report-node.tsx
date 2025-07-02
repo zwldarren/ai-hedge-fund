@@ -50,7 +50,7 @@ export function InvestmentReportNode({
                 {isProcessing ? (
                   <Button 
                     variant="secondary"
-                    className="w-full flex-shrink-0 transition-all duration-200 hover:bg-primary hover:text-primary-foreground active:scale-95 text-subtitle"
+                    className="w-full flex-shrink-0 transition-all duration-200 hover:bg-primary hover:text-primary-foreground active:scale-95 text-subtitle border-border"
                     disabled
                   >
                     <Loader2 className="h-2 w-2 animate-spin" />
@@ -59,7 +59,7 @@ export function InvestmentReportNode({
                 ) : (
                   <Button 
                     variant="secondary"
-                    className="w-full flex-shrink-0 transition-all duration-200 hover:bg-primary hover:text-primary-foreground active:scale-95 text-subtitle"
+                    className="w-full flex-shrink-0 transition-all duration-200 hover:bg-primary hover:text-primary-foreground active:scale-95 text-subtitle border-border"
                     onClick={handleViewOutput}
                     disabled={!isOutputAvailable}
                   >
