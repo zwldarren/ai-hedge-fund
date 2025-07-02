@@ -208,7 +208,12 @@ export function FlowProvider({ children }: FlowProviderProps) {
         return;
       }
 
-      const position = getViewportPosition(true);
+      const centerPosition = getViewportPosition(false);
+      // Add slight randomness (±25 pixels) to avoid stacking components exactly on top of each other
+      const position = {
+        x: centerPosition.x + (Math.random() - 0.5) * 50,
+        y: centerPosition.y + (Math.random() - 0.5) * 50,
+      };
       const newNode = nodeTypeDefinition.createNode(position);
       reactFlowInstance.setNodes((nodes) => [...nodes, newNode]);
       markAsUnsaved();
