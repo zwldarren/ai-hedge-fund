@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { cn, getProviderColor } from '@/lib/utils';
-import { Cloud, Key, RefreshCw } from 'lucide-react';
+import { Cloud, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface CloudModelsProps {
@@ -59,14 +59,6 @@ export function CloudModels({ className }: CloudModelsProps) {
 
   return (
     <div className={cn("space-y-6", className)}>
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-100 dark:text-gray-100 mb-2">Cloud Models</h3>
-          <p className="text-sm text-gray-400 dark:text-gray-400">
-            Available cloud-based AI models from various providers. API keys required for usage.
-          </p>
-        </div>
-      </div>
 
       {error && (
         <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-4">
@@ -79,20 +71,6 @@ export function CloudModels({ className }: CloudModelsProps) {
           </div>
         </div>
       )}
-
-      {/* API Keys Notice */}
-      <div className="bg-blue-700/20 border border-blue-600/30 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <Key className="h-5 w-5 text-blue-400 mt-0.5" />
-          <div>
-            <h4 className="font-medium text-blue-300">API Keys Required</h4>
-            <p className="text-sm text-blue-400 mt-1">
-              To use cloud models, configure your API keys in the <strong>API Keys</strong> settings section.
-              Each provider requires its own API key for authentication.
-            </p>
-          </div>
-        </div>
-      </div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between mb-3">
