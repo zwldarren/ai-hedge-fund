@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { useNodeContext } from '@/contexts/node-context';
+import { useOutputNodeConnection } from '@/hooks/use-output-node-connection';
 import { type InvestmentReportNode } from '../types';
 import { InvestmentReportDialog } from './investment-report-dialog';
 import { NodeShell } from './node-shell';
@@ -15,15 +16,11 @@ export function InvestmentReportNode({
   id,
   isConnectable,
 }: NodeProps<InvestmentReportNode>) {  
-  const { outputNodeData, agentNodeData } = useNodeContext();
+  const { outputNodeData } = useNodeContext();
   const [showOutput, setShowOutput] = useState(false);
   
-  // Check if any agent is in progress
-  const isProcessing = Object.values(agentNodeData).some(
-    agent => agent.status === 'IN_PROGRESS'
-  );
-  
-  const isOutputAvailable = !!outputNodeData;
+  // Use the custom hook for connection logic
+  const { isProcessing, isOutputAvailable } = useOutputNodeConnection(id);
 
   const handleViewOutput = () => {
     setShowOutput(true);

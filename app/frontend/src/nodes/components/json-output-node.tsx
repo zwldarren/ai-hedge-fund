@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useNodeContext } from '@/contexts/node-context';
+import { useOutputNodeConnection } from '@/hooks/use-output-node-connection';
 import { api } from '@/services/api';
 import { type JsonOutputNode } from '../types';
 import { JsonOutputDialog } from './json-output-dialog';
@@ -17,16 +18,12 @@ export function JsonOutputNode({
   id,
   isConnectable,
 }: NodeProps<JsonOutputNode>) {  
-  const { outputNodeData, agentNodeData } = useNodeContext();
+  const { outputNodeData } = useNodeContext();
   const [showOutput, setShowOutput] = useState(false);
   const [saveToFile, setSaveToFile] = useState(false);
   
-  // Check if any agent is in progress
-  const isProcessing = Object.values(agentNodeData).some(
-    agent => agent.status === 'IN_PROGRESS'
-  );
-  
-  const isOutputAvailable = !!outputNodeData;
+  // Use the custom hook for connection logic
+  const { isProcessing, isOutputAvailable } = useOutputNodeConnection(id);
 
   // Save to file when output is available and saveToFile is enabled
   useEffect(() => {
