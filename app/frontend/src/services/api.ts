@@ -48,7 +48,7 @@ export const api = {
    */
   getLanguageModels: async (): Promise<LanguageModel[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/language-models`);
+      const response = await fetch(`${API_BASE_URL}/language-models/`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

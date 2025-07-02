@@ -103,7 +103,7 @@ export function FlowProvider({ children }: FlowProviderProps) {
         localStorage.setItem('lastSelectedFlowId', updatedFlow.id.toString());
         // Ensure the flow ID is set for node state isolation
         setNodeStateFlowId(updatedFlow.id.toString());
-        return null;
+        return updatedFlow;
       } else {
         // Create new flow
         const newFlow = await flowService.createFlow({

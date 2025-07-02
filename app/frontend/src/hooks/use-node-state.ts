@@ -209,9 +209,12 @@ export function useNodeState<T>(
   // Handle flow changes - reset to stored value for new flow
   useEffect(() => {
     const unsubscribe = flowStateManager.addFlowIdChangeListener(() => {
-      const newValue = getStoredValue();
-      setValue(newValue);
-      forceUpdate({}); // Force re-render
+      // Use setTimeout to defer the state update to avoid updating during render
+      setTimeout(() => {
+        const newValue = getStoredValue();
+        setValue(newValue);
+        forceUpdate({}); // Force re-render
+      }, 0);
     });
     
     return unsubscribe;
@@ -222,13 +225,16 @@ export function useNodeState<T>(
     const unsubscribe = flowStateManager.addStateChangeListener(() => {
       const storedValue = flowStateManager.getNodeState(nodeId, stateKey);
       if (storedValue !== undefined) {
-        setValue(prevValue => {
-          if (prevValue !== storedValue) {
-            console.debug(`[useNodeState] Updated ${nodeId}.${stateKey}:`, storedValue);
-            return storedValue;
-          }
-          return prevValue;
-        });
+        // Use setTimeout to defer the state update to avoid updating during render
+        setTimeout(() => {
+          setValue(prevValue => {
+            if (prevValue !== storedValue) {
+              console.debug(`[useNodeState] Updated ${nodeId}.${stateKey}:`, storedValue);
+              return storedValue;
+            }
+            return prevValue;
+          });
+        }, 0);
       }
     });
     
@@ -251,7 +257,10 @@ export function useNodeState<T>(
   useEffect(() => {
     const storedValue = flowStateManager.getNodeState(nodeId, stateKey);
     if (storedValue === undefined) {
-      flowStateManager.setNodeState(nodeId, stateKey, value);
+      // Use setTimeout to defer the state update to avoid updating during render
+      setTimeout(() => {
+        flowStateManager.setNodeState(nodeId, stateKey, value);
+      }, 0);
     }
   }, [nodeId, stateKey, value]);
 
