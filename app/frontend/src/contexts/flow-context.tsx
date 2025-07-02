@@ -103,7 +103,7 @@ export function FlowProvider({ children }: FlowProviderProps) {
         localStorage.setItem('lastSelectedFlowId', updatedFlow.id.toString());
         // Ensure the flow ID is set for node state isolation
         setNodeStateFlowId(updatedFlow.id.toString());
-        return updatedFlow;
+        return null;
       } else {
         // Create new flow
         const newFlow = await flowService.createFlow({
@@ -208,12 +208,7 @@ export function FlowProvider({ children }: FlowProviderProps) {
         return;
       }
 
-      const centerPosition = getViewportPosition(false);
-      // Add slight randomness (±25 pixels) to avoid stacking components exactly on top of each other
-      const position = {
-        x: centerPosition.x + (Math.random() - 0.5) * 50,
-        y: centerPosition.y + (Math.random() - 0.5) * 50,
-      };
+      const position = getViewportPosition(false);
       const newNode = nodeTypeDefinition.createNode(position);
       reactFlowInstance.setNodes((nodes) => [...nodes, newNode]);
       markAsUnsaved();

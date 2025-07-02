@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useFlowContext } from '@/contexts/flow-context';
 import { useNodeContext } from '@/contexts/node-context';
 import { getDefaultModel, getModels, LanguageModel } from '@/data/models';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
@@ -35,10 +36,15 @@ export function PortfolioManagerNode({
   const [startDate, setStartDate] = useNodeState(id, 'startDate', threeMonthsAgo.toISOString().split('T')[0]);
   const [endDate, setEndDate] = useNodeState(id, 'endDate', today.toISOString().split('T')[0]);
   
+  const { currentFlowId } = useFlowContext();
   const nodeContext = useNodeContext();
-  const { resetAllNodes, agentNodeData } = nodeContext;
+  const { resetAllNodes, getAgentNodeDataForFlow, getAllAgentModels } = nodeContext;
   const { getNodes, getEdges } = useReactFlow();
   const abortControllerRef = useRef<(() => void) | null>(null);
+  
+  // Get agent node data for the current flow
+  const flowId = currentFlowId?.toString() || null;
+  const agentNodeData = getAgentNodeDataForFlow(flowId);
   
   // Check if any agent is in progress
   const isProcessing = Object.values(agentNodeData).some(
@@ -115,12 +121,12 @@ export function PortfolioManagerNode({
       abortControllerRef.current = null;
     }
     // Reset all node data states
-    resetAllNodes();
+    resetAllNodes(flowId);
   };
 
   const handlePlay = () => {
     // First, reset all nodes to IDLE
-    resetAllNodes();
+    resetAllNodes(flowId);
     
     // Clean up any existing connection
     if (abortControllerRef.current) {
@@ -155,7 +161,7 @@ export function PortfolioManagerNode({
 
     // Collect agent models from connected agent nodes
     const agentModels = [];
-    const allAgentModels = nodeContext.getAllAgentModels();
+    const allAgentModels = getAllAgentModels(flowId);
     for (const agentId of selectedAgents) {
       const model = allAgentModels[agentId];
       if (model) {
@@ -179,7 +185,9 @@ export function PortfolioManagerNode({
         end_date: endDate,
       },
       // Pass the node status context to the API
-      nodeContext
+      nodeContext,
+      // Pass the current flow ID
+      flowId
     );
   };
 

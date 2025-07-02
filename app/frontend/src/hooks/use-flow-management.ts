@@ -44,7 +44,7 @@ export interface UseFlowManagementReturn {
 
 export function useFlowManagement(): UseFlowManagementReturn {
   // Get flow context, node context, and toast manager
-  const { saveCurrentFlow, loadFlow, reactFlowInstance } = useFlowContext();
+  const { saveCurrentFlow, loadFlow, reactFlowInstance, currentFlowId } = useFlowContext();
   const { exportNodeContextData, importNodeContextData, resetAllNodes } = useNodeContext();
   const { success, error } = useToastManager();
   
@@ -62,7 +62,8 @@ export function useFlowManagement(): UseFlowManagementReturn {
       const currentNodes = reactFlowInstance.getNodes();
       
       // Get node context data (runtime data: agent status, messages, output data)
-      const nodeContextData = exportNodeContextData();
+      const flowId = currentFlowId?.toString() || null;
+      const nodeContextData = exportNodeContextData(flowId);
       
       // Enhance nodes with internal states
       const nodesWithStates = currentNodes.map((node: any) => {
@@ -106,7 +107,7 @@ export function useFlowManagement(): UseFlowManagementReturn {
       console.error('Failed to save flow with states:', err);
       return null;
     }
-  }, [reactFlowInstance, saveCurrentFlow, exportNodeContextData]);
+  }, [reactFlowInstance, saveCurrentFlow, exportNodeContextData, currentFlowId]);
 
   // Enhanced load function that restores internal node states AND node context data
   const loadFlowWithStates = useCallback(async (flow: Flow) => {
@@ -118,7 +119,7 @@ export function useFlowManagement(): UseFlowManagementReturn {
       clearAllNodeStates();
       
       // Clear all node context data for current flow
-      resetAllNodes();
+      resetAllNodes(flow.id.toString());
 
       // Load the flow using the context (this handles currentFlowId, currentFlowName, etc.)
       await loadFlow(flow);
@@ -134,7 +135,7 @@ export function useFlowManagement(): UseFlowManagementReturn {
       
       // Finally, restore node context data (runtime data: agent status, messages, output data)
       if (flow.data?.nodeContextData) {
-        importNodeContextData(flow.data.nodeContextData);
+        importNodeContextData(flow.id.toString(), flow.data.nodeContextData);
       }
 
       console.log('Flow loaded with complete state restoration:', flow.name);

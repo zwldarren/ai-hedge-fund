@@ -1,5 +1,4 @@
 import { LanguageModel } from '@/data/models';
-import { getCurrentFlowId } from '@/hooks/use-node-state';
 import { createContext, ReactNode, useCallback, useContext, useState } from 'react';
 
 export type NodeStatus = 'IDLE' | 'IN_PROGRESS' | 'COMPLETE' | 'ERROR';
@@ -40,8 +39,7 @@ const DEFAULT_AGENT_NODE_STATE: AgentNodeData = {
 };
 
 // Helper function to create flow-aware composite keys
-function createCompositeKey(nodeId: string): string {
-  const flowId = getCurrentFlowId();
+function createCompositeKey(flowId: string | null, nodeId: string): string {
   return flowId ? `${flowId}:${nodeId}` : nodeId;
 }
 
@@ -49,21 +47,24 @@ interface NodeContextType {
   agentNodeData: Record<string, AgentNodeData>;
   outputNodeData: OutputNodeData | null;
   agentModels: Record<string, LanguageModel | null>;
-  updateAgentNode: (nodeId: string, data: Partial<AgentNodeData> | NodeStatus) => void;
-  updateAgentNodes: (nodeIds: string[], status: NodeStatus) => void;
-  setOutputNodeData: (data: OutputNodeData) => void;
-  setAgentModel: (nodeId: string, model: LanguageModel | null) => void;
-  getAgentModel: (nodeId: string) => LanguageModel | null;
-  getAllAgentModels: () => Record<string, LanguageModel | null>;
-  resetAllNodes: () => void;
-  exportNodeContextData: () => {
+  updateAgentNode: (flowId: string | null, nodeId: string, data: Partial<AgentNodeData> | NodeStatus) => void;
+  updateAgentNodes: (flowId: string | null, nodeIds: string[], status: NodeStatus) => void;
+  setOutputNodeData: (flowId: string | null, data: OutputNodeData) => void;
+  setAgentModel: (flowId: string | null, nodeId: string, model: LanguageModel | null) => void;
+  getAgentModel: (flowId: string | null, nodeId: string) => LanguageModel | null;
+  getAllAgentModels: (flowId: string | null) => Record<string, LanguageModel | null>;
+  resetAllNodes: (flowId: string | null) => void;
+  exportNodeContextData: (flowId: string | null) => {
     agentNodeData: Record<string, AgentNodeData>;
     outputNodeData: OutputNodeData | null;
   };
-  importNodeContextData: (data: {
+  importNodeContextData: (flowId: string | null, data: {
     agentNodeData?: Record<string, AgentNodeData>;
     outputNodeData?: OutputNodeData | null;
   }) => void;
+  // New flow-aware functions
+  getAgentNodeDataForFlow: (flowId: string | null) => Record<string, AgentNodeData>;
+  getOutputNodeDataForFlow: (flowId: string | null) => OutputNodeData | null;
 }
 
 const NodeContext = createContext<NodeContextType | undefined>(undefined);
@@ -76,8 +77,8 @@ export function NodeProvider({ children }: { children: ReactNode }) {
   // Agent models also need to be flow-aware to maintain model selections per flow
   const [agentModels, setAgentModels] = useState<Record<string, LanguageModel | null>>({});
 
-  const updateAgentNode = useCallback((nodeId: string, data: Partial<AgentNodeData> | NodeStatus) => {
-    const compositeKey = createCompositeKey(nodeId);
+  const updateAgentNode = useCallback((flowId: string | null, nodeId: string, data: Partial<AgentNodeData> | NodeStatus) => {
+    const compositeKey = createCompositeKey(flowId, nodeId);
     
     // Handle string status shorthand (just passing a status string)
     if (typeof data === 'string') {
@@ -132,14 +133,14 @@ export function NodeProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const updateAgentNodes = useCallback((nodeIds: string[], status: NodeStatus) => {
+  const updateAgentNodes = useCallback((flowId: string | null, nodeIds: string[], status: NodeStatus) => {
     if (nodeIds.length === 0) return;
     
     setAgentNodeData(prev => {
       const newStates = { ...prev };
       
       nodeIds.forEach(id => {
-        const compositeKey = createCompositeKey(id);
+        const compositeKey = createCompositeKey(flowId, id);
         newStates[compositeKey] = {
           ...(newStates[compositeKey] || { ...DEFAULT_AGENT_NODE_STATE }),
           status,
@@ -151,8 +152,8 @@ export function NodeProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const setAgentModel = useCallback((nodeId: string, model: LanguageModel | null) => {
-    const compositeKey = createCompositeKey(nodeId);
+  const setAgentModel = useCallback((flowId: string | null, nodeId: string, model: LanguageModel | null) => {
+    const compositeKey = createCompositeKey(flowId, nodeId);
     
     setAgentModels(prev => {
       if (model === null) {
@@ -169,22 +170,21 @@ export function NodeProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const getAgentModel = useCallback((nodeId: string): LanguageModel | null => {
-    const compositeKey = createCompositeKey(nodeId);
+  const getAgentModel = useCallback((flowId: string | null, nodeId: string): LanguageModel | null => {
+    const compositeKey = createCompositeKey(flowId, nodeId);
     return agentModels[compositeKey] || null;
   }, [agentModels]);
 
-  const getAllAgentModels = useCallback((): Record<string, LanguageModel | null> => {
-    // Return only models for the current flow
-    const currentFlowId = getCurrentFlowId();
-    if (!currentFlowId) {
+  const getAllAgentModels = useCallback((flowId: string | null): Record<string, LanguageModel | null> => {
+    // Return only models for the specified flow
+    if (!flowId) {
       // If no flow ID, return models without flow prefix (backward compatibility)
       return Object.fromEntries(
         Object.entries(agentModels).filter(([key]) => !key.includes(':'))
       );
     }
     
-    const flowPrefix = `${currentFlowId}:`;
+    const flowPrefix = `${flowId}:`;
     const currentFlowModels: Record<string, LanguageModel | null> = {};
     
     Object.entries(agentModels).forEach(([compositeKey, model]) => {
@@ -197,26 +197,24 @@ export function NodeProvider({ children }: { children: ReactNode }) {
     return currentFlowModels;
   }, [agentModels]);
 
-  const setOutputNodeDataForCurrentFlow = useCallback((data: OutputNodeData) => {
-    const currentFlowId = getCurrentFlowId();
-    if (!currentFlowId) {
+  const setOutputNodeDataForFlow = useCallback((flowId: string | null, data: OutputNodeData) => {
+    if (!flowId) {
       // If no flow ID, use 'default' as key for backward compatibility
       setOutputNodeData(prev => ({ ...prev, 'default': data }));
     } else {
-      setOutputNodeData(prev => ({ ...prev, [currentFlowId]: data }));
+      setOutputNodeData(prev => ({ ...prev, [flowId]: data }));
     }
   }, []);
 
-  const resetAllNodes = useCallback(() => {
-    // Clear all agent data for current flow only
-    const currentFlowId = getCurrentFlowId();
-    if (!currentFlowId) {
+  const resetAllNodes = useCallback((flowId: string | null) => {
+    // Clear all agent data for specified flow only
+    if (!flowId) {
       // If no flow ID, clear all data (backward compatibility)
       setAgentNodeData({});
       setOutputNodeData({});
     } else {
-      // Clear only data for current flow
-      const flowPrefix = `${currentFlowId}:`;
+      // Clear only data for specified flow
+      const flowPrefix = `${flowId}:`;
       setAgentNodeData(prev => {
         const newData: Record<string, AgentNodeData> = {};
         Object.entries(prev).forEach(([key, value]) => {
@@ -227,9 +225,9 @@ export function NodeProvider({ children }: { children: ReactNode }) {
         return newData;
       });
       
-      // Clear output data for current flow
+      // Clear output data for specified flow
       setOutputNodeData(prev => {
-        const { [currentFlowId]: removed, ...rest } = prev;
+        const { [flowId]: removed, ...rest } = prev;
         return rest;
       });
     }
@@ -238,15 +236,13 @@ export function NodeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Export node context data for persistence
-  const exportNodeContextData = useCallback(() => {
-    const currentFlowId = getCurrentFlowId();
-    
-    // Export agent data for current flow
+  const exportNodeContextData = useCallback((flowId: string | null) => {
+    // Export agent data for specified flow
     const currentFlowAgentData: Record<string, AgentNodeData> = {};
-    const flowPrefix = currentFlowId ? `${currentFlowId}:` : '';
+    const flowPrefix = flowId ? `${flowId}:` : '';
     
     Object.entries(agentNodeData).forEach(([compositeKey, data]) => {
-      if (currentFlowId) {
+      if (flowId) {
         if (compositeKey.startsWith(flowPrefix)) {
           const nodeId = compositeKey.substring(flowPrefix.length);
           currentFlowAgentData[nodeId] = data;
@@ -259,9 +255,9 @@ export function NodeProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Export output data for current flow
-    const currentFlowOutputData = currentFlowId 
-      ? outputNodeData[currentFlowId] || null
+    // Export output data for specified flow
+    const currentFlowOutputData = flowId 
+      ? outputNodeData[flowId] || null
       : outputNodeData['default'] || null;
 
     return {
@@ -271,16 +267,14 @@ export function NodeProvider({ children }: { children: ReactNode }) {
   }, [agentNodeData, outputNodeData]);
 
   // Import node context data from persistence
-  const importNodeContextData = useCallback((data: {
+  const importNodeContextData = useCallback((flowId: string | null, data: {
     agentNodeData?: Record<string, AgentNodeData>;
     outputNodeData?: OutputNodeData | null;
   }) => {
-    const currentFlowId = getCurrentFlowId();
-    
     // Import agent data
     if (data.agentNodeData) {
       Object.entries(data.agentNodeData).forEach(([nodeId, nodeData]) => {
-        const compositeKey = createCompositeKey(nodeId);
+        const compositeKey = createCompositeKey(flowId, nodeId);
         setAgentNodeData(prev => ({
           ...prev,
           [compositeKey]: nodeData,
@@ -290,10 +284,10 @@ export function NodeProvider({ children }: { children: ReactNode }) {
 
     // Import output data
     if (data.outputNodeData) {
-      if (currentFlowId) {
+      if (flowId) {
         setOutputNodeData(prev => ({
           ...prev,
-          [currentFlowId]: data.outputNodeData!,
+          [flowId]: data.outputNodeData!,
         }));
       } else {
         setOutputNodeData(prev => ({
@@ -304,50 +298,56 @@ export function NodeProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Modified to return flow-aware data
+  // Helper functions to get data for a specific flow
+  const getAgentNodeDataForFlow = useCallback((flowId: string | null): Record<string, AgentNodeData> => {
+    if (!flowId) {
+      // If no flow ID, return data without flow prefix (backward compatibility)
+      return Object.fromEntries(
+        Object.entries(agentNodeData).filter(([key]) => !key.includes(':'))
+      );
+    }
+    
+    const flowPrefix = `${flowId}:`;
+    const currentFlowData: Record<string, AgentNodeData> = {};
+    
+    Object.entries(agentNodeData).forEach(([compositeKey, data]) => {
+      if (compositeKey.startsWith(flowPrefix)) {
+        const nodeId = compositeKey.substring(flowPrefix.length);
+        currentFlowData[nodeId] = data;
+      }
+    });
+    
+    return currentFlowData;
+  }, [agentNodeData]);
+
+  const getOutputNodeDataForFlow = useCallback((flowId: string | null): OutputNodeData | null => {
+    if (!flowId) {
+      // If no flow ID, return 'default' data for backward compatibility
+      return outputNodeData['default'] || null;
+    }
+    
+    return outputNodeData[flowId] || null;
+  }, [outputNodeData]);
+
+  // Context value object
   const contextValue = {
-    get agentNodeData() {
-      // Return only agent data for the current flow, mapped back to simple node IDs
-      const currentFlowId = getCurrentFlowId();
-      if (!currentFlowId) {
-        // If no flow ID, return data without flow prefix (backward compatibility)
-        return Object.fromEntries(
-          Object.entries(agentNodeData).filter(([key]) => !key.includes(':'))
-        );
-      }
-      
-      const flowPrefix = `${currentFlowId}:`;
-      const currentFlowData: Record<string, AgentNodeData> = {};
-      
-      Object.entries(agentNodeData).forEach(([compositeKey, data]) => {
-        if (compositeKey.startsWith(flowPrefix)) {
-          const nodeId = compositeKey.substring(flowPrefix.length);
-          currentFlowData[nodeId] = data;
-        }
-      });
-      
-      return currentFlowData;
-    },
-    get outputNodeData() {
-      // Return output data for the current flow only
-      const currentFlowId = getCurrentFlowId();
-      if (!currentFlowId) {
-        // If no flow ID, return 'default' data for backward compatibility
-        return outputNodeData['default'] || null;
-      }
-      
-      return outputNodeData[currentFlowId] || null;
-    },
+    // Legacy getters for backward compatibility - these will return empty data
+    // Components should use the explicit flow-based functions instead
+    agentNodeData: {},
+    outputNodeData: null,
     agentModels,
     updateAgentNode,
     updateAgentNodes,
-    setOutputNodeData: setOutputNodeDataForCurrentFlow,
+    setOutputNodeData: setOutputNodeDataForFlow,
     setAgentModel,
     getAgentModel,
     getAllAgentModels,
     resetAllNodes,
     exportNodeContextData,
     importNodeContextData,
+    // New flow-aware functions
+    getAgentNodeDataForFlow,
+    getOutputNodeDataForFlow,
   };
 
   return (

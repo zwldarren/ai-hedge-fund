@@ -1,10 +1,10 @@
 import { useFlowContext } from '@/contexts/flow-context';
 import { useNodeContext } from '@/contexts/node-context';
 import {
-    clearAllNodeStates,
-    getNodeInternalState,
-    setNodeInternalState,
-    setCurrentFlowId as setNodeStateFlowId
+  clearAllNodeStates,
+  getNodeInternalState,
+  setNodeInternalState,
+  setCurrentFlowId as setNodeStateFlowId
 } from '@/hooks/use-node-state';
 import { flowService } from '@/services/flow-service';
 import { Flow } from '@/types/flow';
@@ -15,7 +15,7 @@ import { useCallback } from 'react';
  * (both use-node-state data and node context data)
  */
 export function useEnhancedFlowActions() {
-  const { saveCurrentFlow, loadFlow, reactFlowInstance } = useFlowContext();
+  const { saveCurrentFlow, loadFlow, reactFlowInstance, currentFlowId } = useFlowContext();
   const { exportNodeContextData, importNodeContextData, resetAllNodes } = useNodeContext();
 
   // Enhanced save that includes node context data
@@ -25,7 +25,8 @@ export function useEnhancedFlowActions() {
       const currentNodes = reactFlowInstance.getNodes();
       
       // Get node context data (runtime data: agent status, messages, output data)
-      const nodeContextData = exportNodeContextData();
+      const flowId = currentFlowId?.toString() || null;
+      const nodeContextData = exportNodeContextData(flowId);
       
       // Enhance nodes with internal states
       const nodesWithStates = currentNodes.map((node: any) => {
@@ -69,7 +70,7 @@ export function useEnhancedFlowActions() {
       console.error('Failed to save flow with complete state:', err);
       return null;
     }
-  }, [reactFlowInstance, saveCurrentFlow, exportNodeContextData]);
+  }, [reactFlowInstance, saveCurrentFlow, exportNodeContextData, currentFlowId]);
 
   // Enhanced load that restores node context data
   const loadFlowWithCompleteState = useCallback(async (flow: Flow) => {
@@ -81,7 +82,7 @@ export function useEnhancedFlowActions() {
       clearAllNodeStates();
       
       // Clear all node context data for current flow
-      resetAllNodes();
+      resetAllNodes(flow.id.toString());
 
       // Load the flow using the basic function (handles React Flow state)
       await loadFlow(flow);
@@ -97,7 +98,7 @@ export function useEnhancedFlowActions() {
       
       // Finally, restore node context data (runtime data: agent status, messages, output data)
       if (flow.data?.nodeContextData) {
-        importNodeContextData(flow.data.nodeContextData);
+        importNodeContextData(flow.id.toString(), flow.data.nodeContextData);
       }
 
       console.log('Flow loaded with complete state restoration:', flow.name);

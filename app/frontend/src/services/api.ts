@@ -95,11 +95,13 @@ export const api = {
    * Runs a hedge fund simulation with the given parameters and streams the results
    * @param params The hedge fund request parameters
    * @param nodeContext Node context for updating node states
+   * @param flowId The ID of the current flow
    * @returns A function to abort the SSE connection
    */
   runHedgeFund: (
     params: HedgeFundRequest, 
-    nodeContext: ReturnType<typeof useNodeContext>
+    nodeContext: ReturnType<typeof useNodeContext>,
+    flowId: string | null = null
   ): (() => void) => {
     // Convert tickers string to array if needed
     if (typeof params.tickers === 'string') {
@@ -170,7 +172,7 @@ export const api = {
                   switch (eventType) {
                     case 'start':
                       // Reset all nodes at the start of a new run
-                      nodeContext.resetAllNodes();
+                      nodeContext.resetAllNodes(flowId);
                       break;
                     case 'progress':
                       if (eventData.agent) {
@@ -183,7 +185,7 @@ export const api = {
                         const agentId = eventData.agent.replace('_agent', '');
                         
                         // Use the enhanced API to update both status and additional data
-                        nodeContext.updateAgentNode(agentId, {
+                        nodeContext.updateAgentNode(flowId, agentId, {
                           status: nodeStatus,
                           ticker: eventData.ticker,
                           message: eventData.status,
@@ -195,19 +197,19 @@ export const api = {
                     case 'complete':
                       // Store the complete event data in the node context
                       if (eventData.data) {
-                        nodeContext.setOutputNodeData(eventData.data as OutputNodeData);
+                        nodeContext.setOutputNodeData(flowId, eventData.data as OutputNodeData);
                       }
                       // Mark all agents as complete when the whole process is done
-                      nodeContext.updateAgentNodes(params.selected_agents || [], 'COMPLETE');
+                      nodeContext.updateAgentNodes(flowId, params.selected_agents || [], 'COMPLETE');
                       // Also update the output node
-                      nodeContext.updateAgentNode('output', {
+                      nodeContext.updateAgentNode(flowId, 'output', {
                         status: 'COMPLETE',
                         message: 'Analysis complete'
                       });
                       break;
                     case 'error':
                       // Mark all agents as error when there's an error
-                      nodeContext.updateAgentNodes(params.selected_agents || [], 'ERROR');
+                      nodeContext.updateAgentNodes(flowId, params.selected_agents || [], 'ERROR');
                       break;
                     default:
                       console.warn('Unknown event type:', eventType);
@@ -223,7 +225,7 @@ export const api = {
             console.error('Error reading SSE stream:', error);
             // Mark all agents as error when there's a connection error
             const agentIds = params.selected_agents || [];
-            nodeContext.updateAgentNodes(agentIds, 'ERROR');
+            nodeContext.updateAgentNodes(flowId, agentIds, 'ERROR');
           }
         }
       };
@@ -236,7 +238,7 @@ export const api = {
         console.error('SSE connection error:', error);
         // Mark all agents as error when there's a connection error
         const agentIds = params.selected_agents || [];
-        nodeContext.updateAgentNodes(agentIds, 'ERROR');
+        nodeContext.updateAgentNodes(flowId, agentIds, 'ERROR');
       }
     });
 

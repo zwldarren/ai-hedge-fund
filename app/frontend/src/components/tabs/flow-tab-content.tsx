@@ -21,14 +21,16 @@ export function FlowTabContent({ flow, className }: FlowTabContentProps) {
   // Enhanced load function that restores both use-node-state and node context data
   const loadFlowWithCompleteState = async (flowToLoad: FlowType) => {
     try {
+      const flowId = flowToLoad.id.toString();
+      
       // First, set the flow ID for node state isolation
-      setNodeStateFlowId(flowToLoad.id.toString());
+      setNodeStateFlowId(flowId);
       
       // Clear all existing node states
       clearAllNodeStates();
       
       // Clear all node context data for current flow
-      resetAllNodes();
+      resetAllNodes(flowId);
 
       // Load the flow using the basic context function (handles React Flow state)
       await loadFlow(flowToLoad);
@@ -44,7 +46,7 @@ export function FlowTabContent({ flow, className }: FlowTabContentProps) {
       
       // Finally, restore node context data (runtime data: agent status, messages, output data)
       if (flowToLoad.data?.nodeContextData) {
-        importNodeContextData(flowToLoad.data.nodeContextData);
+        importNodeContextData(flowId, flowToLoad.data.nodeContextData);
       }
 
       console.log('Flow tab loaded with complete state restoration:', flowToLoad.name);

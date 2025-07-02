@@ -44,7 +44,7 @@ export interface UseFlowManagementTabsReturn {
 
 export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
   // Get flow context, node context, tabs context, and toast manager
-  const { saveCurrentFlow, reactFlowInstance } = useFlowContext();
+  const { saveCurrentFlow, reactFlowInstance, currentFlowId } = useFlowContext();
   const { exportNodeContextData, importNodeContextData, resetAllNodes } = useNodeContext();
   const { openTab, isTabOpen, closeTab } = useTabsContext();
   const { success, error } = useToastManager();
@@ -63,7 +63,8 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
       const currentNodes = reactFlowInstance.getNodes();
       
       // Get node context data (runtime data: agent status, messages, output data)
-      const nodeContextData = exportNodeContextData();
+      const flowId = currentFlowId?.toString() || null;
+      const nodeContextData = exportNodeContextData(flowId);
       
       // Enhance nodes with internal states
       const nodesWithStates = currentNodes.map((node: any) => {
@@ -107,7 +108,7 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
       console.error('Failed to save flow with states:', err);
       return null;
     }
-  }, [reactFlowInstance, saveCurrentFlow, exportNodeContextData]);
+  }, [reactFlowInstance, saveCurrentFlow, exportNodeContextData, currentFlowId]);
 
   // Create default flow for new users
   const createDefaultFlow = useCallback(async () => {
@@ -224,7 +225,7 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
           onActivate: () => {
             // Restore node context data when tab becomes active
             if (flowData.data?.nodeContextData) {
-              importNodeContextData(flowData.data.nodeContextData);
+              importNodeContextData(flowData.id.toString(), flowData.data.nodeContextData);
             }
             
             // Restore internal states for each node (use-node-state data)

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { CardContent } from '@/components/ui/card';
 import { ModelSelector } from '@/components/ui/llm-selector';
+import { useFlowContext } from '@/contexts/flow-context';
 import { useNodeContext } from '@/contexts/node-context';
 import { getModels, LanguageModel } from '@/data/models';
 import { useNodeState } from '@/hooks/use-node-state';
@@ -20,7 +21,11 @@ export function AgentNode({
   id,
   isConnectable,
 }: NodeProps<AgentNode>) {
-  const { agentNodeData, setAgentModel, getAgentModel } = useNodeContext();
+  const { currentFlowId } = useFlowContext();
+  const { getAgentNodeDataForFlow, setAgentModel, getAgentModel } = useNodeContext();
+  
+  // Get agent node data for the current flow
+  const agentNodeData = getAgentNodeDataForFlow(currentFlowId?.toString() || null);
   const nodeData = agentNodeData[id] || { 
     status: 'IDLE', 
     ticker: null, 
@@ -53,11 +58,12 @@ export function AgentNode({
 
   // Update the node context when the model changes
   useEffect(() => {
-    const currentContextModel = getAgentModel(id);
+    const flowId = currentFlowId?.toString() || null;
+    const currentContextModel = getAgentModel(flowId, id);
     if (selectedModel !== currentContextModel) {
-      setAgentModel(id, selectedModel);
+      setAgentModel(flowId, id, selectedModel);
     }
-  }, [selectedModel, id, setAgentModel, getAgentModel]);
+  }, [selectedModel, id, currentFlowId, setAgentModel, getAgentModel]);
 
   const handleModelChange = (model: LanguageModel | null) => {
     setSelectedModel(model);
