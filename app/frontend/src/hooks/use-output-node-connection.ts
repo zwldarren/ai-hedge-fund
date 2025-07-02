@@ -4,6 +4,7 @@ import { getConnectedEdges, useReactFlow } from '@xyflow/react';
 interface UseOutputNodeConnectionResult {
   isConnected: boolean;
   isProcessing: boolean;
+  isAnyAgentRunning: boolean;
   isOutputAvailable: boolean;
   connectedAgentIds: Set<string>;
 }
@@ -13,7 +14,9 @@ interface UseOutputNodeConnectionResult {
  * 
  * This hook encapsulates all the logic needed for output nodes to:
  * - Check if they're connected to the portfolio manager through agent nodes
- * - Show "Processing..." only when connected agents are running
+ * - Show "In Progress" when connected agents are running
+ * - Show "Completing" when any agent in the flow is running (but not connected ones)
+ * - Show "Idle" when no agents are running and no data is available
  * - Show output data only when connected and data is available
  * 
  * @param nodeId - The ID of the output node
@@ -24,12 +27,13 @@ interface UseOutputNodeConnectionResult {
  * // In any output node component:
  * export function MyOutputNode({ id, ...props }: NodeProps<MyOutputNode>) {
  *   const { outputNodeData } = useNodeContext();
- *   const { isProcessing, isOutputAvailable, isConnected } = useOutputNodeConnection(id);
+ *   const { isProcessing, isAnyAgentRunning, isOutputAvailable, isConnected } = useOutputNodeConnection(id);
  *   
  *   return (
  *     <NodeShell {...props}>
  *       <OutputNodeStatus
  *         isProcessing={isProcessing}
+ *         isAnyAgentRunning={isAnyAgentRunning}
  *         isOutputAvailable={isOutputAvailable}
  *         isConnected={isConnected}
  *         onViewOutput={() => setShowOutput(true)}
@@ -77,8 +81,23 @@ export function useOutputNodeConnection(nodeId: string): UseOutputNodeConnection
     
     return agentsConnectedToThisOutput;
   };
+
+  // Get all agent node IDs in the flow (for detecting any running agent)
+  const getAllAgentIds = (): Set<string> => {
+    const nodes = getNodes();
+    const agentIds = new Set<string>();
+    
+    nodes.forEach(node => {
+      if (node.type === 'agent-node') {
+        agentIds.add(node.id);
+      }
+    });
+    
+    return agentIds;
+  };
   
   const connectedAgentIds = getConnectedAgentIds();
+  const allAgentIds = getAllAgentIds();
   
   // Check if this node is connected to the portfolio manager (has connected agents)
   const isConnected = connectedAgentIds.size > 0;
@@ -88,12 +107,18 @@ export function useOutputNodeConnection(nodeId: string): UseOutputNodeConnection
     agentNodeData[agentId]?.status === 'IN_PROGRESS'
   );
   
+  // Check if ANY agent in the flow is running (for "Completing" state)
+  const isAnyAgentRunning = Array.from(allAgentIds).some(agentId => 
+    agentNodeData[agentId]?.status === 'IN_PROGRESS'
+  );
+  
   // Only show as available if connected to portfolio manager AND has output data
   const isOutputAvailable = !!outputNodeData && isConnected;
   
   return {
     isConnected,
     isProcessing,
+    isAnyAgentRunning,
     isOutputAvailable,
     connectedAgentIds,
   };

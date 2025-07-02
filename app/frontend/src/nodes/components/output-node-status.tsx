@@ -3,46 +3,58 @@ import { getStatusColor } from '../utils';
 
 interface OutputNodeStatusProps {
   isProcessing: boolean;
+  isAnyAgentRunning: boolean;
   isOutputAvailable: boolean;
   isConnected: boolean;
   onViewOutput?: () => void;
   processingText?: string;
+  completingText?: string;
   availableText?: string;
-  unavailableText?: string;
+  idleText?: string;
 }
 
 export function OutputNodeStatus({
   isProcessing,
+  isAnyAgentRunning,
   isOutputAvailable,
   isConnected,
   onViewOutput,
   processingText = "In Progress",
+  completingText = "Completing",
   availableText = "View Output",
-  unavailableText = "View Output"
+  idleText = "Idle"
 }: OutputNodeStatusProps) {
-  const status = isProcessing ? 'IN_PROGRESS' : 'IDLE';
-  const isClickable = isOutputAvailable && !isProcessing;
+  // Determine the current state and appropriate styling
+  const isLocallyProcessing = isProcessing; // Connected agents are running
+  const isGloballyProcessing = !isProcessing && isAnyAgentRunning; // Other agents running
+  const hasGradientAnimation = isLocallyProcessing || isGloballyProcessing;
+  const isClickable = isOutputAvailable && !isLocallyProcessing && !isGloballyProcessing;
   
+  // Determine display text based on current state
   let displayText: string;
-  if (isProcessing) {
-    displayText = processingText;
+  if (isLocallyProcessing) {
+    displayText = processingText; // "In Progress"
+  } else if (isGloballyProcessing) {
+    displayText = completingText; // "Completing"
   } else if (isOutputAvailable) {
-    displayText = availableText;
+    displayText = availableText; // "View Output"
   } else {
-    displayText = unavailableText;
+    displayText = idleText; // "Idle"
   }
+
+  const status = hasGradientAnimation ? 'IN_PROGRESS' : 'IDLE';
 
   return (
     <div 
       className={cn(
         "text-foreground text-xs rounded p-2 border border-border transition-colors",
-        isProcessing ? "gradient-animation" : getStatusColor(status),
+        hasGradientAnimation ? "gradient-animation" : getStatusColor(status),
         isClickable && "bg-primary text-primary-foreground cursor-pointer hover:bg-primary/80",
-        !isOutputAvailable && !isProcessing && "opacity-50 cursor-not-allowed"
+        !isOutputAvailable && !hasGradientAnimation && "opacity-50"
       )}
       onClick={isClickable ? onViewOutput : undefined}
     >
-      {isProcessing ? (
+      {hasGradientAnimation ? (
         <div className="flex items-center gap-2 justify-center">
           <span className="capitalize">{displayText}</span>
         </div>

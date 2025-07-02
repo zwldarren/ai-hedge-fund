@@ -1,8 +1,10 @@
 import { useFlowContext } from '@/contexts/flow-context';
+import { useNodeContext } from '@/contexts/node-context';
 import { useTabsContext } from '@/contexts/tabs-context';
 import {
-  clearFlowNodeStates,
-  getNodeInternalState
+    clearFlowNodeStates,
+    getNodeInternalState,
+    setNodeInternalState
 } from '@/hooks/use-node-state';
 import { useToastManager } from '@/hooks/use-toast-manager';
 import { flowService } from '@/services/flow-service';
@@ -41,8 +43,9 @@ export interface UseFlowManagementTabsReturn {
 }
 
 export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
-  // Get flow context, tabs context, and toast manager
+  // Get flow context, node context, tabs context, and toast manager
   const { saveCurrentFlow, reactFlowInstance } = useFlowContext();
+  const { exportNodeContextData, importNodeContextData, resetAllNodes } = useNodeContext();
   const { openTab, isTabOpen, closeTab } = useTabsContext();
   const { success, error } = useToastManager();
   
@@ -53,11 +56,14 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
   const [openGroups, setOpenGroups] = useState<string[]>(['recent-flows']);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  // Enhanced save function that includes internal node states
+  // Enhanced save function that includes internal node states AND node context data
   const saveCurrentFlowWithStates = useCallback(async (): Promise<Flow | null> => {
     try {
       // Get current nodes from React Flow
       const currentNodes = reactFlowInstance.getNodes();
+      
+      // Get node context data (runtime data: agent status, messages, output data)
+      const nodeContextData = exportNodeContextData();
       
       // Enhance nodes with internal states
       const nodesWithStates = currentNodes.map((node: any) => {
@@ -78,6 +84,20 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
       try {
         // Use the context's save function which handles currentFlowId properly
         const savedFlow = await saveCurrentFlow();
+        
+        if (savedFlow) {
+          // After basic save, update with node context data
+          const updatedFlow = await flowService.updateFlow(savedFlow.id, {
+            ...savedFlow,
+            data: {
+              ...savedFlow.data,
+              nodeContextData, // Add runtime data from node context
+            }
+          });
+          
+          return updatedFlow;
+        }
+        
         return savedFlow;
       } finally {
         // Restore original nodes (without internal_state in React Flow)
@@ -87,7 +107,7 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
       console.error('Failed to save flow with states:', err);
       return null;
     }
-  }, [reactFlowInstance, saveCurrentFlow]);
+  }, [reactFlowInstance, saveCurrentFlow, exportNodeContextData]);
 
   // Create default flow for new users
   const createDefaultFlow = useCallback(async () => {
@@ -192,26 +212,62 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
     try {      
       // Always fetch the full flow data including nodes, edges, and viewport
       // This ensures we have the latest data from the backend
-      const fullFlow = await flowService.getFlow(flow.id);      
+      const fullFlow = await flowService.getFlow(flow.id);
+      
+      // Create tab data with enhanced flow restoration
+      const createTabWithCompleteRestore = (flowData: Flow) => {
+        const tabData = TabService.createFlowTab(flowData);
+        
+        // Enhance the tab content to restore node context data when the tab is activated
+        return {
+          ...tabData,
+          onActivate: () => {
+            // Restore node context data when tab becomes active
+            if (flowData.data?.nodeContextData) {
+              importNodeContextData(flowData.data.nodeContextData);
+            }
+            
+            // Restore internal states for each node (use-node-state data)
+            if (flowData.nodes) {
+              flowData.nodes.forEach((node: any) => {
+                if (node.data?.internal_state) {
+                  setNodeInternalState(node.id, node.data.internal_state);
+                }
+              });
+            }
+          }
+        };
+      };
+      
       // Check if tab is already open
       if (isTabOpen(flow.id.toString(), 'flow')) {
         // Tab exists - update it with fresh data and focus it
         const tabId = `flow-${flow.id}`;
-        const tabData = TabService.createFlowTab(fullFlow);
+        const enhancedTabData = createTabWithCompleteRestore(fullFlow);
         
         // Update the existing tab with fresh data
         openTab({
           id: tabId,
-          type: tabData.type,
-          title: tabData.title,
-          content: tabData.content,
-          flow: tabData.flow,
-          metadata: tabData.metadata,
+          type: enhancedTabData.type,
+          title: enhancedTabData.title,
+          content: enhancedTabData.content,
+          flow: enhancedTabData.flow,
+          metadata: enhancedTabData.metadata,
         });
+        
+        // Trigger the enhanced restoration
+        if (enhancedTabData.onActivate) {
+          enhancedTabData.onActivate();
+        }
       } else {
         // Create new tab with fresh data
-        const tabData = TabService.createFlowTab(fullFlow);
-        openTab(tabData);
+        const enhancedTabData = createTabWithCompleteRestore(fullFlow);
+        openTab(enhancedTabData);
+        
+        // Trigger the enhanced restoration for new tab
+        if (enhancedTabData.onActivate) {
+          enhancedTabData.onActivate();
+        }
       }
       
       // Remember the selected flow
@@ -220,7 +276,7 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
       console.error('Failed to open flow in tab:', err);
       error('Failed to load flow data');
     }
-  }, [isTabOpen, openTab, error]);
+  }, [isTabOpen, openTab, error, importNodeContextData]);
 
   const handleRefresh = useCallback(async () => {
     await loadFlows();

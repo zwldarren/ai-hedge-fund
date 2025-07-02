@@ -23,8 +23,8 @@ export function JsonOutputNode({
   const [saveToFile, setSaveToFile] = useState(false);
   
   // Use the custom hook for connection logic
-  const { isProcessing, isOutputAvailable, isConnected, connectedAgentIds } = useOutputNodeConnection(id);
-  const status = isProcessing ? 'IN_PROGRESS' : 'IDLE';
+  const { isProcessing, isAnyAgentRunning, isOutputAvailable, isConnected, connectedAgentIds } = useOutputNodeConnection(id);
+  const status = isProcessing || isAnyAgentRunning ? 'IN_PROGRESS' : 'IDLE';
 
   // Save to file when output is available and saveToFile is enabled
   useEffect(() => {
@@ -80,6 +80,7 @@ export function JsonOutputNode({
               
               <OutputNodeStatus
                 isProcessing={isProcessing}
+                isAnyAgentRunning={isAnyAgentRunning}
                 isOutputAvailable={isOutputAvailable}
                 isConnected={isConnected}
                 onViewOutput={handleViewOutput}

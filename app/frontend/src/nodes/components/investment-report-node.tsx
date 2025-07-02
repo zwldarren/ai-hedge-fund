@@ -20,8 +20,8 @@ export function InvestmentReportNode({
   const [showOutput, setShowOutput] = useState(false);
   
   // Use the custom hook for connection logic
-  const { isProcessing, isOutputAvailable, isConnected, connectedAgentIds } = useOutputNodeConnection(id);
-  const status = isProcessing ? 'IN_PROGRESS' : 'IDLE';
+  const { isProcessing, isAnyAgentRunning, isOutputAvailable, isConnected, connectedAgentIds } = useOutputNodeConnection(id);
+  const status = isProcessing || isAnyAgentRunning ? 'IN_PROGRESS' : 'IDLE';
 
   const handleViewOutput = () => {
     setShowOutput(true);
@@ -48,6 +48,7 @@ export function InvestmentReportNode({
               
               <OutputNodeStatus
                 isProcessing={isProcessing}
+                isAnyAgentRunning={isAnyAgentRunning}
                 isOutputAvailable={isOutputAvailable}
                 isConnected={isConnected}
                 onViewOutput={handleViewOutput}

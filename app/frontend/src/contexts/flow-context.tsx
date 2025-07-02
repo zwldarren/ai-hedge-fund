@@ -77,9 +77,15 @@ export function FlowProvider({ children }: FlowProviderProps) {
       const edges = reactFlowInstance.getEdges();
       const viewport = reactFlowInstance.getViewport();
       
-      // Collect all node internal states
+      // Collect all node internal states (from use-node-state)
       const nodeStates = getAllNodeStates();
-      const data = Object.fromEntries(nodeStates);
+      const nodeInternalStates = Object.fromEntries(nodeStates);
+
+      // Create structured data - nodeContextData will be added by enhanced save functions
+      const data = {
+        nodeStates: nodeInternalStates,  // use-node-state data
+        // nodeContextData will be added separately by enhanced save functions
+      };
 
       if (currentFlowId) {
         // Update existing flow
@@ -137,9 +143,16 @@ export function FlowProvider({ children }: FlowProviderProps) {
       
       // Restore internal states BEFORE setting nodes so they're available during render
       if (flow.data) {
-        Object.entries(flow.data).forEach(([nodeId, nodeState]) => {
-          setNodeInternalState(nodeId, nodeState as Record<string, any>);
-        });
+        // Handle backward compatibility - data might be direct nodeStates or structured data
+        const dataToRestore = flow.data.nodeStates || flow.data;
+        
+        if (dataToRestore) {
+          Object.entries(dataToRestore).forEach(([nodeId, nodeState]) => {
+            setNodeInternalState(nodeId, nodeState as Record<string, any>);
+          });
+        }
+        
+        // nodeContextData restoration will be handled by enhanced load functions
       }
       
       // Now render the nodes - useNodeState hooks will initialize with correct flow ID

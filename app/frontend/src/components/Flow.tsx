@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from 'react';
 import '@xyflow/react/dist/style.css';
 
 import { useFlowContext } from '@/contexts/flow-context';
+import { useEnhancedFlowActions } from '@/hooks/use-enhanced-flow-actions';
 import { useFlowHistory } from '@/hooks/use-flow-history';
 import { useFlowKeyboardShortcuts, useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useToastManager } from '@/hooks/use-toast-manager';
@@ -33,8 +34,11 @@ export function Flow({ className = '' }: FlowProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const proOptions = { hideAttribution: true };
   
-  // Get flow context for saving
-  const { saveCurrentFlow, currentFlowId } = useFlowContext();
+  // Get flow context for flow ID
+  const { currentFlowId } = useFlowContext();
+  
+  // Get enhanced flow actions for complete state persistence
+  const { saveCurrentFlowWithCompleteState } = useEnhancedFlowActions();
   
   // Get toast manager
   const { success, error } = useToastManager();
@@ -66,7 +70,7 @@ export function Flow({ className = '' }: FlowProps) {
     
     const timeoutId = setTimeout(async () => {
       try {
-        await saveCurrentFlow();
+        await saveCurrentFlowWithCompleteState();
         // Don't show success toast for auto-save to avoid spam
       } catch (err) {
         // Only show error notifications for auto-save failures
@@ -75,12 +79,12 @@ export function Flow({ className = '' }: FlowProps) {
     }, 1000); // Debounce auto-save by 1 second (longer than undo/redo)
 
     return () => clearTimeout(timeoutId);
-  }, [nodes, edges, saveCurrentFlow, error, isInitialized]);
+  }, [nodes, edges, saveCurrentFlowWithCompleteState, error, isInitialized]);
 
   // Connect keyboard shortcuts to save flow with toast
   useFlowKeyboardShortcuts(async () => {
     try {
-      const savedFlow = await saveCurrentFlow();
+      const savedFlow = await saveCurrentFlowWithCompleteState();
       if (savedFlow) {
         success(`"${savedFlow.name}" saved!`, 'flow-save');
       } else {
