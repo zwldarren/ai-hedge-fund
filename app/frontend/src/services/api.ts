@@ -1,6 +1,7 @@
 import { NodeStatus, OutputNodeData, useNodeContext } from '@/contexts/node-context';
 import { Agent } from '@/data/agents';
 import { LanguageModel } from '@/data/models';
+import { flowConnectionManager } from '@/hooks/use-flow-connection';
 import { ModelProvider } from '@/services/types';
 
 interface AgentModelConfig {
@@ -206,10 +207,27 @@ export const api = {
                         status: 'COMPLETE',
                         message: 'Analysis complete'
                       });
+
+                      // Update flow connection state to completed
+                      if (flowId) {
+                        flowConnectionManager.setConnection(flowId, {
+                          state: 'completed',
+                          abortController: null,
+                        });
+                      }
                       break;
                     case 'error':
-                      // Mark all agents as error when there's an error
+                      // Mark all agents as error when there's an error  
                       nodeContext.updateAgentNodes(flowId, params.selected_agents || [], 'ERROR');
+                      
+                      // Update flow connection state to error
+                      if (flowId) {
+                        flowConnectionManager.setConnection(flowId, {
+                          state: 'error',
+                          error: eventData.message || 'Unknown error occurred',
+                          abortController: null,
+                        });
+                      }
                       break;
                     default:
                       console.warn('Unknown event type:', eventType);
@@ -226,6 +244,15 @@ export const api = {
             // Mark all agents as error when there's a connection error
             const agentIds = params.selected_agents || [];
             nodeContext.updateAgentNodes(flowId, agentIds, 'ERROR');
+            
+            // Update flow connection state to error
+            if (flowId) {
+              flowConnectionManager.setConnection(flowId, {
+                state: 'error',
+                error: error.message || 'Connection error',
+                abortController: null,
+              });
+            }
           }
         }
       };
@@ -239,12 +266,28 @@ export const api = {
         // Mark all agents as error when there's a connection error
         const agentIds = params.selected_agents || [];
         nodeContext.updateAgentNodes(flowId, agentIds, 'ERROR');
+        
+        // Update flow connection state to error
+        if (flowId) {
+          flowConnectionManager.setConnection(flowId, {
+            state: 'error',
+            error: error.message || 'Connection failed',
+            abortController: null,
+          });
+        }
       }
     });
 
     // Return abort function
     return () => {
       controller.abort();
+      // Update connection state when manually aborted
+      if (flowId) {
+        flowConnectionManager.setConnection(flowId, {
+          state: 'idle',
+          abortController: null,
+        });
+      }
     };
   },
 }; 

@@ -3,6 +3,7 @@ import { FileText } from 'lucide-react';
 import { useState } from 'react';
 
 import { CardContent } from '@/components/ui/card';
+import { useFlowContext } from '@/contexts/flow-context';
 import { useNodeContext } from '@/contexts/node-context';
 import { useOutputNodeConnection } from '@/hooks/use-output-node-connection';
 import { type InvestmentReportNode } from '../types';
@@ -16,7 +17,13 @@ export function InvestmentReportNode({
   id,
   isConnectable,
 }: NodeProps<InvestmentReportNode>) {  
-  const { outputNodeData } = useNodeContext();
+  const { currentFlowId } = useFlowContext();
+  const { getOutputNodeDataForFlow } = useNodeContext();
+  
+  // Get output node data for the current flow
+  const flowId = currentFlowId?.toString() || null;
+  const outputNodeData = getOutputNodeDataForFlow(flowId);
+  
   const [showOutput, setShowOutput] = useState(false);
   
   // Use the custom hook for connection logic

@@ -1,10 +1,11 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from '@/components/ui/dialog';
+import { useFlowContext } from '@/contexts/flow-context';
 import { useNodeContext } from '@/contexts/node-context';
 import { formatTimeFromTimestamp } from '@/utils/date-utils';
 import { formatContent } from '@/utils/text-utils';
@@ -26,7 +27,12 @@ export function AgentOutputDialog({
   name, 
   nodeId 
 }: AgentOutputDialogProps) {
-  const { agentNodeData } = useNodeContext();
+  const { currentFlowId } = useFlowContext();
+  const { getAgentNodeDataForFlow } = useNodeContext();
+  
+  // Get agent node data for the current flow
+  const flowId = currentFlowId?.toString() || null;
+  const agentNodeData = getAgentNodeDataForFlow(flowId);
   const nodeData = agentNodeData[nodeId] || { 
     status: 'IDLE', 
     ticker: null, 

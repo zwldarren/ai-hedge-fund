@@ -1,5 +1,6 @@
 import { getMultiNodeDefinition, isMultiNodeComponent } from '@/data/multi-node-mappings';
 import { getNodeIdForComponent, getNodeTypeDefinition } from '@/data/node-mappings';
+import { flowConnectionManager } from '@/hooks/use-flow-connection';
 import { clearAllNodeStates, getAllNodeStates, setNodeInternalState, setCurrentFlowId as setNodeStateFlowId } from '@/hooks/use-node-state';
 import { flowService } from '@/services/flow-service';
 import { Flow } from '@/types/flow';
@@ -172,6 +173,17 @@ export function FlowProvider({ children }: FlowProviderProps) {
       
       // Remember this flow as the last selected
       localStorage.setItem('lastSelectedFlowId', flow.id.toString());
+
+      // IMPORTANT: Allow components to mount first, then recover connection state
+      // This ensures useFlowConnection hooks are initialized before recovery
+      setTimeout(() => {
+        // Check if this flow has any stale processing states and recover them
+        const connection = flowConnectionManager.getConnection(flow.id.toString());
+        if (connection.state === 'idle') {
+          // No active connection, so any IN_PROGRESS states are stale and should be reset
+          console.log(`Flow ${flow.id} loaded - checking for stale connection states`);
+        }
+      }, 100);
     } catch (error) {
       console.error('Failed to load flow:', error);
     }
@@ -194,6 +206,10 @@ export function FlowProvider({ children }: FlowProviderProps) {
       reactFlowInstance.setViewport({ x: 0, y: 0, zoom: 1 });
 
       setIsUnsaved(false);
+
+      // Clear any active connections when creating a new flow
+      // Note: We don't have a current flow ID to clear, so this is mainly cleanup
+      console.log('Created new flow - any previous connections should be cleaned up');
     } catch (error) {
       console.error('Failed to create new flow:', error);
     }

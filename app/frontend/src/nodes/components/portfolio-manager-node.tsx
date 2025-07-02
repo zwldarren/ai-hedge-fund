@@ -1,7 +1,7 @@
 import { ModelSelector } from '@/components/ui/llm-selector';
 import { getConnectedEdges, useReactFlow, type NodeProps } from '@xyflow/react';
 import { Brain, Play, Square } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useFlowContext } from '@/contexts/flow-context';
 import { useNodeContext } from '@/contexts/node-context';
 import { getDefaultModel, getModels, LanguageModel } from '@/data/models';
+import { useFlowConnection } from '@/hooks/use-flow-connection';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useNodeState } from '@/hooks/use-node-state';
 import { formatKeyboardShortcut } from '@/lib/utils';
-import { api } from '@/services/api';
 import { type PortfolioManagerNode } from '../types';
 import { NodeShell } from './node-shell';
 
@@ -38,21 +38,23 @@ export function PortfolioManagerNode({
   
   const { currentFlowId } = useFlowContext();
   const nodeContext = useNodeContext();
-  const { resetAllNodes, getAgentNodeDataForFlow, getAllAgentModels } = nodeContext;
+  const { getAllAgentModels } = nodeContext;
   const { getNodes, getEdges } = useReactFlow();
-  const abortControllerRef = useRef<(() => void) | null>(null);
   
-  // Get agent node data for the current flow
+  // Use the new flow connection hook
   const flowId = currentFlowId?.toString() || null;
-  const agentNodeData = getAgentNodeDataForFlow(flowId);
+  const {
+    isConnecting,
+    isConnected,
+    isProcessing,
+    canRun,
+    runFlow,
+    stopFlow,
+    recoverFlowState
+  } = useFlowConnection(flowId);
   
-  // Check if any agent is in progress
-  const isProcessing = Object.values(agentNodeData).some(
-    agent => agent.status === 'IN_PROGRESS'
-  );
-  
-  // Check if the hedge fund can be run (same logic as play button enable state)
-  const canRunHedgeFund = !isProcessing && tickers.trim() !== '';
+  // Check if the hedge fund can be run
+  const canRunHedgeFund = canRun && tickers.trim() !== '';
   
   // Add keyboard shortcut for Cmd+Enter / Ctrl+Enter to run hedge fund
   useKeyboardShortcuts({
@@ -94,14 +96,12 @@ export function PortfolioManagerNode({
     loadModels();
   }, []); // Remove selectedModel from dependencies to avoid infinite loop
 
-  // Clean up SSE connection on unmount
+  // Recover flow state when component mounts or flow changes
   useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current();
-      }
-    };
-  }, []);
+    if (flowId) {
+      recoverFlowState();
+    }
+  }, [flowId, recoverFlowState]);
   
   const handleTickersChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTickers(e.target.value);
@@ -116,26 +116,10 @@ export function PortfolioManagerNode({
   };
 
   const handleStop = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current();
-      abortControllerRef.current = null;
-    }
-    // Reset all node data states
-    resetAllNodes(flowId);
+    stopFlow();
   };
 
   const handlePlay = () => {
-    // First, reset all nodes to IDLE
-    resetAllNodes(flowId);
-    
-    // Clean up any existing connection
-    if (abortControllerRef.current) {
-      abortControllerRef.current();
-    }
-    
-    // Call the backend API with SSE
-    const tickerList = tickers.split(',').map(t => t.trim());
-    
     // Get the nodes and edges
     const nodes = getNodes();
     const edges = getEdges();
@@ -172,24 +156,25 @@ export function PortfolioManagerNode({
         });
       }
     }
+    
+    // Convert tickers to array    
+    const tickerList = tickers.split(',').map(t => t.trim());
         
-    abortControllerRef.current = api.runHedgeFund(
-      {
-        tickers: tickerList,
-        selected_agents: Array.from(selectedAgents),
-        agent_models: agentModels,
-        // Keep global model for backwards compatibility (will be removed later)
-        model_name: selectedModel?.model_name || undefined,
-        model_provider: selectedModel?.provider as any || undefined,
-        start_date: startDate,
-        end_date: endDate,
-      },
-      // Pass the node status context to the API
-      nodeContext,
-      // Pass the current flow ID
-      flowId
-    );
+    // Use the flow connection hook to run the flow
+    runFlow({
+      tickers: tickerList,
+      selected_agents: Array.from(selectedAgents),
+      agent_models: agentModels,
+      // Keep global model for backwards compatibility (will be removed later)
+      model_name: selectedModel?.model_name || undefined,
+      model_provider: selectedModel?.provider as any || undefined,
+      start_date: startDate,
+      end_date: endDate,
+    });
   };
+
+  // Determine if we're processing (connecting, connected, or any agents running)
+  const showAsProcessing = isConnecting || isConnected || isProcessing;
 
   return (
     <TooltipProvider>
@@ -226,11 +211,11 @@ export function PortfolioManagerNode({
                     size="icon" 
                     variant="secondary"
                     className="flex-shrink-0 transition-all duration-200 hover:bg-primary hover:text-primary-foreground active:scale-95"
-                    title={isProcessing ? "Stop" : `Run (${formatKeyboardShortcut('↵')})`}
-                    onClick={isProcessing ? handleStop : handlePlay}
-                    disabled={!canRunHedgeFund && !isProcessing}
+                    title={showAsProcessing ? "Stop" : `Run (${formatKeyboardShortcut('↵')})`}
+                    onClick={showAsProcessing ? handleStop : handlePlay}
+                    disabled={!canRunHedgeFund && !showAsProcessing}
                   >
-                    {isProcessing ? (
+                    {showAsProcessing ? (
                       <Square className="h-3.5 w-3.5" />
                     ) : (
                       <Play className="h-3.5 w-3.5" />

@@ -1,125 +1,59 @@
-import { useNodeContext } from '@/contexts/node-context';
 import { getConnectedEdges, useReactFlow } from '@xyflow/react';
+import { useMemo } from 'react';
 
-interface UseOutputNodeConnectionResult {
-  isConnected: boolean;
-  isProcessing: boolean;
-  isAnyAgentRunning: boolean;
-  isOutputAvailable: boolean;
-  connectedAgentIds: Set<string>;
-}
+import { useFlowContext } from '@/contexts/flow-context';
+import { useNodeContext } from '@/contexts/node-context';
 
 /**
- * Custom hook to manage output node connection state and availability
- * 
- * This hook encapsulates all the logic needed for output nodes to:
- * - Check if they're connected to the portfolio manager through agent nodes
- * - Show "In Progress" when connected agents are running
- * - Show "Completing" when any agent in the flow is running (but not connected ones)
- * - Show "Idle" when no agents are running and no data is available
- * - Show output data only when connected and data is available
- * 
+ * Custom hook to determine output node connection state and processing status
  * @param nodeId - The ID of the output node
- * @returns Object containing connection state, processing status, and output availability
- * 
- * @example
- * ```typescript
- * // In any output node component:
- * export function MyOutputNode({ id, ...props }: NodeProps<MyOutputNode>) {
- *   const { outputNodeData } = useNodeContext();
- *   const { isProcessing, isAnyAgentRunning, isOutputAvailable, isConnected } = useOutputNodeConnection(id);
- *   
- *   return (
- *     <NodeShell {...props}>
- *       <OutputNodeStatus
- *         isProcessing={isProcessing}
- *         isAnyAgentRunning={isAnyAgentRunning}
- *         isOutputAvailable={isOutputAvailable}
- *         isConnected={isConnected}
- *         onViewOutput={() => setShowOutput(true)}
- *       />
- *     </NodeShell>
- *   );
- * }
- * ```
+ * @returns Object containing connection state and processing status
  */
-export function useOutputNodeConnection(nodeId: string): UseOutputNodeConnectionResult {
-  const { outputNodeData, agentNodeData } = useNodeContext();
+export function useOutputNodeConnection(nodeId: string) {
+  const { currentFlowId } = useFlowContext();
+  const { getAgentNodeDataForFlow, getOutputNodeDataForFlow } = useNodeContext();
   const { getNodes, getEdges } = useReactFlow();
-  
-  // Get all agent IDs that are connected to this output node through the portfolio manager
-  const getConnectedAgentIds = (): Set<string> => {
+
+  // Get data for the current flow
+  const flowId = currentFlowId?.toString() || null;
+  const agentNodeData = getAgentNodeDataForFlow(flowId);
+  const outputNodeData = getOutputNodeDataForFlow(flowId);
+
+  return useMemo(() => {
+    // Get all nodes and edges
     const nodes = getNodes();
     const edges = getEdges();
-    const connectedEdges = getConnectedEdges(nodes, edges);
     
-    // Find the portfolio manager node
-    const portfolioManagerNode = nodes.find(node => node.type === 'portfolio-manager-node');
-    if (!portfolioManagerNode) return new Set<string>();
-    
-    // Get all agents directly connected to portfolio manager
-    const portfolioConnectedAgentIds = new Set<string>();
-    connectedEdges.forEach(edge => {
-      if (edge.source === portfolioManagerNode.id) {
-        const targetNode = nodes.find(node => node.id === edge.target);
-        if (targetNode?.type === 'agent-node') {
-          portfolioConnectedAgentIds.add(edge.target);
-        }
-      }
-    });
-    
-    // Filter to only agents that also connect to this output node
-    const agentsConnectedToThisOutput = new Set<string>();
-    connectedEdges.forEach(edge => {
-      if (edge.target === nodeId) {
-        const sourceNode = nodes.find(node => node.id === edge.source);
-        if (sourceNode?.type === 'agent-node' && portfolioConnectedAgentIds.has(edge.source)) {
-          agentsConnectedToThisOutput.add(edge.source);
-        }
-      }
-    });
-    
-    return agentsConnectedToThisOutput;
-  };
+    // Find edges connected to this output node
+    const connectedEdges = getConnectedEdges([{ id: nodeId }] as any, edges);
+    const connectedAgentIds = connectedEdges
+      .filter(edge => edge.target === nodeId)
+      .map(edge => edge.source)
+      .filter(sourceId => {
+        const sourceNode = nodes.find(n => n.id === sourceId);
+        return sourceNode?.type === 'agent-node';
+      });
 
-  // Get all agent node IDs in the flow (for detecting any running agent)
-  const getAllAgentIds = (): Set<string> => {
-    const nodes = getNodes();
-    const agentIds = new Set<string>();
-    
-    nodes.forEach(node => {
-      if (node.type === 'agent-node') {
-        agentIds.add(node.id);
-      }
-    });
-    
-    return agentIds;
-  };
-  
-  const connectedAgentIds = getConnectedAgentIds();
-  const allAgentIds = getAllAgentIds();
-  
-  // Check if this node is connected to the portfolio manager (has connected agents)
-  const isConnected = connectedAgentIds.size > 0;
-  
-  // Check if any connected agent is in progress
-  const isProcessing = Array.from(connectedAgentIds).some(agentId => 
-    agentNodeData[agentId]?.status === 'IN_PROGRESS'
-  );
-  
-  // Check if ANY agent in the flow is running (for "Completing" state)
-  const isAnyAgentRunning = Array.from(allAgentIds).some(agentId => 
-    agentNodeData[agentId]?.status === 'IN_PROGRESS'
-  );
-  
-  // Only show as available if connected to portfolio manager AND has output data
-  const isOutputAvailable = !!outputNodeData && isConnected;
-  
-  return {
-    isConnected,
-    isProcessing,
-    isAnyAgentRunning,
-    isOutputAvailable,
-    connectedAgentIds,
-  };
+    // Check if any connected agents are running
+    const isAnyAgentRunning = connectedAgentIds.some(agentId => 
+      agentNodeData[agentId]?.status === 'IN_PROGRESS'
+    );
+
+    // Check if processing (any agent is running)
+    const isProcessing = isAnyAgentRunning;
+
+    // Check if output is available
+    const isOutputAvailable = outputNodeData !== null && outputNodeData !== undefined;
+
+    // Check if connected to any agents  
+    const isConnected = connectedAgentIds.length > 0;
+
+    return {
+      isProcessing,
+      isAnyAgentRunning,
+      isOutputAvailable,
+      isConnected,
+      connectedAgentIds: new Set(connectedAgentIds),
+    };
+  }, [nodeId, agentNodeData, outputNodeData, getNodes, getEdges]);
 } 

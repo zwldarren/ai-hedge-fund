@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useFlowContext } from '@/contexts/flow-context';
 import { useNodeContext } from '@/contexts/node-context';
 import { useOutputNodeConnection } from '@/hooks/use-output-node-connection';
 import { api } from '@/services/api';
@@ -18,7 +19,13 @@ export function JsonOutputNode({
   id,
   isConnectable,
 }: NodeProps<JsonOutputNode>) {  
-  const { outputNodeData } = useNodeContext();
+  const { currentFlowId } = useFlowContext();
+  const { getOutputNodeDataForFlow } = useNodeContext();
+  
+  // Get output node data for the current flow
+  const flowId = currentFlowId?.toString() || null;
+  const outputNodeData = getOutputNodeDataForFlow(flowId);
+  
   const [showOutput, setShowOutput] = useState(false);
   const [saveToFile, setSaveToFile] = useState(false);
   
