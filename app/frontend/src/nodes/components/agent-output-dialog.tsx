@@ -48,24 +48,26 @@ export function AgentOutputDialog({
   const initialFocusRef = useRef<HTMLDivElement>(null);
 
   // Collect all analysis from all messages into a single analysis dictionary
-  const allAnalysis = messages.reduce<Record<string, string>>((acc, msg) => {
-    // Add analysis from this message to our accumulated analysis
-    if (msg.analysis && Object.keys(msg.analysis).length > 0) {
-      // Filter out null values before adding to our accumulated decisions
-      const validDecisions = Object.entries(msg.analysis)
-        .filter(([_, value]) => value !== null && value !== undefined)
-        .reduce((obj, [key, value]) => {
-          obj[key] = value;
-          return obj;
-        }, {} as Record<string, string>);
-      
-      if (Object.keys(validDecisions).length > 0) {
-        // Combine with accumulated decisions, newer messages overwrite older ones for the same ticker
-        return { ...acc, ...validDecisions };
+  const allAnalysis = messages
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) // Sort by timestamp
+    .reduce<Record<string, string>>((acc, msg) => {
+      // Add analysis from this message to our accumulated analysis
+      if (msg.analysis && Object.keys(msg.analysis).length > 0) {
+        // Filter out null values before adding to our accumulated decisions
+        const validDecisions = Object.entries(msg.analysis)
+          .filter(([_, value]) => value !== null && value !== undefined)
+          .reduce((obj, [key, value]) => {
+            obj[key] = value;
+            return obj;
+          }, {} as Record<string, string>);
+        
+        if (Object.keys(validDecisions).length > 0) {
+          // Combine with accumulated decisions, newer messages overwrite older ones for the same ticker
+          return { ...acc, ...validDecisions };
+        }
       }
-    }
-    return acc;
-  }, {});
+      return acc;
+    }, {});
 
   // Get all unique tickers that have decisions
   const tickersWithDecisions = Object.keys(allAnalysis);
@@ -129,7 +131,9 @@ export function AgentOutputDialog({
             <div className="h-[400px] overflow-y-auto border border-border rounded-lg p-3">
               {messages.length > 0 ? (
                 <div className="p-3 space-y-3">
-                  {[...messages].reverse().map((msg, idx) => (
+                  {messages
+                    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()) // Sort newest first for log
+                    .map((msg, idx) => (
                     <div key={idx} className="border-l-2 border-primary pl-3 text-sm">
                       <div className="text-foreground">
                         {msg.ticker && <span>[{msg.ticker}] </span>}

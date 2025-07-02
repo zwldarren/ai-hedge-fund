@@ -101,34 +101,56 @@ export function NodeProvider({ children }: { children: ReactNode }) {
       const existingNode = prev[compositeKey] || { ...DEFAULT_AGENT_NODE_STATE };
       const newMessages = [...existingNode.messages];
       
-      // Add message to history if it's new based on timestamp
-      if (data.message && data.timestamp !== existingNode.timestamp) {
-        // Get the reasoning for the current ticker if available
-        const ticker = data.ticker || null;
+      // Add message to history if it's new - use more robust checking
+      if (data.message && data.timestamp) {
+        // Check if this exact message already exists (prevent duplicates)
+        const messageExists = newMessages.some(msg => 
+          msg.timestamp === data.timestamp && 
+          msg.message === data.message &&
+          msg.ticker === data.ticker
+        );
+        
+        if (!messageExists) {
+          const ticker = data.ticker || null;
 
-        const messageItem: MessageItem = {
-          timestamp: data.timestamp || new Date().toISOString(),
-          message: data.message,
-          ticker: ticker,
-          analysis: {} as Record<string, string>,
+          const messageItem: MessageItem = {
+            timestamp: data.timestamp,
+            message: data.message,
+            ticker: ticker,
+            analysis: {} as Record<string, string>,
+          }
+
+          // Add analysis for ticker to messageItem if ticker is not null
+          if (ticker && data.analysis) {
+            messageItem.analysis[ticker] = data.analysis;
+          }
+
+          newMessages.push(messageItem);
+          
+          // Debug logging for background processing
+          if (flowId) {
+            console.debug(`[NodeContext] Added message for ${flowId}:${nodeId} - ${ticker || 'no ticker'}: ${data.message}`);
+          }
+        } else {
+          console.debug(`[NodeContext] Duplicate message detected for ${flowId}:${nodeId} - ${data.ticker || 'no ticker'}: ${data.message}`);
         }
-
-        // Add analysis for ticker to messageItem if ticker is not null
-        if (ticker && data.analysis) {
-          messageItem.analysis[ticker] = data.analysis;
-        }
-
-        newMessages.push(messageItem);
+      }
+      
+      const updatedNode = {
+        ...existingNode,
+        ...data,
+        messages: newMessages,
+        lastUpdated: Date.now()
+      };
+      
+      // Debug logging for state updates
+      if (flowId && data.status) {
+        console.debug(`[NodeContext] Updated ${flowId}:${nodeId} status: ${data.status} (${newMessages.length} messages)`);
       }
       
       return {
         ...prev,
-        [compositeKey]: {
-          ...existingNode,
-          ...data,
-          messages: newMessages,
-          lastUpdated: Date.now()
-        }
+        [compositeKey]: updatedNode
       };
     });
   }, []);

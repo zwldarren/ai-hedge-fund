@@ -173,6 +173,7 @@ export const api = {
                   switch (eventType) {
                     case 'start':
                       // Reset all nodes at the start of a new run
+                      console.log(`[API] Flow ${flowId}: Starting new run`);
                       nodeContext.resetAllNodes(flowId);
                       break;
                     case 'progress':
@@ -185,6 +186,8 @@ export const api = {
                         // Use the agent name as the node ID
                         const agentId = eventData.agent.replace('_agent', '');
                         
+                        console.log(`[API] Flow ${flowId}: Progress for ${agentId} (${eventData.ticker}): ${eventData.status}`);
+                        
                         // Use the enhanced API to update both status and additional data
                         nodeContext.updateAgentNode(flowId, agentId, {
                           status: nodeStatus,
@@ -196,6 +199,7 @@ export const api = {
                       }
                       break;
                     case 'complete':
+                      console.log(`[API] Flow ${flowId}: Run completed`);
                       // Store the complete event data in the node context
                       if (eventData.data) {
                         nodeContext.setOutputNodeData(flowId, eventData.data as OutputNodeData);
@@ -217,6 +221,7 @@ export const api = {
                       }
                       break;
                     case 'error':
+                      console.error(`[API] Flow ${flowId}: Error occurred`, eventData);
                       // Mark all agents as error when there's an error  
                       nodeContext.updateAgentNodes(flowId, params.selected_agents || [], 'ERROR');
                       
