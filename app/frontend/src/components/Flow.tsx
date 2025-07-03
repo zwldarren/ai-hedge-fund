@@ -3,7 +3,9 @@ import {
   ColorMode,
   Connection,
   Edge,
+  EdgeChange,
   MarkerType,
+  NodeChange,
   ReactFlow,
   addEdge,
   useEdgesState,
@@ -48,8 +50,12 @@ export function Flow({ className = '' }: FlowProps) {
 
   // Create debounced auto-save function
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedFlowIdRef = useRef<number | null>(null);
   
-  const autoSave = useCallback(async () => {
+  const autoSave = useCallback(async (flowIdToSave?: number | null) => {
+    // Use the provided flowId or fall back to current flow ID
+    const targetFlowId = flowIdToSave !== undefined ? flowIdToSave : currentFlowId;
+    
     // Clear any existing timeout
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
@@ -57,16 +63,85 @@ export function Flow({ className = '' }: FlowProps) {
     
     // Set new timeout for debounced save
     autoSaveTimeoutRef.current = setTimeout(async () => {
-      if (!currentFlowId) return; // Only auto-save existing flows
+      // Double-check that we're still saving to the correct flow
+      if (!targetFlowId) {
+        console.log('[Auto-save] Skipped: No flow ID to save to');
+        return;
+      }
+      
+      // If the current flow has changed since this auto-save was scheduled, skip it
+      if (targetFlowId !== currentFlowId) {
+        console.log(`[Auto-save] Skipped: Flow changed from ${targetFlowId} to ${currentFlowId}`);
+        return;
+      }
       
       try {
         await saveCurrentFlowWithCompleteState();
-        console.log('[Auto-save] Flow saved successfully');
+        lastSavedFlowIdRef.current = targetFlowId;
+        console.log(`[Auto-save] Flow ${targetFlowId} saved successfully`);
       } catch (error) {
-        console.error('[Auto-save] Failed to save flow:', error);
+        console.error(`[Auto-save] Failed to save flow ${targetFlowId}:`, error);
       }
     }, 1000); // 1 second debounce
   }, [currentFlowId, saveCurrentFlowWithCompleteState]);
+
+  // Enhanced onNodesChange handler with auto-save for specific change types
+  const handleNodesChange = useCallback((changes: NodeChange<AppNode>[]) => {
+    // Apply the changes first
+    onNodesChange(changes);
+    
+    // Check if any of the changes should trigger auto-save
+    const shouldAutoSave = changes.some(change => {
+      switch (change.type) {
+        case 'add':
+          console.log('[Auto-save] Node added:', change.item?.id);
+          return true;
+        case 'remove':
+          console.log('[Auto-save] Node removed:', change.id);
+          return true;
+        case 'position':
+          // Only auto-save position changes when dragging is complete
+          if (!change.dragging) {
+            console.log('[Auto-save] Node position changed:', change.id);
+            return true;
+          }
+          return false;
+        default:
+          return false;
+      }
+    });
+
+    // Trigger auto-save if needed and flow is initialized
+    // IMPORTANT: Capture the current flow ID at the time of the change
+    if (shouldAutoSave && isInitialized && currentFlowId) {
+      const flowIdAtTimeOfChange = currentFlowId;
+      autoSave(flowIdAtTimeOfChange);
+    }
+  }, [onNodesChange, autoSave, isInitialized, currentFlowId]);
+
+  // Enhanced onEdgesChange handler with auto-save for edge removal
+  const handleEdgesChange = useCallback((changes: EdgeChange[]) => {
+    // Apply the changes first
+    onEdgesChange(changes);
+    
+    // Check if any of the changes should trigger auto-save
+    const shouldAutoSave = changes.some(change => {
+      switch (change.type) {
+        case 'remove':
+          console.log('[Auto-save] Edge removed:', change.id);
+          return true;
+        default:
+          return false;
+      }
+    });
+
+    // Trigger auto-save if needed and flow is initialized
+    // IMPORTANT: Capture the current flow ID at the time of the change
+    if (shouldAutoSave && isInitialized && currentFlowId) {
+      const flowIdAtTimeOfChange = currentFlowId;
+      autoSave(flowIdAtTimeOfChange);
+    }
+  }, [onEdgesChange, autoSave, isInitialized, currentFlowId]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -76,6 +151,15 @@ export function Flow({ className = '' }: FlowProps) {
       }
     };
   }, []);
+
+  // Cancel pending auto-saves when flow changes to prevent cross-flow saves
+  useEffect(() => {
+    if (autoSaveTimeoutRef.current) {
+      console.log(`[Auto-save] Cancelling pending auto-save due to flow change to ${currentFlowId}`);
+      clearTimeout(autoSaveTimeoutRef.current);
+      autoSaveTimeoutRef.current = null;
+    }
+  }, [currentFlowId]);
 
   // Take initial snapshot when flow is initialized
   useEffect(() => {
@@ -169,6 +253,9 @@ export function Flow({ className = '' }: FlowProps) {
       
       // Auto-save new connections immediately (structural change)
       if (currentFlowId) {
+        // IMPORTANT: Capture the current flow ID at the time of the change
+        const flowIdAtTimeOfChange = currentFlowId;
+        
         // Clear any pending debounced saves and save immediately
         if (autoSaveTimeoutRef.current) {
           clearTimeout(autoSaveTimeoutRef.current);
@@ -176,11 +263,17 @@ export function Flow({ className = '' }: FlowProps) {
         
         // Use setTimeout to ensure the edge is added to state first
         setTimeout(async () => {
+          // Double-check that we're still saving to the correct flow
+          if (flowIdAtTimeOfChange !== currentFlowId) {
+            console.log(`[Auto-save] Skipped connection save: Flow changed from ${flowIdAtTimeOfChange} to ${currentFlowId}`);
+            return;
+          }
+          
           try {
             await saveCurrentFlowWithCompleteState();
-            console.log('[Auto-save] New connection saved immediately');
+            console.log(`[Auto-save] New connection for flow ${flowIdAtTimeOfChange} saved immediately`);
           } catch (error) {
-            console.error('[Auto-save] Failed to save new connection:', error);
+            console.error(`[Auto-save] Failed to save new connection for flow ${flowIdAtTimeOfChange}:`, error);
           }
         }, 100);
       }
@@ -194,10 +287,10 @@ export function Flow({ className = '' }: FlowProps) {
         <ReactFlow
           nodes={nodes}
           nodeTypes={nodeTypes}
-          onNodesChange={onNodesChange}
+          onNodesChange={handleNodesChange}
           edges={edges}
           edgeTypes={edgeTypes}
-          onEdgesChange={onEdgesChange}
+          onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
           onInit={onInit}
           colorMode={colorMode}

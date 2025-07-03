@@ -141,8 +141,8 @@ export default function FlowItem({ flow, onLoadFlow, onDeleteFlow, onRefresh, is
             {/* Active connection indicator - right aligned */}
             {hasActiveConnection && (
               <div className="flex items-center gap-1 flex-shrink-0">
-                <Zap className="h-3 w-3 text-yellow-400 animate-pulse" />
-                <span className="text-xs text-yellow-400">Running</span>
+                <Zap className="h-3 w-3 text-transparent bg-clip-text gradient-animation animate-pulse" />
+                <span className="text-xs text-transparent bg-clip-text gradient-animation font-medium">Running</span>
               </div>
             )}
           </div>
