@@ -236,6 +236,18 @@
   animation: gradientFlow 3s linear infinite;
 }
 
+/* Gradient text animation */
+.gradient-text {
+  background: linear-gradient(90deg, 
+    #2383F4, #5e61e7, #8F00FF, #7831d4, #2383F4
+  );
+  background-size: 200% 100%;
+  animation: gradientFlow 3s linear infinite;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
 /* Remove white lines between ReactFlow Controls buttons */
 .react-flow__controls .react-flow__controls-button {
   border-right: none !important;
