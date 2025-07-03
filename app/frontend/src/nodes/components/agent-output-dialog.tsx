@@ -1,12 +1,12 @@
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { useFlowContext } from '@/contexts/flow-context';
-import { useNodeContext } from '@/contexts/node-context';
+import { AgentNodeData, useNodeContext } from '@/contexts/node-context';
 import { formatTimeFromTimestamp } from '@/utils/date-utils';
 import { formatContent } from '@/utils/text-utils';
 import { AlignJustify, Copy, Loader2 } from 'lucide-react';
@@ -30,16 +30,66 @@ export function AgentOutputDialog({
   const { currentFlowId } = useFlowContext();
   const { getAgentNodeDataForFlow } = useNodeContext();
   
-  // Get agent node data for the current flow
+  // Get agent node data for the current flow and track changes
   const flowId = currentFlowId?.toString() || null;
-  const agentNodeData = getAgentNodeDataForFlow(flowId);
-  const nodeData = agentNodeData[nodeId] || { 
-    status: 'IDLE', 
-    ticker: null, 
-    message: '', 
-    messages: [],
-    lastUpdated: 0
-  };
+  
+  // Use state to track node data and force re-renders when it changes
+  const [nodeData, setNodeData] = useState<AgentNodeData>(() => {
+    const agentNodeData = getAgentNodeDataForFlow(flowId);
+    return agentNodeData[nodeId] || { 
+      status: 'IDLE', 
+      ticker: null, 
+      message: '', 
+      messages: [],
+      lastUpdated: 0
+    };
+  });
+
+  // Subscribe to changes in the node context data
+  useEffect(() => {
+    const updateNodeData = () => {
+      const agentNodeData = getAgentNodeDataForFlow(flowId);
+      const newNodeData = agentNodeData[nodeId] || { 
+        status: 'IDLE', 
+        ticker: null, 
+        message: '', 
+        messages: [],
+        lastUpdated: 0
+      };
+      
+      // Only update if data has actually changed (based on lastUpdated timestamp)
+      setNodeData(prevData => {
+        if (prevData.lastUpdated !== newNodeData.lastUpdated) {
+          console.debug(`[AgentOutputDialog] Updated data for ${flowId}:${nodeId} - ${newNodeData.messages.length} messages`);
+          return newNodeData;
+        }
+        return prevData;
+      });
+    };
+
+    // Update immediately
+    updateNodeData();
+
+    // Set up an interval to check for updates periodically
+    // This ensures we catch updates even if the component doesn't re-render
+    const intervalId = setInterval(updateNodeData, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [getAgentNodeDataForFlow, flowId, nodeId]);
+
+  // Also update when flow changes
+  useEffect(() => {
+    const agentNodeData = getAgentNodeDataForFlow(flowId);
+    const newNodeData = agentNodeData[nodeId] || { 
+      status: 'IDLE', 
+      ticker: null, 
+      message: '', 
+      messages: [],
+      lastUpdated: 0
+    };
+    setNodeData(newNodeData);
+  }, [flowId, nodeId, getAgentNodeDataForFlow]);
+
   const messages = nodeData.messages || [];
   const nodeStatus = nodeData.status;
   
