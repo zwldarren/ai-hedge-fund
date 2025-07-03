@@ -5,7 +5,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { useFlowContext } from '@/contexts/flow-context';
 import { useNodeContext } from '@/contexts/node-context';
 import { formatTimeFromTimestamp } from '@/utils/date-utils';
 import { formatContent } from '@/utils/text-utils';
@@ -19,19 +18,19 @@ interface AgentOutputDialogProps {
   onOpenChange: (open: boolean) => void;
   name: string;
   nodeId: string;
+  flowId: string | null;
 }
 
 export function AgentOutputDialog({ 
   isOpen, 
   onOpenChange, 
   name, 
-  nodeId 
+  nodeId,
+  flowId
 }: AgentOutputDialogProps) {
-  const { currentFlowId } = useFlowContext();
   const { getAgentNodeDataForFlow } = useNodeContext();
   
-  // Get agent node data for the current flow - this will automatically update when context changes
-  const flowId = currentFlowId?.toString() || null;
+  // Use the passed flowId instead of getting it from flow context
   const agentNodeData = getAgentNodeDataForFlow(flowId);
   const nodeData = agentNodeData[nodeId] || { 
     status: 'IDLE', 
@@ -74,6 +73,13 @@ export function AgentOutputDialog({
   const tickersWithDecisions = Object.keys(allAnalysis);
 
   console.log('nodeData for agent with id', nodeId, nodeData);
+  console.log(`[AgentOutputDialog] Flow ${flowId}, Agent ${nodeId}:`, {
+    messageCount: messages.length,
+    nodeStatus,
+    flowId,
+    nodeId,
+    messages: messages.map(m => ({ ticker: m.ticker, message: m.message, timestamp: m.timestamp }))
+  });
 
   // Reset selected ticker when node changes
   useEffect(() => {

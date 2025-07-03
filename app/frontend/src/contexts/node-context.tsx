@@ -129,7 +129,7 @@ export function NodeProvider({ children }: { children: ReactNode }) {
           
           // Debug logging for background processing
           if (flowId) {
-            console.debug(`[NodeContext] Added message for ${flowId}:${nodeId} - ${ticker || 'no ticker'}: ${data.message}`);
+            console.debug(`[NodeContext] Added message for ${flowId}:${nodeId} - ${ticker || 'no ticker'}: ${data.message} (total: ${newMessages.length})`);
           }
         } else {
           console.debug(`[NodeContext] Duplicate message detected for ${flowId}:${nodeId} - ${data.ticker || 'no ticker'}: ${data.message}`);

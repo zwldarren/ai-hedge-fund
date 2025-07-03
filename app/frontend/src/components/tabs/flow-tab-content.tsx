@@ -8,6 +8,9 @@ import { flowService } from '@/services/flow-service';
 import { Flow as FlowType } from '@/types/flow';
 import { useEffect } from 'react';
 
+// Import the flow connection manager to check if flow is actively running
+import { flowConnectionManager } from '@/hooks/use-flow-connection';
+
 interface FlowTabContentProps {
   flow: FlowType;
   className?: string;
@@ -29,8 +32,18 @@ export function FlowTabContent({ flow, className }: FlowTabContentProps) {
       // Clear all existing node states
       clearAllNodeStates();
       
-      // Clear all node context data for current flow
-      resetAllNodes(flowId);
+      // Check if the flow is actively running before clearing runtime data
+      const connection = flowConnectionManager.getConnection(flowId);
+      const isFlowActive = connection.state === 'connecting' || connection.state === 'connected';
+      
+      if (!isFlowActive) {
+        // Only clear runtime data if the flow is not actively running
+        console.log(`[FlowTabContent] Flow ${flowId} is not active, clearing runtime data`);
+        resetAllNodes(flowId);
+      } else {
+        // Flow is active, preserve runtime data
+        console.log(`[FlowTabContent] Flow ${flowId} is active (${connection.state}), preserving runtime data`);
+      }
 
       // Load the flow using the basic context function (handles React Flow state)
       await loadFlow(flowToLoad);

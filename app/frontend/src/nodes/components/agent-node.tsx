@@ -139,6 +139,7 @@ export function AgentNode({
           onOpenChange={setIsDialogOpen}
           name={data.name || "Agent"}
           nodeId={id}
+          flowId={currentFlowId?.toString() || null}
         />
       </CardContent>
     </NodeShell>
