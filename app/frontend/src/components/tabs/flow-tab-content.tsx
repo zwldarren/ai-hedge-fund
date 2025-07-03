@@ -48,8 +48,6 @@ export function FlowTabContent({ flow, className }: FlowTabContentProps) {
       if (flowToLoad.data?.nodeContextData) {
         importNodeContextData(flowId, flowToLoad.data.nodeContextData);
       }
-
-      console.log('Flow tab loaded with complete state restoration:', flowToLoad.name);
     } catch (error) {
       console.error('Failed to load flow with complete state:', error);
       throw error;
