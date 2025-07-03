@@ -118,8 +118,9 @@ export function useFlowManagement(): UseFlowManagementReturn {
       // Clear all existing node states
       clearAllNodeStates();
       
-      // Clear all node context data for current flow
-      resetAllNodes(flow.id.toString());
+      // DO NOT reset runtime data when loading flows - preserve all runtime state
+      // Runtime data should only be reset when explicitly starting a new run via the Play button
+      console.log(`[FlowManagement] Loading flow ${flow.id} (${flow.name}), preserving all runtime data`);
 
       // Load the flow using the context (this handles currentFlowId, currentFlowName, etc.)
       await loadFlow(flow);
@@ -142,7 +143,7 @@ export function useFlowManagement(): UseFlowManagementReturn {
       console.error('Failed to load flow with states:', error);
       throw error; // Re-throw to handle in calling function
     }
-  }, [loadFlow, resetAllNodes]);
+  }, [loadFlow]);
 
   // Create default flow for new users
   const createDefaultFlow = useCallback(async () => {

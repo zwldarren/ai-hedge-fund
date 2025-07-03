@@ -1,6 +1,5 @@
 import { Flow } from '@/components/Flow';
 import { useFlowContext } from '@/contexts/flow-context';
-import { useNodeContext } from '@/contexts/node-context';
 import { useTabsContext } from '@/contexts/tabs-context';
 import { clearAllNodeStates, setNodeInternalState, setCurrentFlowId as setNodeStateFlowId } from '@/hooks/use-node-state';
 import { cn } from '@/lib/utils';
@@ -9,7 +8,6 @@ import { Flow as FlowType } from '@/types/flow';
 import { useEffect } from 'react';
 
 // Import the flow connection manager to check if flow is actively running
-import { flowConnectionManager } from '@/hooks/use-flow-connection';
 
 interface FlowTabContentProps {
   flow: FlowType;
@@ -18,7 +16,6 @@ interface FlowTabContentProps {
 
 export function FlowTabContent({ flow, className }: FlowTabContentProps) {
   const { loadFlow } = useFlowContext();
-  const { resetAllNodes } = useNodeContext();
   const { activeTabId } = useTabsContext();
 
   // Enhanced load function that restores both use-node-state and node context data
@@ -32,18 +29,9 @@ export function FlowTabContent({ flow, className }: FlowTabContentProps) {
       // Clear all existing node states
       clearAllNodeStates();
       
-      // Check if the flow is actively running before clearing runtime data
-      const connection = flowConnectionManager.getConnection(flowId);
-      const isFlowActive = connection.state === 'connecting' || connection.state === 'connected';
-      
-      if (!isFlowActive) {
-        // Only clear runtime data if the flow is not actively running
-        console.log(`[FlowTabContent] Flow ${flowId} is not active, clearing runtime data`);
-        resetAllNodes(flowId);
-      } else {
-        // Flow is active, preserve runtime data
-        console.log(`[FlowTabContent] Flow ${flowId} is active (${connection.state}), preserving runtime data`);
-      }
+      // DO NOT reset runtime data when switching tabs - preserve all runtime state
+      // Runtime data should only be reset when explicitly starting a new run via the Play button
+      console.log(`[FlowTabContent] Loading flow ${flowId}, preserving all runtime data`);
 
       // Load the flow using the basic context function (handles React Flow state)
       await loadFlow(flowToLoad);
@@ -86,7 +74,7 @@ export function FlowTabContent({ flow, className }: FlowTabContentProps) {
 
       fetchAndLoadFlow();
     }
-  }, [activeTabId, flow.id, flow, loadFlow, resetAllNodes]);
+  }, [activeTabId, flow.id, flow, loadFlow]);
 
   return (
     <div className={cn("h-full w-full", className)}>

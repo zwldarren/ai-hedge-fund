@@ -198,9 +198,6 @@ export function useFlowConnection(flowId: string | null) {
       connection.abortController();
     }
 
-    // Reset node states
-    nodeContext.resetAllNodes(flowId);
-
     // Update connection state
     flowConnectionManager.setConnection(flowId, {
       state: 'idle',

@@ -81,8 +81,9 @@ export function useEnhancedFlowActions() {
       // Clear all existing node states
       clearAllNodeStates();
       
-      // Clear all node context data for current flow
-      resetAllNodes(flow.id.toString());
+      // DO NOT reset runtime data when loading flows - preserve all runtime state
+      // Runtime data should only be reset when explicitly starting a new run via the Play button
+      console.log(`[EnhancedFlowActions] Loading flow ${flow.id} (${flow.name}), preserving all runtime data`);
 
       // Load the flow using the basic function (handles React Flow state)
       await loadFlow(flow);
@@ -105,7 +106,7 @@ export function useEnhancedFlowActions() {
       console.error('Failed to load flow with complete state:', error);
       throw error;
     }
-  }, [loadFlow, resetAllNodes]);
+  }, [loadFlow]);
 
   return {
     saveCurrentFlowWithCompleteState,
