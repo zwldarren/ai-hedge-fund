@@ -45,7 +45,7 @@ export interface UseFlowManagementTabsReturn {
 export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
   // Get flow context, node context, tabs context, and toast manager
   const { saveCurrentFlow, reactFlowInstance, currentFlowId } = useFlowContext();
-  const { exportNodeContextData, importNodeContextData, resetAllNodes } = useNodeContext();
+  const { exportNodeContextData } = useNodeContext();
   const { openTab, isTabOpen, closeTab } = useTabsContext();
   const { success, error } = useToastManager();
   
@@ -215,20 +215,18 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
       // This ensures we have the latest data from the backend
       const fullFlow = await flowService.getFlow(flow.id);
       
-      // Create tab data with enhanced flow restoration
-      const createTabWithCompleteRestore = (flowData: Flow) => {
+      // Create tab data with configuration restoration only
+      const createTabWithConfigRestore = (flowData: Flow) => {
         const tabData = TabService.createFlowTab(flowData);
         
-        // Enhance the tab content to restore node context data when the tab is activated
+        // Enhance the tab content to restore only configuration data when the tab is activated
         return {
           ...tabData,
           onActivate: () => {
-            // Restore node context data when tab becomes active
-            if (flowData.data?.nodeContextData) {
-              importNodeContextData(flowData.id.toString(), flowData.data.nodeContextData);
-            }
+            // NOTE: We intentionally do NOT restore nodeContextData here
+            // Runtime execution data (messages, analysis, agent status) should start fresh
             
-            // Restore internal states for each node (use-node-state data)
+            // Restore internal states for each node (use-node-state data - configuration only)
             if (flowData.nodes) {
               flowData.nodes.forEach((node: any) => {
                 if (node.data?.internal_state) {
@@ -244,7 +242,7 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
       if (isTabOpen(flow.id.toString(), 'flow')) {
         // Tab exists - update it with fresh data and focus it
         const tabId = `flow-${flow.id}`;
-        const enhancedTabData = createTabWithCompleteRestore(fullFlow);
+        const enhancedTabData = createTabWithConfigRestore(fullFlow);
         
         // Update the existing tab with fresh data
         openTab({
@@ -262,7 +260,7 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
         }
       } else {
         // Create new tab with fresh data
-        const enhancedTabData = createTabWithCompleteRestore(fullFlow);
+        const enhancedTabData = createTabWithConfigRestore(fullFlow);
         openTab(enhancedTabData);
         
         // Trigger the enhanced restoration for new tab
@@ -277,7 +275,7 @@ export function useFlowManagementTabs(): UseFlowManagementTabsReturn {
       console.error('Failed to open flow in tab:', err);
       error('Failed to load flow data');
     }
-  }, [isTabOpen, openTab, error, importNodeContextData]);
+  }, [isTabOpen, openTab, error]);
 
   const handleRefresh = useCallback(async () => {
     await loadFlows();

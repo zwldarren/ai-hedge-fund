@@ -218,6 +218,16 @@ export const api = {
                           state: 'completed',
                           abortController: null,
                         });
+
+                        // Optional: Auto-cleanup completed connections after a delay
+                        setTimeout(() => {
+                          const currentConnection = flowConnectionManager.getConnection(flowId);
+                          if (currentConnection.state === 'completed') {
+                            flowConnectionManager.setConnection(flowId, {
+                              state: 'idle',
+                            });
+                          }
+                        }, 30000); // 30 seconds
                       }
                       break;
                     case 'error':
@@ -241,6 +251,19 @@ export const api = {
               } catch (err) {
                 console.error('Error parsing SSE event:', err, 'Raw event:', eventText);
               }
+            }
+          }
+          
+          // After the stream has finished, check if we are still in a connected state.
+          // This can happen if the backend closes the connection without sending a 'complete' event.
+          if (flowId) {
+            const currentConnection = flowConnectionManager.getConnection(flowId);
+            if (currentConnection.state === 'connected') {
+              console.warn(`[API] Flow ${flowId}: SSE stream ended without a 'complete' or 'error' event. Assuming completion.`);
+              flowConnectionManager.setConnection(flowId, {
+                state: 'completed',
+                abortController: null,
+              });
             }
           }
         } catch (error: any) { // Type assertion for error

@@ -45,7 +45,7 @@ export interface UseFlowManagementReturn {
 export function useFlowManagement(): UseFlowManagementReturn {
   // Get flow context, node context, and toast manager
   const { saveCurrentFlow, loadFlow, reactFlowInstance, currentFlowId } = useFlowContext();
-  const { exportNodeContextData, importNodeContextData, resetAllNodes } = useNodeContext();
+  const { exportNodeContextData, resetAllNodes } = useNodeContext();
   const { success, error } = useToastManager();
   
   // State for flows
@@ -133,17 +133,16 @@ export function useFlowManagement(): UseFlowManagementReturn {
         });
       }
       
-      // Finally, restore node context data (runtime data: agent status, messages, output data)
-      if (flow.data?.nodeContextData) {
-        importNodeContextData(flow.id.toString(), flow.data.nodeContextData);
-      }
+      // NOTE: We intentionally do NOT restore nodeContextData here
+      // Runtime execution data (messages, analysis, agent status) should start fresh
+      // Only configuration data (tickers, model selections) is restored above
 
       console.log('Flow loaded with complete state restoration:', flow.name);
     } catch (error) {
       console.error('Failed to load flow with states:', error);
       throw error; // Re-throw to handle in calling function
     }
-  }, [loadFlow, importNodeContextData, resetAllNodes]);
+  }, [loadFlow, resetAllNodes]);
 
   // Create default flow for new users
   const createDefaultFlow = useCallback(async () => {
