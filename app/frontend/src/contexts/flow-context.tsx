@@ -139,10 +139,8 @@ export function FlowProvider({ children }: FlowProviderProps) {
       setCurrentFlowId(flow.id);
       setCurrentFlowName(flow.name);
       
-      // Clear existing node states for this flow
-      clearAllNodeStates();
-      
-      // Restore internal states BEFORE setting nodes so they're available during render
+      // DO NOT clear configuration state when loading flows - useNodeState handles flow isolation automatically
+      // Only restore additional internal states if they exist in the flow data
       if (flow.data) {
         // Handle backward compatibility - data might be direct nodeStates or structured data
         const dataToRestore = flow.data.nodeStates || flow.data;

@@ -1,7 +1,6 @@
 import { useFlowContext } from '@/contexts/flow-context';
 import { useNodeContext } from '@/contexts/node-context';
 import {
-  clearAllNodeStates,
   clearFlowNodeStates,
   getNodeInternalState,
   setNodeInternalState,
@@ -115,12 +114,10 @@ export function useFlowManagement(): UseFlowManagementReturn {
       // First, set the flow ID for node state isolation
       setNodeStateFlowId(flow.id.toString());
       
-      // Clear all existing node states
-      clearAllNodeStates();
-      
+      // DO NOT clear configuration state when loading flows - useNodeState handles flow isolation automatically
       // DO NOT reset runtime data when loading flows - preserve all runtime state
       // Runtime data should only be reset when explicitly starting a new run via the Play button
-      console.log(`[FlowManagement] Loading flow ${flow.id} (${flow.name}), preserving all runtime data`);
+      console.log(`[FlowManagement] Loading flow ${flow.id} (${flow.name}), preserving all state (configuration + runtime)`);
 
       // Load the flow using the context (this handles currentFlowId, currentFlowName, etc.)
       await loadFlow(flow);

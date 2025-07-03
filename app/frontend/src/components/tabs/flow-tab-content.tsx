@@ -1,7 +1,7 @@
 import { Flow } from '@/components/Flow';
 import { useFlowContext } from '@/contexts/flow-context';
 import { useTabsContext } from '@/contexts/tabs-context';
-import { clearAllNodeStates, setNodeInternalState, setCurrentFlowId as setNodeStateFlowId } from '@/hooks/use-node-state';
+import { setNodeInternalState, setCurrentFlowId as setNodeStateFlowId } from '@/hooks/use-node-state';
 import { cn } from '@/lib/utils';
 import { flowService } from '@/services/flow-service';
 import { Flow as FlowType } from '@/types/flow';
@@ -26,12 +26,10 @@ export function FlowTabContent({ flow, className }: FlowTabContentProps) {
       // First, set the flow ID for node state isolation
       setNodeStateFlowId(flowId);
       
-      // Clear all existing node states
-      clearAllNodeStates();
-      
+      // DO NOT clear configuration state when switching tabs - useNodeState handles flow isolation automatically
       // DO NOT reset runtime data when switching tabs - preserve all runtime state
       // Runtime data should only be reset when explicitly starting a new run via the Play button
-      console.log(`[FlowTabContent] Loading flow ${flowId}, preserving all runtime data`);
+      console.log(`[FlowTabContent] Loading flow ${flowId}, preserving all state (configuration + runtime)`);
 
       // Load the flow using the basic context function (handles React Flow state)
       await loadFlow(flowToLoad);
