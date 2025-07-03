@@ -65,20 +65,17 @@ export function Flow({ className = '' }: FlowProps) {
     autoSaveTimeoutRef.current = setTimeout(async () => {
       // Double-check that we're still saving to the correct flow
       if (!targetFlowId) {
-        console.log('[Auto-save] Skipped: No flow ID to save to');
         return;
       }
       
       // If the current flow has changed since this auto-save was scheduled, skip it
       if (targetFlowId !== currentFlowId) {
-        console.log(`[Auto-save] Skipped: Flow changed from ${targetFlowId} to ${currentFlowId}`);
         return;
       }
       
       try {
         await saveCurrentFlowWithCompleteState();
         lastSavedFlowIdRef.current = targetFlowId;
-        console.log(`[Auto-save] Flow ${targetFlowId} saved successfully`);
       } catch (error) {
         console.error(`[Auto-save] Failed to save flow ${targetFlowId}:`, error);
       }
@@ -94,15 +91,12 @@ export function Flow({ className = '' }: FlowProps) {
     const shouldAutoSave = changes.some(change => {
       switch (change.type) {
         case 'add':
-          console.log('[Auto-save] Node added:', change.item?.id);
           return true;
         case 'remove':
-          console.log('[Auto-save] Node removed:', change.id);
           return true;
         case 'position':
           // Only auto-save position changes when dragging is complete
           if (!change.dragging) {
-            console.log('[Auto-save] Node position changed:', change.id);
             return true;
           }
           return false;
@@ -128,7 +122,6 @@ export function Flow({ className = '' }: FlowProps) {
     const shouldAutoSave = changes.some(change => {
       switch (change.type) {
         case 'remove':
-          console.log('[Auto-save] Edge removed:', change.id);
           return true;
         default:
           return false;
@@ -155,7 +148,6 @@ export function Flow({ className = '' }: FlowProps) {
   // Cancel pending auto-saves when flow changes to prevent cross-flow saves
   useEffect(() => {
     if (autoSaveTimeoutRef.current) {
-      console.log(`[Auto-save] Cancelling pending auto-save due to flow change to ${currentFlowId}`);
       clearTimeout(autoSaveTimeoutRef.current);
       autoSaveTimeoutRef.current = null;
     }
@@ -265,13 +257,11 @@ export function Flow({ className = '' }: FlowProps) {
         setTimeout(async () => {
           // Double-check that we're still saving to the correct flow
           if (flowIdAtTimeOfChange !== currentFlowId) {
-            console.log(`[Auto-save] Skipped connection save: Flow changed from ${flowIdAtTimeOfChange} to ${currentFlowId}`);
             return;
           }
           
           try {
             await saveCurrentFlowWithCompleteState();
-            console.log(`[Auto-save] New connection for flow ${flowIdAtTimeOfChange} saved immediately`);
           } catch (error) {
             console.error(`[Auto-save] Failed to save new connection for flow ${flowIdAtTimeOfChange}:`, error);
           }
