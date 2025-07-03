@@ -220,9 +220,7 @@ export function useFlowConnection(flowId: string | null) {
       agent => agent.status === 'IN_PROGRESS'
     );
 
-    if (hasInProgressNodes && connection.state === 'idle') {
-      console.log(`Recovering stale state for flow ${flowId}`);
-      
+    if (hasInProgressNodes && connection.state === 'idle') {      
       // Reset IN_PROGRESS nodes to IDLE, keep final states
       Object.entries(agentData).forEach(([nodeId, data]) => {
         if (data.status === 'IN_PROGRESS') {
