@@ -15,7 +15,7 @@ import { useCallback } from 'react';
  */
 export function useEnhancedFlowActions() {
   const { saveCurrentFlow, loadFlow, reactFlowInstance, currentFlowId } = useFlowContext();
-  const { exportNodeContextData, resetAllNodes } = useNodeContext();
+  const { exportNodeContextData } = useNodeContext();
 
   // Enhanced save that includes node context data
   const saveCurrentFlowWithCompleteState = useCallback(async (name?: string, description?: string): Promise<Flow | null> => {

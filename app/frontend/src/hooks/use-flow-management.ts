@@ -44,7 +44,7 @@ export interface UseFlowManagementReturn {
 export function useFlowManagement(): UseFlowManagementReturn {
   // Get flow context, node context, and toast manager
   const { saveCurrentFlow, loadFlow, reactFlowInstance, currentFlowId } = useFlowContext();
-  const { exportNodeContextData, resetAllNodes } = useNodeContext();
+  const { exportNodeContextData } = useNodeContext();
   const { success, error } = useToastManager();
   
   // State for flows
