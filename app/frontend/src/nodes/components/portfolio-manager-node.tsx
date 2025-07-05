@@ -117,7 +117,17 @@ export function PortfolioManagerNode({
   };
 
   const handleInitialCashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInitialCash(e.target.value);
+    // Remove non-numeric characters except decimal point
+    const numericValue = e.target.value.replace(/[^0-9.]/g, '');
+    setInitialCash(numericValue);
+  };
+
+  // Format the display value with commas
+  const formatCurrency = (value: string) => {
+    if (!value) return '';
+    const num = parseFloat(value);
+    if (isNaN(num)) return value;
+    return num.toLocaleString('en-US');
   };
 
   const handleStop = () => {
@@ -233,15 +243,18 @@ export function PortfolioManagerNode({
                 <div className="text-subtitle text-primary flex items-center gap-1">
                   Initial Cash
                 </div>
-                <Input
-                  type="number"
-                  placeholder="100000"
-                  value={initialCash}
-                  onChange={handleInitialCashChange}
-                  min="0"
-                  step="1000"
-                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none">
+                    $
+                  </div>
+                  <Input
+                    type="text"
+                    placeholder="100,000"
+                    value={formatCurrency(initialCash)}
+                    onChange={handleInitialCashChange}
+                    className="pl-8 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
               </div>
               <div className="flex flex-col gap-2">
                 <div className="text-subtitle text-primary flex items-center gap-1">
