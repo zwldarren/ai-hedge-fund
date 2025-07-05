@@ -35,6 +35,7 @@ export function PortfolioManagerNode({
   const [availableModels, setAvailableModels] = useNodeState<LanguageModel[]>(id, 'availableModels', []);
   const [startDate, setStartDate] = useNodeState(id, 'startDate', threeMonthsAgo.toISOString().split('T')[0]);
   const [endDate, setEndDate] = useNodeState(id, 'endDate', today.toISOString().split('T')[0]);
+  const [initialCash, setInitialCash] = useNodeState(id, 'initialCash', '100000');
   
   const { currentFlowId } = useFlowContext();
   const nodeContext = useNodeContext();
@@ -115,6 +116,10 @@ export function PortfolioManagerNode({
     setEndDate(e.target.value);
   };
 
+  const handleInitialCashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInitialCash(e.target.value);
+  };
+
   const handleStop = () => {
     stopFlow();
   };
@@ -170,6 +175,7 @@ export function PortfolioManagerNode({
       model_provider: selectedModel?.provider as any || undefined,
       start_date: startDate,
       end_date: endDate,
+      initial_cash: parseFloat(initialCash) || 100000,
     });
   };
 
@@ -225,6 +231,20 @@ export function PortfolioManagerNode({
               </div>
               <div className="flex flex-col gap-2">
                 <div className="text-subtitle text-primary flex items-center gap-1">
+                  Initial Cash
+                </div>
+                <Input
+                  type="number"
+                  placeholder="100000"
+                  value={initialCash}
+                  onChange={handleInitialCashChange}
+                  min="0"
+                  step="1000"
+                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="text-subtitle text-primary flex items-center gap-1">
                   Model
                 </div>
                 <ModelSelector
@@ -241,7 +261,7 @@ export function PortfolioManagerNode({
                   </AccordionTrigger>
                   <AccordionContent className="pt-2">
                     <div className="flex flex-col gap-4">
-                    <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-2">
                         <div className="text-subtitle text-primary flex items-center gap-1">
                           End Date
                         </div>

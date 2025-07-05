@@ -153,6 +153,7 @@ export function useFlowConnection(flowId: string | null) {
       end_date?: string;
       model_name?: string;
       model_provider?: any;
+      initial_cash?: number;
     }
   ) => {
     if (!flowId || !canRun) return;
