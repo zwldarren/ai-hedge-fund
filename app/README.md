@@ -25,6 +25,7 @@ The AI Hedge Fund consists of:
   - [Running the Application](#running-the-application)
 - [Detailed Documentation](#detailed-documentation)
 - [Disclaimer](#disclaimer)
+- [Troubleshooting](#troubleshooting])
 
 ## 🚀 Quick Start (For Non-Technical Users)
 
@@ -172,4 +173,62 @@ This project is for **educational and research purposes only**.
 - Creator assumes no liability for financial losses
 - Consult a financial advisor for investment decisions
 
-By using this software, you agree to use it solely for learning purposes. 
+By using this software, you agree to use it solely for learning purposes.
+
+## Troubleshooting
+
+### Common Issues
+
+#### "Command not found: uvicorn" Error
+If you see this error when running the setup script:
+
+```bash
+[ERROR] Backend failed to start. Check the logs:
+Command not found: uvicorn
+```
+
+**Solution:**
+1. **Clean Poetry environment:**
+   ```bash
+   cd app/backend
+   poetry env remove --all
+   poetry install
+   ```
+
+2. **Or force reinstall:**
+   ```bash
+   cd app/backend
+   poetry install --sync
+   ```
+
+3. **Verify installation:**
+   ```bash
+   cd app/backend
+   poetry run python -c "import uvicorn; import fastapi"
+   ```
+
+#### Python Version Issues
+- **Use Python 3.11**: Python 3.13+ may have compatibility issues
+- **Check your Python version:** `python --version`
+- **Switch Python versions if needed** (using pyenv, conda, etc.)
+
+#### Environment Variable Issues
+- **Ensure .env file exists** in the project root directory
+- **Copy from template:** `cp .env.example .env`
+- **Add your API keys** to the .env file
+
+#### Permission Issues (Mac/Linux)
+If you get "permission denied":
+```bash
+chmod +x run.sh
+./run.sh
+```
+
+#### Port Already in Use
+If ports 8000 or 5173 are in use:
+- **Kill existing processes:** `pkill -f "uvicorn\|vite"`
+- **Or use different ports** by modifying the scripts
+
+### Getting Help
+- Check the [GitHub Issues](https://github.com/virattt/ai-hedge-fund/issues)
+- Follow updates on [Twitter](https://x.com/virattt) 

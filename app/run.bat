@@ -118,7 +118,7 @@ REM Install backend dependencies
 echo %INFO% Installing backend dependencies...
 cd backend
 
-poetry check >nul 2>&1
+poetry run python -c "import uvicorn; import fastapi" >nul 2>&1
 if %errorlevel% equ 0 (
     echo %SUCCESS% Backend dependencies already installed!
 ) else (
@@ -129,7 +129,15 @@ if %errorlevel% equ 0 (
         pause
         exit /b 1
     )
-    echo %SUCCESS% Backend dependencies installed!
+    poetry run python -c "import uvicorn; import fastapi" >nul 2>&1
+    if %errorlevel% equ 0 (
+        echo %SUCCESS% Backend dependencies installed!
+    ) else (
+        echo %ERROR% Failed to install backend dependencies properly
+        echo %ERROR% Try running: cd backend && poetry install --sync
+        pause
+        exit /b 1
+    )
 )
 
 cd ..

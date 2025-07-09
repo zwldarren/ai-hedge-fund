@@ -175,13 +175,19 @@ install_backend() {
     
     cd backend
     
-    # Check if dependencies are already installed
-    if poetry check >/dev/null 2>&1; then
+    # Check if dependencies are actually installed and working
+    if poetry run python -c "import uvicorn; import fastapi" >/dev/null 2>&1; then
         print_success "Backend dependencies already installed!"
     else
         print_status "Installing Python dependencies with Poetry..."
         poetry install
-        print_success "Backend dependencies installed!"
+        if poetry run python -c "import uvicorn; import fastapi" >/dev/null 2>&1; then
+            print_success "Backend dependencies installed!"
+        else
+            print_error "Failed to install backend dependencies properly"
+            print_error "Try running: cd backend && poetry install --sync"
+            exit 1
+        fi
     fi
     
     cd ..
