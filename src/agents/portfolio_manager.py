@@ -2,22 +2,26 @@ import json
 from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 
-from src.graph.state import AgentState, show_agent_reasoning
+from graph.state import AgentState, show_agent_reasoning
 from pydantic import BaseModel, Field
 from typing_extensions import Literal
-from src.utils.progress import progress
-from src.utils.llm import call_llm
+from utils.progress import progress
+from utils.llm import call_llm
 
 
 class PortfolioDecision(BaseModel):
     action: Literal["buy", "sell", "short", "cover", "hold"]
     quantity: int = Field(description="Number of shares to trade")
-    confidence: float = Field(description="Confidence in the decision, between 0.0 and 100.0")
+    confidence: float = Field(
+        description="Confidence in the decision, between 0.0 and 100.0"
+    )
     reasoning: str = Field(description="Reasoning for the decision")
 
 
 class PortfolioManagerOutput(BaseModel):
-    decisions: dict[str, PortfolioDecision] = Field(description="Dictionary of ticker to trading decisions")
+    decisions: dict[str, PortfolioDecision] = Field(
+        description="Dictionary of ticker to trading decisions"
+    )
 
 
 ##### Portfolio Management Agent #####
@@ -35,7 +39,9 @@ def portfolio_management_agent(state: AgentState):
     max_shares = {}
     signals_by_ticker = {}
     for ticker in tickers:
-        progress.update_status("portfolio_manager", ticker, "Processing analyst signals")
+        progress.update_status(
+            "portfolio_manager", ticker, "Processing analyst signals"
+        )
 
         # Get position limits and current prices for the ticker
         risk_data = analyst_signals.get("risk_management_agent", {}).get(ticker, {})
@@ -52,7 +58,10 @@ def portfolio_management_agent(state: AgentState):
         ticker_signals = {}
         for agent, signals in analyst_signals.items():
             if agent != "risk_management_agent" and ticker in signals:
-                ticker_signals[agent] = {"signal": signals[ticker]["signal"], "confidence": signals[ticker]["confidence"]}
+                ticker_signals[agent] = {
+                    "signal": signals[ticker]["signal"],
+                    "confidence": signals[ticker]["confidence"],
+                }
         signals_by_ticker[ticker] = ticker_signals
 
     progress.update_status("portfolio_manager", None, "Generating trading decisions")
@@ -69,13 +78,24 @@ def portfolio_management_agent(state: AgentState):
 
     # Create the portfolio management message
     message = HumanMessage(
-        content=json.dumps({ticker: decision.model_dump() for ticker, decision in result.decisions.items()}),
+        content=json.dumps(
+            {
+                ticker: decision.model_dump()
+                for ticker, decision in result.decisions.items()
+            }
+        ),
         name="portfolio_manager",
     )
 
     # Print the decision if the flag is set
     if state["metadata"]["show_reasoning"]:
-        show_agent_reasoning({ticker: decision.model_dump() for ticker, decision in result.decisions.items()}, "Portfolio Manager")
+        show_agent_reasoning(
+            {
+                ticker: decision.model_dump()
+                for ticker, decision in result.decisions.items()
+            },
+            "Portfolio Manager",
+        )
 
     progress.update_status("portfolio_manager", None, "Done")
 
@@ -188,7 +208,17 @@ def generate_trading_decision(
 
     # Create default factory for PortfolioManagerOutput
     def create_default_portfolio_output():
-        return PortfolioManagerOutput(decisions={ticker: PortfolioDecision(action="hold", quantity=0, confidence=0.0, reasoning="Error in portfolio management, defaulting to hold") for ticker in tickers})
+        return PortfolioManagerOutput(
+            decisions={
+                ticker: PortfolioDecision(
+                    action="hold",
+                    quantity=0,
+                    confidence=0.0,
+                    reasoning="Error in portfolio management, defaulting to hold",
+                )
+                for ticker in tickers
+            }
+        )
 
     return call_llm(
         prompt=prompt,

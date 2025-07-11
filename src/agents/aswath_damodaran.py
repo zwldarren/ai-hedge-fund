@@ -4,22 +4,22 @@ import json
 from typing_extensions import Literal
 from pydantic import BaseModel
 
-from src.graph.state import AgentState, show_agent_reasoning
+from graph.state import AgentState, show_agent_reasoning
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage
 
-from src.tools.api import (
+from tools.api import (
     get_financial_metrics,
     get_market_cap,
     search_line_items,
 )
-from src.utils.llm import call_llm
-from src.utils.progress import progress
+from utils.llm import call_llm
+from utils.progress import progress
 
 
 class AswathDamodaranSignal(BaseModel):
     signal: Literal["bullish", "bearish", "neutral"]
-    confidence: float          # 0‒100
+    confidence: float  # 0‒100
     reasoning: str
 
 
@@ -32,19 +32,23 @@ def aswath_damodaran_agent(state: AgentState):
       • Cross-check with relative valuation (PE vs. Fwd PE sector median proxy)
     Produces a trading signal and explanation in Damodaran's analytical voice.
     """
-    data      = state["data"]
-    end_date  = data["end_date"]
-    tickers   = data["tickers"]
+    data = state["data"]
+    end_date = data["end_date"]
+    tickers = data["tickers"]
 
     analysis_data: dict[str, dict] = {}
     damodaran_signals: dict[str, dict] = {}
 
     for ticker in tickers:
         # ─── Fetch core data ────────────────────────────────────────────────────
-        progress.update_status("aswath_damodaran_agent", ticker, "Fetching financial metrics")
+        progress.update_status(
+            "aswath_damodaran_agent", ticker, "Fetching financial metrics"
+        )
         metrics = get_financial_metrics(ticker, end_date, period="ttm", limit=5)
 
-        progress.update_status("aswath_damodaran_agent", ticker, "Fetching financial line items")
+        progress.update_status(
+            "aswath_damodaran_agent", ticker, "Fetching financial line items"
+        )
         line_items = search_line_items(
             ticker,
             [
@@ -64,16 +68,26 @@ def aswath_damodaran_agent(state: AgentState):
         market_cap = get_market_cap(ticker, end_date)
 
         # ─── Analyses ───────────────────────────────────────────────────────────
-        progress.update_status("aswath_damodaran_agent", ticker, "Analyzing growth and reinvestment")
+        progress.update_status(
+            "aswath_damodaran_agent", ticker, "Analyzing growth and reinvestment"
+        )
         growth_analysis = analyze_growth_and_reinvestment(metrics, line_items)
 
-        progress.update_status("aswath_damodaran_agent", ticker, "Analyzing risk profile")
+        progress.update_status(
+            "aswath_damodaran_agent", ticker, "Analyzing risk profile"
+        )
         risk_analysis = analyze_risk_profile(metrics, line_items)
 
-        progress.update_status("aswath_damodaran_agent", ticker, "Calculating intrinsic value (DCF)")
-        intrinsic_val_analysis = calculate_intrinsic_value_dcf(metrics, line_items, risk_analysis)
+        progress.update_status(
+            "aswath_damodaran_agent", ticker, "Calculating intrinsic value (DCF)"
+        )
+        intrinsic_val_analysis = calculate_intrinsic_value_dcf(
+            metrics, line_items, risk_analysis
+        )
 
-        progress.update_status("aswath_damodaran_agent", ticker, "Assessing relative valuation")
+        progress.update_status(
+            "aswath_damodaran_agent", ticker, "Assessing relative valuation"
+        )
         relative_val_analysis = analyze_relative_valuation(metrics)
 
         # ─── Score & margin of safety ──────────────────────────────────────────
@@ -82,22 +96,41 @@ def aswath_damodaran_agent(state: AgentState):
             + risk_analysis["score"]
             + relative_val_analysis["score"]
         )
-        max_score = growth_analysis["max_score"] + risk_analysis["max_score"] + relative_val_analysis["max_score"]
+        max_score = (
+            growth_analysis["max_score"]
+            + risk_analysis["max_score"]
+            + relative_val_analysis["max_score"]
+        )
 
         intrinsic_value = intrinsic_val_analysis["intrinsic_value"]
         margin_of_safety = (
-            (intrinsic_value - market_cap) / market_cap if intrinsic_value and market_cap else None
+            (intrinsic_value - market_cap) / market_cap
+            if intrinsic_value and market_cap
+            else None
         )
 
         # Decision rules (Damodaran tends to act with ~20-25 % MOS)
-        if margin_of_safety is not None and margin_of_safety >= 0.25:
+        # Handle cases where margin_of_safety might be NaN or None
+        if margin_of_safety is None or (
+            isinstance(margin_of_safety, float) and margin_of_safety != margin_of_safety
+        ):  # Check for NaN
+            signal = "neutral"
+        elif margin_of_safety >= 0.25:
             signal = "bullish"
-        elif margin_of_safety is not None and margin_of_safety <= -0.25:
+        elif margin_of_safety <= -0.25:
             signal = "bearish"
         else:
             signal = "neutral"
 
-        confidence = min(max(abs(margin_of_safety or 0) * 200, 10), 100)  # simple proxy 10-100
+        # Handle NaN/None in margin_of_safety
+        if margin_of_safety is None or (
+            isinstance(margin_of_safety, float) and margin_of_safety != margin_of_safety
+        ):  # Check for NaN
+            margin_value = 0
+        else:
+            margin_value = margin_of_safety
+
+        min(max(abs(margin_value) * 200, 10), 100)  # simple proxy 10-100
 
         analysis_data[ticker] = {
             "signal": signal,
@@ -112,7 +145,9 @@ def aswath_damodaran_agent(state: AgentState):
         }
 
         # ─── LLM: craft Damodaran-style narrative ──────────────────────────────
-        progress.update_status("aswath_damodaran_agent", ticker, "Generating Damodaran analysis")
+        progress.update_status(
+            "aswath_damodaran_agent", ticker, "Generating Damodaran analysis"
+        )
         damodaran_output = generate_damodaran_output(
             ticker=ticker,
             analysis_data=analysis_data,
@@ -121,10 +156,17 @@ def aswath_damodaran_agent(state: AgentState):
 
         damodaran_signals[ticker] = damodaran_output.model_dump()
 
-        progress.update_status("aswath_damodaran_agent", ticker, "Done", analysis=damodaran_output.reasoning)
+        progress.update_status(
+            "aswath_damodaran_agent",
+            ticker,
+            "Done",
+            analysis=damodaran_output.reasoning,
+        )
 
     # ─── Push message back to graph state ──────────────────────────────────────
-    message = HumanMessage(content=json.dumps(damodaran_signals), name="aswath_damodaran_agent")
+    message = HumanMessage(
+        content=json.dumps(damodaran_signals), name="aswath_damodaran_agent"
+    )
 
     if state["metadata"]["show_reasoning"]:
         show_agent_reasoning(damodaran_signals, "Aswath Damodaran Agent")
@@ -185,7 +227,12 @@ def analyze_growth_and_reinvestment(metrics: list, line_items: list) -> dict[str
         score += 1
         details.append(f"ROIC {latest.return_on_invested_capital:.1%} (> 10 %)")
 
-    return {"score": score, "max_score": max_score, "details": "; ".join(details), "metrics": latest.model_dump()}
+    return {
+        "score": score,
+        "max_score": max_score,
+        "details": "; ".join(details),
+        "metrics": latest.model_dump(),
+    }
 
 
 def analyze_risk_profile(metrics: list, line_items: list) -> dict[str, any]:
@@ -258,7 +305,11 @@ def analyze_relative_valuation(metrics: list) -> dict[str, any]:
     """
     max_score = 1
     if not metrics or len(metrics) < 5:
-        return {"score": 0, "max_score": max_score, "details": "Insufficient P/E history"}
+        return {
+            "score": 0,
+            "max_score": max_score,
+            "details": "Insufficient P/E history",
+        }
 
     pes = [m.price_to_earnings_ratio for m in metrics if m.price_to_earnings_ratio]
     if len(pes) < 5:
@@ -272,7 +323,7 @@ def analyze_relative_valuation(metrics: list) -> dict[str, any]:
     elif ttm_pe > 1.3 * median_pe:
         score, desc = -1, f"P/E {ttm_pe:.1f} vs. median {median_pe:.1f} (expensive)"
     else:
-        score, desc = 0, f"P/E inline with history"
+        score, desc = 0, "P/E inline with history"
 
     return {"score": score, "max_score": max_score, "details": desc}
 
@@ -280,7 +331,9 @@ def analyze_relative_valuation(metrics: list) -> dict[str, any]:
 # ────────────────────────────────────────────────────────────────────────────────
 # Intrinsic value via FCFF DCF (Damodaran style)
 # ────────────────────────────────────────────────────────────────────────────────
-def calculate_intrinsic_value_dcf(metrics: list, line_items: list, risk_analysis: dict) -> dict[str, any]:
+def calculate_intrinsic_value_dcf(
+    metrics: list, line_items: list, risk_analysis: dict
+) -> dict[str, any]:
     """
     FCFF DCF with:
       • Base FCFF = latest free cash flow
@@ -347,8 +400,8 @@ def calculate_intrinsic_value_dcf(metrics: list, line_items: list, risk_analysis
 
 def estimate_cost_of_equity(beta: float | None) -> float:
     """CAPM: r_e = r_f + β × ERP (use Damodaran's long-term averages)."""
-    risk_free = 0.04          # 10-yr US Treasury proxy
-    erp = 0.05                # long-run US equity risk premium
+    risk_free = 0.04  # 10-yr US Treasury proxy
+    erp = 0.05  # long-run US equity risk premium
     beta = beta if beta is not None else 1.0
     return risk_free + beta * erp
 
@@ -398,7 +451,9 @@ def generate_damodaran_output(
         ]
     )
 
-    prompt = template.invoke({"analysis_data": json.dumps(analysis_data, indent=2), "ticker": ticker})
+    prompt = template.invoke(
+        {"analysis_data": json.dumps(analysis_data, indent=2), "ticker": ticker}
+    )
 
     def default_signal():
         return AswathDamodaranSignal(

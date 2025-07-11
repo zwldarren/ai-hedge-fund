@@ -2,7 +2,8 @@ import os
 import json
 from langchain_anthropic import ChatAnthropic
 from langchain_deepseek import ChatDeepSeek
-from langchain_google_genai import ChatGoogleGenerativeAI
+
+# from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
@@ -66,9 +67,9 @@ class LLMModel(BaseModel):
 # Load models from JSON file
 def load_models_from_json(json_path: str) -> List[LLMModel]:
     """Load models from a JSON file"""
-    with open(json_path, 'r') as f:
+    with open(json_path, "r") as f:
         models_data = json.load(f)
-    
+
     models = []
     for model_data in models_data:
         # Convert string provider to ModelProvider enum
@@ -77,7 +78,7 @@ def load_models_from_json(json_path: str) -> List[LLMModel]:
             LLMModel(
                 display_name=model_data["display_name"],
                 model_name=model_data["model_name"],
-                provider=provider_enum
+                provider=provider_enum,
             )
         )
     return models
@@ -104,7 +105,14 @@ OLLAMA_LLM_ORDER = [model.to_choice_tuple() for model in OLLAMA_MODELS]
 def get_model_info(model_name: str, model_provider: str) -> LLMModel | None:
     """Get model information by model_name"""
     all_models = AVAILABLE_MODELS + OLLAMA_MODELS
-    return next((model for model in all_models if model.model_name == model_name and model.provider == model_provider), None)
+    return next(
+        (
+            model
+            for model in all_models
+            if model.model_name == model_name and model.provider == model_provider
+        ),
+        None,
+    )
 
 
 def get_models_list():
@@ -113,19 +121,25 @@ def get_models_list():
         {
             "display_name": model.display_name,
             "model_name": model.model_name,
-            "provider": model.provider.value
+            "provider": model.provider.value,
         }
         for model in AVAILABLE_MODELS
     ]
 
 
-def get_model(model_name: str, model_provider: ModelProvider) -> ChatOpenAI | ChatGroq | ChatOllama | None:
+def get_model(
+    model_name: str, model_provider: ModelProvider
+) -> ChatOpenAI | ChatGroq | ChatOllama | None:
     if model_provider == ModelProvider.GROQ:
         api_key = os.getenv("GROQ_API_KEY")
         if not api_key:
             # Print error to console
-            print(f"API Key Error: Please make sure GROQ_API_KEY is set in your .env file.")
-            raise ValueError("Groq API key not found.  Please make sure GROQ_API_KEY is set in your .env file.")
+            print(
+                "API Key Error: Please make sure GROQ_API_KEY is set in your .env file."
+            )
+            raise ValueError(
+                "Groq API key not found.  Please make sure GROQ_API_KEY is set in your .env file."
+            )
         return ChatGroq(model=model_name, api_key=api_key)
     elif model_provider == ModelProvider.OPENAI:
         # Get and validate API key
@@ -133,27 +147,44 @@ def get_model(model_name: str, model_provider: ModelProvider) -> ChatOpenAI | Ch
         base_url = os.getenv("OPENAI_API_BASE")
         if not api_key:
             # Print error to console
-            print(f"API Key Error: Please make sure OPENAI_API_KEY is set in your .env file.")
-            raise ValueError("OpenAI API key not found.  Please make sure OPENAI_API_KEY is set in your .env file.")
+            print(
+                "API Key Error: Please make sure OPENAI_API_KEY is set in your .env file."
+            )
+            raise ValueError(
+                "OpenAI API key not found.  Please make sure OPENAI_API_KEY is set in your .env file."
+            )
         return ChatOpenAI(model=model_name, api_key=api_key, base_url=base_url)
     elif model_provider == ModelProvider.ANTHROPIC:
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
-            print(f"API Key Error: Please make sure ANTHROPIC_API_KEY is set in your .env file.")
-            raise ValueError("Anthropic API key not found.  Please make sure ANTHROPIC_API_KEY is set in your .env file.")
+            print(
+                "API Key Error: Please make sure ANTHROPIC_API_KEY is set in your .env file."
+            )
+            raise ValueError(
+                "Anthropic API key not found.  Please make sure ANTHROPIC_API_KEY is set in your .env file."
+            )
         return ChatAnthropic(model=model_name, api_key=api_key)
     elif model_provider == ModelProvider.DEEPSEEK:
         api_key = os.getenv("DEEPSEEK_API_KEY")
         if not api_key:
-            print(f"API Key Error: Please make sure DEEPSEEK_API_KEY is set in your .env file.")
-            raise ValueError("DeepSeek API key not found.  Please make sure DEEPSEEK_API_KEY is set in your .env file.")
+            print(
+                "API Key Error: Please make sure DEEPSEEK_API_KEY is set in your .env file."
+            )
+            raise ValueError(
+                "DeepSeek API key not found.  Please make sure DEEPSEEK_API_KEY is set in your .env file."
+            )
         return ChatDeepSeek(model=model_name, api_key=api_key)
     elif model_provider == ModelProvider.GOOGLE:
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
-            print(f"API Key Error: Please make sure GOOGLE_API_KEY is set in your .env file.")
-            raise ValueError("Google API key not found.  Please make sure GOOGLE_API_KEY is set in your .env file.")
-        return ChatGoogleGenerativeAI(model=model_name, api_key=api_key)
+            print(
+                "API Key Error: Please make sure GOOGLE_API_KEY is set in your .env file."
+            )
+            raise ValueError(
+                "Google API key not found.  Please make sure GOOGLE_API_KEY is set in your .env file."
+            )
+        # return ChatGoogleGenerativeAI(model=model_name, api_key=api_key)
+        raise NotImplementedError
     elif model_provider == ModelProvider.OLLAMA:
         # For Ollama, we use a base URL instead of an API key
         # Check if OLLAMA_HOST is set (for Docker on macOS)
