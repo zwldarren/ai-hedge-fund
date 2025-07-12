@@ -2,6 +2,7 @@ import pandas as pd
 import akshare_one as ao
 from datetime import timedelta
 from cachetools.func import ttl_cache
+from data.models import FinancialMetrics
 
 
 class AksharePrice:
@@ -273,60 +274,39 @@ def get_akshare_company_info(symbol: str) -> dict:
 
 
 def get_financial_metrics(symbol) -> pd.DataFrame:
-    # Define FinancialMetrics model structure
-    financial_metrics_columns = [
-        "ticker",
-        "report_period",
-        "currency",
-        "market_cap",
-        "enterprise_value",
-        "price_to_earnings_ratio",
-        "price_to_book_ratio",
-        "price_to_sales_ratio",
-        "enterprise_value_to_ebitda_ratio",
-        "enterprise_value_to_revenue_ratio",
-        "free_cash_flow_yield",
-        "peg_ratio",
-        "gross_margin",
-        "operating_margin",
-        "net_margin",
-        "return_on_equity",
-        "return_on_assets",
-        "return_on_invested_capital",
-        "asset_turnover",
-        "inventory_turnover",
-        "receivables_turnover",
-        "days_sales_outstanding",
-        "operating_cycle",
-        "working_capital_turnover",
-        "current_ratio",
-        "quick_ratio",
-        "cash_ratio",
-        "operating_cash_flow_ratio",
-        "debt_to_equity",
-        "debt_to_assets",
-        "interest_coverage",
-        "revenue_growth",
-        "earnings_growth",
-        "book_value_growth",
-        "earnings_per_share_growth",
-        "free_cash_flow_growth",
-        "operating_income_growth",
-        "ebitda_growth",
-        "payout_ratio",
-        "earnings_per_share",
-        "book_value_per_share",
-        "free_cash_flow_per_share",
-    ]
+    # Define FinancialMetrics model structure from the Pydantic model
+    financial_metrics_columns = list(FinancialMetrics.model_fields.keys())
 
     # Get all financial statements
     balance = ao.get_balance_sheet(symbol)
     income = ao.get_income_statement(symbol)
     cash = ao.get_cash_flow(symbol)
 
+    # If any of the financial statements are missing, we cannot proceed.
+    if balance.empty or income.empty or cash.empty:
+        return pd.DataFrame(columns=financial_metrics_columns)
+
     # Merge all statements on report_date
     merged = pd.merge(balance, income, on="report_date", suffixes=("", "_y"))
     merged = pd.merge(merged, cash, on="report_date", suffixes=("", "_z"))
+
+    # If merged is empty after join, return empty df
+    if merged.empty:
+        return pd.DataFrame(columns=financial_metrics_columns)
+        
+    # Ensure all required columns exist in merged DataFrame
+    required_columns = [
+        'revenue', 'cost_of_revenue', 'operating_profit', 'net_income',
+        'shareholders_equity', 'total_assets', 'current_assets',
+        'current_liabilities', 'cash_and_equivalents', 'current_investments',
+        'total_debt', 'interest_expense', 'inventory',
+        'trade_and_non_trade_receivables', 'outstanding_shares',
+        'net_cash_flow_from_operations'
+    ]
+    
+    for col in required_columns:
+        if col not in merged:
+            merged[col] = float('nan')
 
     # Get market data
     try:

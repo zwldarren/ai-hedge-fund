@@ -105,13 +105,14 @@ def search_line_items(
     limit: int = 10,
 ) -> list[LineItem]:
     """Fetch line items from akshare-one."""
+    high_limit = 100
     balance_sheets = get_akshare_financial_statements(
-        ticker, "balance_sheet", limit=limit
+        ticker, "balance_sheet", limit=high_limit
     )
     income_statements = get_akshare_financial_statements(
-        ticker, "income_statement", limit=limit
+        ticker, "income_statement", limit=high_limit
     )
-    cash_flows = get_akshare_financial_statements(ticker, "cash_flow", limit=limit)
+    cash_flows = get_akshare_financial_statements(ticker, "cash_flow", limit=high_limit)
 
     all_statements = []
     for bs in balance_sheets:
@@ -142,28 +143,48 @@ def search_line_items(
             }
         )
 
-    # Sort by report_date descending
-    all_statements.sort(key=lambda x: x["report_date"], reverse=True)
+    # Convert end_date to Timestamp for comparison
+    end_date_dt = pd.to_datetime(end_date)
+    # Filter statements by report_date <= end_date_dt
+    all_statements = [stmt for stmt in all_statements if stmt["report_date"] <= end_date_dt]
 
-    found_line_items = []
+    # If no statements after filtering, return empty list
+    if not all_statements:
+        return []
+
+    # Group by report_period (string of the report_date's date)
+    grouped = {}
     for stmt in all_statements:
-        line_item_data = {
-            "ticker": ticker,
-            "report_period": str(stmt["report_date"].date()),
-            "period": stmt["period"],
-            "currency": stmt["currency"],
-        }
-        found_any = False
-        for item in line_items:
-            if hasattr(stmt, item):
-                line_item_data[item] = getattr(stmt, item)
-                found_any = True
-        if found_any:
-            found_line_items.append(LineItem(**line_item_data))
-        if len(found_line_items) >= limit:
-            break
+        # Create a string key for the report date (YYYY-MM-DD)
+        report_period_str = stmt["report_date"].strftime("%Y-%m-%d")
+        if report_period_str not in grouped:
+            base_info = {
+                "ticker": ticker,
+                "report_period": report_period_str,
+                "period": stmt["period"],  # "annual"
+                "currency": stmt["currency"],
+            }
+            line_items_found = {}
+            grouped[report_period_str] = (base_info, line_items_found)
+        else:
+            base_info, line_items_found = grouped[report_period_str]
 
-    return found_line_items
+        # For each requested line item, if it exists in the statement, add it to line_items_found
+        for item in line_items:
+            if item in stmt:
+                line_items_found[item] = stmt[item]
+
+    # create a LineItem for each group
+    found_line_items = []
+    for report_period_str, (base_info, line_items_found) in grouped.items():
+        if line_items_found:
+            data = {**base_info, **line_items_found}
+            found_line_items.append(LineItem(**data))
+
+    # Sort by report_period descending (most recent first)
+    found_line_items.sort(key=lambda x: x.report_period, reverse=True)
+
+    return found_line_items[:limit]
 
 
 def get_insider_trades(
@@ -224,7 +245,7 @@ def get_company_news(
             source=n.source,
             date=n.date,
             url=n.url,
-            sentiment=n.sentiment,
+            sentiment=getattr(n, "sentiment", "neutral"),
         )
         for n in akshare_news
     ]

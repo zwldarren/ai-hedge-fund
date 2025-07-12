@@ -71,8 +71,12 @@ class LineItem(BaseModel):
     period: str
     currency: str
 
-    # Allow additional fields dynamically
+    # Allow any field dynamically without predefined attributes
     model_config = {"extra": "allow"}
+    
+    def __getattr__(self, name: str):
+        """Return None for any missing attribute to prevent AttributeErrors"""
+        return None
 
 
 class LineItemResponse(BaseModel):
