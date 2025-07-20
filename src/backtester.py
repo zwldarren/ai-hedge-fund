@@ -292,15 +292,10 @@ class Backtester:
         """Pre-fetch all data needed for the backtest period."""
         print("\nPre-fetching data for the entire backtest period...")
 
-        # Convert end_date string to datetime, fetch up to 1 year before
-        end_date_dt = datetime.strptime(self.end_date, "%Y-%m-%d")
-        start_date_dt = end_date_dt - relativedelta(years=1)
-        start_date_str = start_date_dt.strftime("%Y-%m-%d")
-
         for ticker in self.tickers:
-            # Fetch price data for the entire period, plus 1 year
-            get_prices(ticker, start_date_str, self.end_date)
-
+            # Trigger full price data caching by requesting wide date range
+            get_prices(ticker, "2000-01-01", "2030-12-31")
+            
             # Fetch financial metrics
             get_financial_metrics(ticker, self.end_date, limit=10)
 

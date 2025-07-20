@@ -20,32 +20,40 @@ from data.akshare_data import (
 
 # Global cache instance
 _cache = get_cache()
+# Module-level price cache for full datasets
+_full_price_cache = {}
 
 
 def get_prices(ticker: str, start_date: str, end_date: str) -> list[Price]:
-    """Fetch price data from cache or akshare-one."""
-    cache_key = f"prices_{ticker}_{start_date}_{end_date}"
-    if cached_data := _cache.get_prices(cache_key):
-        return [Price(**price) for price in cached_data]
-
-    akshare_prices = get_akshare_hist_data(ticker, start_date, end_date)
-    prices = [
-        Price(
-            open=p.open,
-            close=p.close,
-            high=p.high,
-            low=p.low,
-            volume=p.volume,
-            time=p.time,
-        )
-        for p in akshare_prices
+    """Fetch price data from cache or akshare-one with static caching."""
+    cache_key = f"prices_{ticker}"
+    
+    # Check if we have full dataset cached
+    if cache_key in _full_price_cache:
+        all_prices = _full_price_cache[cache_key]
+    else:
+        # Fetch full dataset (use wide date range)
+        akshare_prices = get_akshare_hist_data(ticker, "2000-01-01", "2030-12-31")
+        all_prices = [
+            Price(
+                open=p.open,
+                close=p.close,
+                high=p.high,
+                low=p.low,
+                volume=p.volume,
+                time=p.time,
+            )
+            for p in akshare_prices
+        ]
+        _full_price_cache[cache_key] = all_prices
+    
+    # Filter by requested date range
+    filtered_prices = [
+        p for p in all_prices 
+        if start_date <= p.time.split("T")[0] <= end_date
     ]
-
-    if not prices:
-        return []
-
-    _cache.set_prices(cache_key, [p.model_dump() for p in prices])
-    return prices
+    
+    return filtered_prices
 
 
 def get_financial_metrics(
