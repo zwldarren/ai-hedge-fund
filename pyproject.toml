@@ -12,7 +12,7 @@ dependencies = [
     "langchain-openai>=0.3.27",
     "langchain-deepseek>=0.1.2",
     "langchain-ollama>=0.3.4",
-    "langgraph==0.5.2",
+    "langgraph==0.5.4",
     "pandas>=2.3.1",
     "numpy>=2.3.1",
     "python-dotenv==1.1.1",
@@ -28,7 +28,7 @@ dependencies = [
     "httpx>=0.28.1",
     "sqlalchemy>=2.0.41",
     "alembic>=1.16.4",
-    "akshare-one @ git+https://github.com/zwldarren/akshare-one.git@dev",
+    "akshare-one>=0.3.6",
 ]
 
 [dependency-groups]

@@ -244,13 +244,13 @@ def get_akshare_insider_trades(
 
 def get_akshare_market_cap(symbol: str, date: str) -> float | None:
     """
-    Gets market capitalization for A-share stocks using akshare-one's get_info API.
+    Gets market capitalization for A-share stocks using akshare-one's get_basic_info API.
     """
     try:
-        info = ao.get_info(symbol=symbol)
+        info = ao.get_basic_info(symbol=symbol)
         if not info.empty and "total_market_cap" in info:
             return info["total_market_cap"].iloc[0]
-        print(f"Market cap not found for {symbol} via get_info API")
+        print(f"Market cap not found for {symbol} via get_basic_info API")
         return None
     except Exception as e:
         print(f"Error getting market cap for {symbol}: {e}")
@@ -260,11 +260,11 @@ def get_akshare_market_cap(symbol: str, date: str) -> float | None:
 @ttl_cache(maxsize=128, ttl=3600)
 def get_akshare_company_info(symbol: str) -> dict:
     """
-    Gets basic company information using akshare-one's get_info API.
+    Gets basic company information using akshare-one's get_basic_info API.
     Returns a dictionary with company details like name, industry, market cap etc.
     """
     try:
-        info = ao.get_info(symbol=symbol)
+        info = ao.get_basic_info(symbol=symbol)
         if info.empty:
             return {}
         return info.iloc[0].to_dict()
@@ -310,7 +310,7 @@ def get_financial_metrics(symbol) -> pd.DataFrame:
 
     # Get market data
     try:
-        info_df = ao.get_info(symbol)
+        info_df = ao.get_basic_info(symbol)
         market_cap = info_df["total_market_cap"].iloc[0]
         price = info_df["price"].iloc[0]
     except Exception:
