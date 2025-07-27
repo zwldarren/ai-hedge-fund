@@ -4,7 +4,7 @@ from langchain_anthropic import ChatAnthropic
 from langchain_deepseek import ChatDeepSeek
 
 # from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_groq import ChatGroq
+# from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
 from enum import Enum
@@ -20,7 +20,6 @@ class ModelProvider(str, Enum):
     ANTHROPIC = "Anthropic"
     DEEPSEEK = "DeepSeek"
     GOOGLE = "Google"
-    GROQ = "Groq"
     META = "Meta"
     MISTRAL = "Mistral"
     OPENAI = "OpenAI"
@@ -129,19 +128,8 @@ def get_models_list():
 
 def get_model(
     model_name: str, model_provider: ModelProvider
-) -> ChatOpenAI | ChatGroq | ChatOllama | None:
-    if model_provider == ModelProvider.GROQ:
-        api_key = os.getenv("GROQ_API_KEY")
-        if not api_key:
-            # Print error to console
-            print(
-                "API Key Error: Please make sure GROQ_API_KEY is set in your .env file."
-            )
-            raise ValueError(
-                "Groq API key not found.  Please make sure GROQ_API_KEY is set in your .env file."
-            )
-        return ChatGroq(model=model_name, api_key=api_key)
-    elif model_provider == ModelProvider.OPENAI:
+) -> ChatOpenAI | ChatOllama | None:
+    if model_provider == ModelProvider.OPENAI:
         # Get and validate API key
         api_key = os.getenv("OPENAI_API_KEY")
         base_url = os.getenv("OPENAI_API_BASE")

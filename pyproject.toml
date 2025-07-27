@@ -8,7 +8,6 @@ readme = "README.md"
 dependencies = [
     "langchain==0.3.26",
     "langchain-anthropic==0.3.17",
-    "langchain-groq==0.3.5",
     "langchain-openai>=0.3.27",
     "langchain-deepseek>=0.1.2",
     "langchain-ollama>=0.3.4",
